@@ -1,37 +1,55 @@
 # re2-rust
 
-#### 介绍
-a compatible RE2 API  by calling Rust library regex(rure)
-
-#### 软件架构
-软件架构说明
+a compatible RE2 API(
+2021-11-01)  by calling Rust library [regex(rure)](https://github.com/rust-lang/regex)
 
 
-#### 安装教程
+``` Shell
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+$ git clone https://gitee.com/openeuler/re2-rust.git
+$ cd re2-rust
+```
 
 
-#### 特技
+###  安装rure库
+安装过程如下：
+``` Shell
+$ git clone https://github.com/rust-lang/regex
+$ cd regex/regex-capi
+$ cargo build --verbose
+```
+对于编译完成的`librure.a`和`librure.so`文件需要进行手工安装
+``` Shell
+# put the librure.a and librure.so into the /usr/lib
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+$ sudo cp regex/target/debug/librure.a /usr/lib
+$ sudo cp regex/target/debug/librure.so /usr/lib
+```
+手工安装rure.h文件
+``` Shell
+# copy the rure.h
+$ sudo cp regex/regex-capi/include/rure.h /usr/include
+```
+
+使用rure库:
+使用regex/regex-capi/ctest/目录下的 test.c文件进行测试
+``` Shell
+$ gcc test.c -o test -lrure
+$ ./test
+```
+
+### 编译、安装re2-rust
+
+``` Shell
+$ make
+$ sudo make install
+```
+
+# Links
+
+* https://github.com/rust-lang/regex
+* https://gitee.com/src-openeuler/re2
+* https://github.com/google/re2
+
+
+
