@@ -5,17 +5,19 @@ a compatible RE2 API(
 
 
 ``` Shell
-
 $ git clone https://gitee.com/openeuler/re2-rust.git
 $ cd re2-rust
 ```
 
 
 ###  安装rure库
+使用rust-lang/regex的版本号为1.6.0
 安装过程如下：
 ``` Shell
-$ git clone https://github.com/rust-lang/regex
-$ cd regex/regex-capi
+$ git clone -b 1.6.0 --depth=1 https://github.com/rust-lang/regex.git
+$ cd regex
+$ patch -p1 < ../patch/rure.patch
+$ cd regex-capi
 $ cargo build --verbose
 ```
 对于编译完成的`librure.a`和`librure.so`文件需要进行手工安装
