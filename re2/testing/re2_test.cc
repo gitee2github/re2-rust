@@ -180,36 +180,36 @@ TEST(RE2, Replace) {
     std::string one(t->original);
     ASSERT_TRUE(RE2::Replace(&one, t->regexp, t->rewrite));
     ASSERT_EQ(one, t->single);
-    // std::string all(t->original);
-    // ASSERT_EQ(RE2::GlobalReplace(&all, t->regexp, t->rewrite), t->greplace_count)
-    //   << "Got: " << all;
-    // ASSERT_EQ(all, t->global);
+    std::string all(t->original);
+    ASSERT_EQ(RE2::GlobalReplace(&all, t->regexp, t->rewrite), t->greplace_count)
+      << "Got: " << all;
+    ASSERT_EQ(all, t->global);
   }
 }
 
-// static void TestCheckRewriteString(const char* regexp, const char* rewrite,
-//                               bool expect_ok) {
-//   std::string error;
-//   RE2 exp(regexp);
-//   bool actual_ok = exp.CheckRewriteString(rewrite, &error);
-//   EXPECT_EQ(expect_ok, actual_ok) << " for " << rewrite << " error: " << error;
-// }
+static void TestCheckRewriteString(const char* regexp, const char* rewrite,
+                              bool expect_ok) {
+  std::string error;
+  RE2 exp(regexp);
+  bool actual_ok = exp.CheckRewriteString(rewrite, &error);
+  EXPECT_EQ(expect_ok, actual_ok) << " for " << rewrite << " error: " << error;
+}
 
-// TEST(CheckRewriteString, all) {
-//   TestCheckRewriteString("abc", "foo", true);
-//   TestCheckRewriteString("abc", "foo\\", false);
-//   TestCheckRewriteString("abc", "foo\\0bar", true);
+TEST(CheckRewriteString, all) {
+  TestCheckRewriteString("abc", "foo", true);
+  TestCheckRewriteString("abc", "foo\\", false);
+  TestCheckRewriteString("abc", "foo\\0bar", true);
 
-//   TestCheckRewriteString("a(b)c", "foo", true);
-//   TestCheckRewriteString("a(b)c", "foo\\0bar", true);
-//   TestCheckRewriteString("a(b)c", "foo\\1bar", true);
-//   TestCheckRewriteString("a(b)c", "foo\\2bar", false);
-//   TestCheckRewriteString("a(b)c", "f\\\\2o\\1o", true);
+  TestCheckRewriteString("a(b)c", "foo", true);
+  TestCheckRewriteString("a(b)c", "foo\\0bar", true);
+  TestCheckRewriteString("a(b)c", "foo\\1bar", true);
+  TestCheckRewriteString("a(b)c", "foo\\2bar", false);
+  TestCheckRewriteString("a(b)c", "f\\\\2o\\1o", true);
 
-//   TestCheckRewriteString("a(b)(c)", "foo\\12", true);
-//   TestCheckRewriteString("a(b)(c)", "f\\2o\\1o", true);
-//   TestCheckRewriteString("a(b)(c)", "f\\oo\\1", false);
-// }
+  TestCheckRewriteString("a(b)(c)", "foo\\12", true);
+  TestCheckRewriteString("a(b)(c)", "f\\2o\\1o", true);
+  TestCheckRewriteString("a(b)(c)", "f\\oo\\1", false);
+}
 
 // TEST(RE2, Extract) {
 //   std::string s;
@@ -229,8 +229,8 @@ TEST(RE2, MaxSubmatchTooLarge) {
   // ASSERT_FALSE(RE2::Extract("foo", "f(o+)", "\\1\\2", &s));
   s = "foo";
   ASSERT_FALSE(RE2::Replace(&s, "f(o+)", "\\1\\2"));
-  // s = "foo";
-  // ASSERT_FALSE(RE2::GlobalReplace(&s, "f(o+)", "\\1\\2"));
+  s = "foo";
+  ASSERT_FALSE(RE2::GlobalReplace(&s, "f(o+)", "\\1\\2"));
 }
 
 TEST(RE2, Consume) {
@@ -1623,23 +1623,23 @@ TEST(RE2, Bug21371806) {
 //   ASSERT_EQ(m, s) << " (ANCHOR_BOTH) got m='" << m << "', want '" << s << "'";
 // }
 
-// TEST(RE2, Issue104) {
-//   // RE2::GlobalReplace always advanced by one byte when the empty string was
-//   // matched, which would clobber any rune that is longer than one byte.
+TEST(RE2, Issue104) {
+  // RE2::GlobalReplace always advanced by one byte when the empty string was
+  // matched, which would clobber any rune that is longer than one byte.
 
-//   std::string s = "bc";
-//   ASSERT_EQ(3, RE2::GlobalReplace(&s, "a*", "d"));
-//   ASSERT_EQ("dbdcd", s);
+  std::string s = "bc";
+  ASSERT_EQ(3, RE2::GlobalReplace(&s, "a*", "d"));
+  ASSERT_EQ("dbdcd", s);
 
-//   s = "ąć";
-//   ASSERT_EQ(3, RE2::GlobalReplace(&s, "Ć*", "Ĉ"));
-//   ASSERT_EQ("ĈąĈćĈ", s);
+  s = "ąć";
+  ASSERT_EQ(3, RE2::GlobalReplace(&s, "Ć*", "Ĉ"));
+  ASSERT_EQ("ĈąĈćĈ", s);
 
 
-//   s = "人类";
-//   ASSERT_EQ(3, RE2::GlobalReplace(&s, "大*", "小"));
-//   ASSERT_EQ("小人小类小", s);
-// }
+  s = "人类";
+  ASSERT_EQ(3, RE2::GlobalReplace(&s, "大*", "小"));
+  ASSERT_EQ("小人小类小", s);
+}
 
 // TEST(RE2, Issue310) {
 //   // (?:|a)* matched more text than (?:|a)+ did.
