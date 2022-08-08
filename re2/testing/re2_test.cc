@@ -96,96 +96,96 @@ TEST(RE2, DecimalTests) {
 #undef ASSERT_DECIMAL
 }
 
-// TEST(RE2, Replace) {
-//   struct ReplaceTest {
-//     const char *regexp;
-//     const char *rewrite;
-//     const char *original;
-//     const char *single;
-//     const char *global;
-//     int        greplace_count;
-//   };
-//   static const ReplaceTest tests[] = {
-//     { "(qu|[b-df-hj-np-tv-z]*)([a-z]+)",
-//       "\\2\\1ay",
-//       "the quick brown fox jumps over the lazy dogs.",
-//       "ethay quick brown fox jumps over the lazy dogs.",
-//       "ethay ickquay ownbray oxfay umpsjay overay ethay azylay ogsday.",
-//       9 },
-//     { "\\w+",
-//       "\\0-NOSPAM",
-//       "abcd.efghi@google.com",
-//       "abcd-NOSPAM.efghi@google.com",
-//       "abcd-NOSPAM.efghi-NOSPAM@google-NOSPAM.com-NOSPAM",
-//       4 },
-//     { "^",
-//       "(START)",
-//       "foo",
-//       "(START)foo",
-//       "(START)foo",
-//       1 },
-//     { "^",
-//       "(START)",
-//       "",
-//       "(START)",
-//       "(START)",
-//       1 },
-//     { "$",
-//       "(END)",
-//       "",
-//       "(END)",
-//       "(END)",
-//       1 },
-//     { "b",
-//       "bb",
-//       "ababababab",
-//       "abbabababab",
-//       "abbabbabbabbabb",
-//       5 },
-//     { "b",
-//       "bb",
-//       "bbbbbb",
-//       "bbbbbbb",
-//       "bbbbbbbbbbbb",
-//       6 },
-//     { "b+",
-//       "bb",
-//       "bbbbbb",
-//       "bb",
-//       "bb",
-//       1 },
-//     { "b*",
-//       "bb",
-//       "bbbbbb",
-//       "bb",
-//       "bb",
-//       1 },
-//     { "b*",
-//       "bb",
-//       "aaaaa",
-//       "bbaaaaa",
-//       "bbabbabbabbabbabb",
-//       6 },
-//     // Check newline handling
-//     { "a.*a",
-//       "(\\0)",
-//       "aba\naba",
-//       "(aba)\naba",
-//       "(aba)\n(aba)",
-//       2 },
-//     { "", NULL, NULL, NULL, NULL, 0 }
-//   };
+TEST(RE2, Replace) {
+  struct ReplaceTest {
+    const char *regexp;
+    const char *rewrite;
+    const char *original;
+    const char *single;
+    const char *global;
+    int        greplace_count;
+  };
+  static const ReplaceTest tests[] = {
+    { "(qu|[b-df-hj-np-tv-z]*)([a-z]+)",
+      "\\2\\1ay",
+      "the quick brown fox jumps over the lazy dogs.",
+      "ethay quick brown fox jumps over the lazy dogs.",
+      "ethay ickquay ownbray oxfay umpsjay overay ethay azylay ogsday.",
+      9 },
+    { "\\w+",
+      "\\0-NOSPAM",
+      "abcd.efghi@google.com",
+      "abcd-NOSPAM.efghi@google.com",
+      "abcd-NOSPAM.efghi-NOSPAM@google-NOSPAM.com-NOSPAM",
+      4 },
+    { "^",
+      "(START)",
+      "foo",
+      "(START)foo",
+      "(START)foo",
+      1 },
+    { "^",
+      "(START)",
+      "",
+      "(START)",
+      "(START)",
+      1 },
+    { "$",
+      "(END)",
+      "",
+      "(END)",
+      "(END)",
+      1 },
+    { "b",
+      "bb",
+      "ababababab",
+      "abbabababab",
+      "abbabbabbabbabb",
+      5 },
+    { "b",
+      "bb",
+      "bbbbbb",
+      "bbbbbbb",
+      "bbbbbbbbbbbb",
+      6 },
+    { "b+",
+      "bb",
+      "bbbbbb",
+      "bb",
+      "bb",
+      1 },
+    { "b*",
+      "bb",
+      "bbbbbb",
+      "bb",
+      "bb",
+      1 },
+    { "b*",
+      "bb",
+      "aaaaa",
+      "bbaaaaa",
+      "bbabbabbabbabbabb",
+      6 },
+    // Check newline handling
+    { "a.*a",
+      "(\\0)",
+      "aba\naba",
+      "(aba)\naba",
+      "(aba)\n(aba)",
+      2 },
+    { "", NULL, NULL, NULL, NULL, 0 }
+  };
 
-//   for (const ReplaceTest* t = tests; t->original != NULL; t++) {
-//     std::string one(t->original);
-//     ASSERT_TRUE(RE2::Replace(&one, t->regexp, t->rewrite));
-//     ASSERT_EQ(one, t->single);
-//     std::string all(t->original);
-//     ASSERT_EQ(RE2::GlobalReplace(&all, t->regexp, t->rewrite), t->greplace_count)
-//       << "Got: " << all;
-//     ASSERT_EQ(all, t->global);
-//   }
-// }
+  for (const ReplaceTest* t = tests; t->original != NULL; t++) {
+    std::string one(t->original);
+    ASSERT_TRUE(RE2::Replace(&one, t->regexp, t->rewrite));
+    ASSERT_EQ(one, t->single);
+    // std::string all(t->original);
+    // ASSERT_EQ(RE2::GlobalReplace(&all, t->regexp, t->rewrite), t->greplace_count)
+    //   << "Got: " << all;
+    // ASSERT_EQ(all, t->global);
+  }
+}
 
 // static void TestCheckRewriteString(const char* regexp, const char* rewrite,
 //                               bool expect_ok) {
@@ -224,14 +224,14 @@ TEST(RE2, DecimalTests) {
 //   ASSERT_EQ(s, "'foo'");
 // }
 
-// TEST(RE2, MaxSubmatchTooLarge) {
-//   std::string s;
-//   ASSERT_FALSE(RE2::Extract("foo", "f(o+)", "\\1\\2", &s));
-//   s = "foo";
-//   ASSERT_FALSE(RE2::Replace(&s, "f(o+)", "\\1\\2"));
-//   s = "foo";
-//   ASSERT_FALSE(RE2::GlobalReplace(&s, "f(o+)", "\\1\\2"));
-// }
+TEST(RE2, MaxSubmatchTooLarge) {
+  std::string s;
+  // ASSERT_FALSE(RE2::Extract("foo", "f(o+)", "\\1\\2", &s));
+  s = "foo";
+  ASSERT_FALSE(RE2::Replace(&s, "f(o+)", "\\1\\2"));
+  // s = "foo";
+  // ASSERT_FALSE(RE2::GlobalReplace(&s, "f(o+)", "\\1\\2"));
+}
 
 TEST(RE2, Consume) {
   RE2 r("\\s*(\\w+)");    // matches a word, possibly proceeded by whitespace
@@ -1215,8 +1215,7 @@ TEST(RE2, Recursion) {
 TEST(RE2, BigCountedRepetition) {
   // Test that counted repetition works, given tons of memory.
   RE2::Options opt;
-  opt.set_max_mem(256<<20);
-
+  opt.set_max_mem(256 << 20);
   RE2 re(".{512}x", opt);
   ASSERT_TRUE(re.ok());
   std::string s;
