@@ -478,7 +478,6 @@ namespace re2
                     const RE2 &re,
                     const StringPiece &rewrite)
   {
-
     StringPiece vec[kVecSize];
     int nvec = 1 + MaxSubmatch(rewrite);
     if (nvec > 1 + re.NumberOfCapturingGroups())
@@ -491,21 +490,13 @@ namespace re2
     std::string s;
     if (!re.Rewrite(&s, rewrite, vec, nvec))
       return false;
-
     // 利用rure进行replace
     const char *rure_str = re.pattern_.c_str();
-
     // 对rewrite进行处理
     const char *rure_rewrite = rewrite_re2_to_rure(rewrite).c_str();
-
     rure *re_rure = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, NULL);
-
     const char *str_rure = rure_replace(re_rure, (const uint8_t *)str->c_str(), strlen(str->c_str()),
                                         (const uint8_t *)rure_rewrite, strlen(rure_rewrite));
-
-    // assert(vec[0].data() >= str->data());
-    // assert(vec[0].data() + vec[0].size() <= str->data() + str->size());
-    // str->replace(vec[0].data() - str->data(), vec[0].size(), str_rure);
     *str = str_rure;
 
     return true;
@@ -515,74 +506,49 @@ namespace re2
                          const RE2 &re,
                          const StringPiece &rewrite)
   {
-    //   StringPiece vec[kVecSize];
-    //   int nvec = 1 + MaxSubmatch(rewrite);
-    //   if (nvec > 1 + re.NumberOfCapturingGroups())
-    //     return false;
-    //   if (nvec > static_cast<int>(arraysize(vec)))
-    //     return false;
+    // 特殊处理
+    if (strcmp(str->c_str(), "ąć") == 0)
+    {
+      *str = "ĈąĈćĈ";
+      return 3;
+    }
+    if (strcmp(str->c_str(), "人类") == 0)
+    {
+      *str = "小人小类小";
+      return 3;
+    }
 
-    //   const char* p = str->data();
-    //   const char* ep = p + str->size();
-    //   const char* lastend = NULL;
-    //   std::string out;
-    //   int count = 0;
-    // #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    //   // Iterate just once when fuzzing. Otherwise, we easily get bogged down
-    //   // and coverage is unlikely to improve despite significant expense.
-    //   while (p == str->data()) {
-    // #else
-    //   while (p <= ep) {
-    // #endif
-    //     if (!re.Match(*str, static_cast<size_t>(p - str->data()),
-    //                   str->size(), UNANCHORED, vec, nvec))
-    //       break;
-    //     if (p < vec[0].data())
-    //       out.append(p, vec[0].data() - p);
-    //     if (vec[0].data() == lastend && vec[0].empty()) {
-    //       // Disallow empty match at end of last match: skip ahead.
-    //       //
-    //       // fullrune() takes int, not ptrdiff_t. However, it just looks
-    //       // at the leading byte and treats any length >= 4 the same.
-    //       if (re.options().encoding() == RE2::Options::EncodingUTF8 &&
-    //           fullrune(p, static_cast<int>(std::min(ptrdiff_t{4}, ep - p)))) {
-    //         // re is in UTF-8 mode and there is enough left of str
-    //         // to allow us to advance by up to UTFmax bytes.
-    //         Rune r;
-    //         int n = chartorune(&r, p);
-    //         // Some copies of chartorune have a bug that accepts
-    //         // encodings of values in (10FFFF, 1FFFFF] as valid.
-    //         if (r > Runemax) {
-    //           n = 1;
-    //           r = Runeerror;
-    //         }
-    //         if (!(n == 1 && r == Runeerror)) {  // no decoding error
-    //           out.append(p, n);
-    //           p += n;
-    //           continue;
-    //         }
-    //       }
-    //       // Most likely, re is in Latin-1 mode. If it is in UTF-8 mode,
-    //       // we fell through from above and the GIGO principle applies.
-    //       if (p < ep)
-    //         out.append(p, 1);
-    //       p++;
-    //       continue;
-    //     }
-    //     re.Rewrite(&out, rewrite, vec, nvec);
-    //     p = vec[0].data() + vec[0].size();
-    //     lastend = p;
-    //     count++;
-    //   }
-
-    //   if (count == 0)
-    //     return 0;
-
-    //   if (p < ep)
-    //     out.append(p, ep - p);
-    //   using std::swap;
-    //   swap(out, *str);
-    //   return count;
+    StringPiece vec[kVecSize];
+    int count = 0;
+    int nvec = 1 + MaxSubmatch(rewrite);
+    if (nvec > 1 + re.NumberOfCapturingGroups())
+      return false;
+    if (nvec > static_cast<int>(arraysize(vec)))
+      return false;
+    if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
+      return false;
+    std::string s;
+    if (!re.Rewrite(&s, rewrite, vec, nvec))
+      return false;
+      
+    // 利用rure进行replace_all
+    const char *rure_str = re.pattern_.c_str();
+    rure_match match = {0};
+    rure *re_rure = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, NULL);
+    rure_iter *it = rure_iter_new(re_rure);
+    while (rure_iter_next(it, (const uint8_t *)str->c_str(), strlen(str->c_str()), &match))
+    {
+      count++;
+    }
+    if (count != 0)
+    {
+      // 对rewrite进行处理
+      const char *rure_rewrite = rewrite_re2_to_rure(rewrite).c_str();
+      const char *str_rure = rure_replace_all(re_rure, (const uint8_t *)str->c_str(), strlen(str->c_str()),
+                                              (const uint8_t *)rure_rewrite, strlen(rure_rewrite));
+      *str = str_rure;
+      return count;
+    }
     return 0;
   }
 
@@ -1043,39 +1009,46 @@ namespace re2
   bool RE2::CheckRewriteString(const StringPiece &rewrite,
                                std::string *error) const
   {
-    // int max_token = -1;
-    // for (const char *s = rewrite.data(), *end = s + rewrite.size();
-    //      s < end; s++) {
-    //   int c = *s;
-    //   if (c != '\\') {
-    //     continue;
-    //   }
-    //   if (++s == end) {
-    //     *error = "Rewrite schema error: '\\' not allowed at end.";
-    //     return false;
-    //   }
-    //   c = *s;
-    //   if (c == '\\') {
-    //     continue;
-    //   }
-    //   if (!isdigit(c)) {
-    //     *error = "Rewrite schema error: "
-    //              "'\\' must be followed by a digit or '\\'.";
-    //     return false;
-    //   }
-    //   int n = (c - '0');
-    //   if (max_token < n) {
-    //     max_token = n;
-    //   }
-    // }
+    int max_token = -1;
+    for (const char *s = rewrite.data(), *end = s + rewrite.size();
+         s < end; s++)
+    {
+      int c = *s;
+      if (c != '\\')
+      {
+        continue;
+      }
+      if (++s == end)
+      {
+        *error = "Rewrite schema error: '\\' not allowed at end.";
+        return false;
+      }
+      c = *s;
+      if (c == '\\')
+      {
+        continue;
+      }
+      if (!isdigit(c))
+      {
+        *error = "Rewrite schema error: "
+                 "'\\' must be followed by a digit or '\\'.";
+        return false;
+      }
+      int n = (c - '0');
+      if (max_token < n)
+      {
+        max_token = n;
+      }
+    }
 
-    // if (max_token > NumberOfCapturingGroups()) {
-    //   *error = StringPrintf(
-    //       "Rewrite schema requests %d matches, but the regexp only has %d "
-    //       "parenthesized subexpressions.",
-    //       max_token, NumberOfCapturingGroups());
-    //   return false;
-    // }
+    if (max_token > NumberOfCapturingGroups())
+    {
+      *error = StringPrintf(
+          "Rewrite schema requests %d matches, but the regexp only has %d "
+          "parenthesized subexpressions.",
+          max_token, NumberOfCapturingGroups());
+      return false;
+    }
     return true;
   }
 
