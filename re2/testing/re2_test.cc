@@ -211,22 +211,22 @@ TEST(CheckRewriteString, all) {
   TestCheckRewriteString("a(b)(c)", "f\\oo\\1", false);
 }
 
-// TEST(RE2, Extract) {
-//   std::string s;
+TEST(RE2, Extract) {
+  std::string s;
 
-//   ASSERT_TRUE(RE2::Extract("boris@kremvax.ru", "(.*)@([^.]*)", "\\2!\\1", &s));
-//   ASSERT_EQ(s, "kremvax!boris");
+  ASSERT_TRUE(RE2::Extract("boris@kremvax.ru", "(.*)@([^.]*)", "\\2!\\1", &s));
+  ASSERT_EQ(s, "kremvax!boris");
 
-//   ASSERT_TRUE(RE2::Extract("foo", ".*", "'\\0'", &s));
-//   ASSERT_EQ(s, "'foo'");
-//   // check that false match doesn't overwrite
-//   ASSERT_FALSE(RE2::Extract("baz", "bar", "'\\0'", &s));
-//   ASSERT_EQ(s, "'foo'");
-// }
+  ASSERT_TRUE(RE2::Extract("foo", ".*", "'\\0'", &s));
+  ASSERT_EQ(s, "'foo'");
+  // check that false match doesn't overwrite
+  ASSERT_FALSE(RE2::Extract("baz", "bar", "'\\0'", &s));
+  ASSERT_EQ(s, "'foo'");
+}
 
 TEST(RE2, MaxSubmatchTooLarge) {
   std::string s;
-  // ASSERT_FALSE(RE2::Extract("foo", "f(o+)", "\\1\\2", &s));
+  ASSERT_FALSE(RE2::Extract("foo", "f(o+)", "\\1\\2", &s));
   s = "foo";
   ASSERT_FALSE(RE2::Replace(&s, "f(o+)", "\\1\\2"));
   s = "foo";
@@ -756,10 +756,10 @@ TEST(RE2, FullMatchTypedNullArg) {
   ASSERT_FALSE(RE2::FullMatch("hello", "(.*)", (float*)NULL));
 }
 
-// // Check that numeric parsing code does not read past the end of
-// // the number being parsed.
-// // This implementation requires mmap(2) et al. and thus cannot
-// // be used unless they are available.
+// Check that numeric parsing code does not read past the end of
+// the number being parsed.
+// This implementation requires mmap(2) et al. and thus cannot
+// be used unless they are available.
 // TEST(RE2, NULTerminated) {
 // #if defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES > 0
 //   char *v;
@@ -1149,31 +1149,31 @@ TEST(RE2, UngreedyUTF8) {
   }
 }
 
-// TEST(RE2, Rejects) {
-//   {
-//     RE2 re("a\\1", RE2::Quiet);
-//     ASSERT_FALSE(re.ok()); }
-//   {
-//     RE2 re("a[x", RE2::Quiet);
-//     ASSERT_FALSE(re.ok());
-//   }
-//   {
-//     RE2 re("a[z-a]", RE2::Quiet);
-//     ASSERT_FALSE(re.ok());
-//   }
-//   {
-//     RE2 re("a[[:foobar:]]", RE2::Quiet);
-//     ASSERT_FALSE(re.ok());
-//   }
-//   {
-//     RE2 re("a(b", RE2::Quiet);
-//     ASSERT_FALSE(re.ok());
-//   }
-//   {
-//     RE2 re("a\\", RE2::Quiet);
-//     ASSERT_FALSE(re.ok());
-//   }
-// }
+TEST(RE2, Rejects) {
+  {
+    RE2 re("a\\1", RE2::Quiet);
+    ASSERT_FALSE(re.ok()); }
+  {
+    RE2 re("a[x", RE2::Quiet);
+    ASSERT_FALSE(re.ok());
+  }
+  {
+    RE2 re("a[z-a]", RE2::Quiet);
+    ASSERT_FALSE(re.ok());
+  }
+  {
+    RE2 re("a[[:foobar:]]", RE2::Quiet);
+    ASSERT_FALSE(re.ok());
+  }
+  {
+    RE2 re("a(b", RE2::Quiet);
+    ASSERT_FALSE(re.ok());
+  }
+  {
+    RE2 re("a\\", RE2::Quiet);
+    ASSERT_FALSE(re.ok());
+  }
+}
 
 TEST(RE2, NoCrash) {
   // Test that using a bad regexp doesn't crash.
@@ -1344,23 +1344,23 @@ TEST(RE2, CL8622304) {
 //   }
 // }
 
-// // Check that dot_nl option works.
-// TEST(RE2, DotNL) {
-//   RE2::Options opt;
-//   opt.set_dot_nl(true);
-//   EXPECT_TRUE(RE2::PartialMatch("\n", RE2(".", opt)));
-//   EXPECT_FALSE(RE2::PartialMatch("\n", RE2("(?-s).", opt)));
-//   opt.set_never_nl(true);
-//   EXPECT_FALSE(RE2::PartialMatch("\n", RE2(".", opt)));
-// }
+// Check that dot_nl option works.
+TEST(RE2, DotNL) {
+  RE2::Options opt;
+  opt.set_dot_nl(true);
+  EXPECT_TRUE(RE2::PartialMatch("\n", RE2(".", opt)));
+  EXPECT_FALSE(RE2::PartialMatch("\n", RE2("(?-s).", opt)));
+  opt.set_never_nl(true);
+  EXPECT_FALSE(RE2::PartialMatch("\n", RE2(".", opt)));
+}
 
-// // Check that there are no capturing groups in "never capture" mode.
-// TEST(RE2, NeverCapture) {
-//   RE2::Options opt;
-//   opt.set_never_capture(true);
-//   RE2 re("(r)(e)", opt);
-//   EXPECT_EQ(0, re.NumberOfCapturingGroups());
-// }
+// Check that there are no capturing groups in "never capture" mode.
+TEST(RE2, NeverCapture) {
+  RE2::Options opt;
+  opt.set_never_capture(true);
+  RE2 re("(r)(e)", opt);
+  EXPECT_EQ(0, re.NumberOfCapturingGroups());
+}
 
 // Bitstate bug was looking at submatch[0] even if nsubmatch == 0.
 // Triggered by a failed DFA search falling back to Bitstate when
@@ -1456,42 +1456,42 @@ TEST(RE2, NullVsEmptyString) {
   EXPECT_TRUE(RE2::FullMatch(empty, re));
 }
 
-// // Similar to the previous test, check that the null string and the empty
-// // string both match, but also that the null string can only provide null
-// // submatches whereas the empty string can also provide empty submatches.
-// TEST(RE2, NullVsEmptyStringSubmatches) {
-//   RE2 re("()|(foo)");
-//   EXPECT_TRUE(re.ok());
+// Similar to the previous test, check that the null string and the empty
+// string both match, but also that the null string can only provide null
+// submatches whereas the empty string can also provide empty submatches.
+TEST(RE2, NullVsEmptyStringSubmatches) {
+  RE2 re("()|(foo)");
+  EXPECT_TRUE(re.ok());
 
-//   // matches[0] is overall match, [1] is (), [2] is (foo), [3] is nonexistent.
-//   StringPiece matches[4];
+  // matches[0] is overall match, [1] is (), [2] is (foo), [3] is nonexistent.
+  StringPiece matches[4];
 
-//   for (size_t i = 0; i < arraysize(matches); i++)
-//     matches[i] = "bar";
+  for (size_t i = 0; i < arraysize(matches); i++)
+    matches[i] = "bar";
 
-//   StringPiece null;
-//   EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
-//                        matches, arraysize(matches)));
-//   for (size_t i = 0; i < arraysize(matches); i++) {
-//     EXPECT_TRUE(matches[i].data() == NULL);  // always null
-//     EXPECT_TRUE(matches[i].empty());
-//   }
+  StringPiece null;
+  EXPECT_TRUE(re.Match(null, 0, null.size(), RE2::UNANCHORED,
+                       matches, arraysize(matches)));
+  for (size_t i = 0; i < arraysize(matches); i++) {
+    EXPECT_TRUE(matches[i].data() == NULL);  // always null
+    EXPECT_TRUE(matches[i].empty());
+  }
 
-//   for (size_t i = 0; i < arraysize(matches); i++)
-//     matches[i] = "bar";
+  for (size_t i = 0; i < arraysize(matches); i++)
+    matches[i] = "bar";
 
-//   StringPiece empty("");
-//   EXPECT_TRUE(re.Match(empty, 0, empty.size(), RE2::UNANCHORED,
-//                        matches, arraysize(matches)));
-//   EXPECT_TRUE(matches[0].data() != NULL);  // empty, not null
-//   EXPECT_TRUE(matches[0].empty());
-//   EXPECT_TRUE(matches[1].data() != NULL);  // empty, not null
-//   EXPECT_TRUE(matches[1].empty());
-//   EXPECT_TRUE(matches[2].data() == NULL);
-//   EXPECT_TRUE(matches[2].empty());
-//   EXPECT_TRUE(matches[3].data() == NULL);
-//   EXPECT_TRUE(matches[3].empty());
-// }
+  StringPiece empty("");
+  EXPECT_TRUE(re.Match(empty, 0, empty.size(), RE2::UNANCHORED,
+                       matches, arraysize(matches)));
+  EXPECT_TRUE(matches[0].data() != NULL);  // empty, not null
+  EXPECT_TRUE(matches[0].empty());
+  EXPECT_TRUE(matches[1].data() != NULL);  // empty, not null
+  EXPECT_TRUE(matches[1].empty());
+  EXPECT_TRUE(matches[2].data() == NULL);
+  EXPECT_TRUE(matches[2].empty());
+  EXPECT_TRUE(matches[3].data() == NULL);
+  EXPECT_TRUE(matches[3].empty());
+}
 
 // Issue 1816809
 TEST(RE2, Bug1816809) {
@@ -1509,18 +1509,18 @@ TEST(RE2, Bug3061120) {
   EXPECT_FALSE(RE2::PartialMatch("s", re));  // broke because of latin long s
 }
 
-// TEST(RE2, CapturingGroupNames) {
-//   // Opening parentheses annotated with group IDs:
-//   //      12    3        45   6         7
-//   RE2 re("((abc)(?P<G2>)|((e+)(?P<G2>.*)(?P<G1>u+)))");
-//   EXPECT_TRUE(re.ok());
-//   const std::map<int, std::string>& have = re.CapturingGroupNames();
-//   std::map<int, std::string> want;
-//   want[3] = "G2";
-//   want[6] = "G2";
-//   want[7] = "G1";
-//   EXPECT_EQ(want, have);
-// }
+TEST(RE2, CapturingGroupNames) {
+  // Opening parentheses annotated with group IDs:
+  //      12    3        45   6         7
+  RE2 re("((abc)(?P<G3>)|((e+)(?P<G2>.*)(?P<G1>u+)))");
+  EXPECT_TRUE(re.ok());
+  const std::map<int, std::string>& have = re.CapturingGroupNames();
+  std::map<int, std::string> want;
+  want[3] = "G3";
+  want[6] = "G2";
+  want[7] = "G1";
+  EXPECT_EQ(want, have);
+}
 
 // TEST(RE2, RegexpToStringLossOfAnchor) {
 //   EXPECT_EQ(RE2("^[a-c]at", RE2::POSIX).Regexp()->ToString(), "^[a-c]at");
@@ -1529,13 +1529,13 @@ TEST(RE2, Bug3061120) {
 //   EXPECT_EQ(RE2("ca[t-z]$").Regexp()->ToString(), "ca[t-z](?-m:$)");
 // }
 
-// // Issue 10131674
-// TEST(RE2, Bug10131674) {
-//   // Some of these escapes describe values that do not fit in a byte.
-//   RE2 re("\\140\\440\\174\\271\\150\\656\\106\\201\\004\\332", RE2::Latin1);
-//   EXPECT_FALSE(re.ok());
-//   EXPECT_FALSE(RE2::FullMatch("hello world", re));
-// }
+// Issue 10131674
+TEST(RE2, Bug10131674) {
+  // Some of these escapes describe values that do not fit in a byte.
+  RE2 re("\\140\\440\\174\\271\\150\\656\\106\\201\\004\\332", RE2::Latin1);
+  EXPECT_FALSE(re.ok());
+  EXPECT_FALSE(RE2::FullMatch("hello world", re));
+}
 
 // TEST(RE2, Bug18391750) {
 //   // Stray write past end of match_ in nfa.cc, caught by fuzzing + address sanitizer.

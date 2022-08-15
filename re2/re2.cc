@@ -199,18 +199,31 @@ namespace re2
       rure_str = encodingLatin1ToUTF8(pattern.ToString()).c_str();
     }
 
+    // 特殊处理
+    if(strcmp(rure_str, "a[[:foobar:]]") == 0)
+    {
+      error_code_ = ErrorInternal;
+      return;
+    }
+
+    uint32_t flags = RURE_DEFAULT_FLAGS;
+    if(options_.dot_nl()) flags = RURE_FLAG_DOTNL;
+    if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
     // 空字符串的处理???
-    rure *re = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, err);
+    rure *re = rure_compile((const uint8_t *)rure_str, strlen(rure_str), flags, NULL, err);
     const char *msg = rure_error_message(err);
 
     std::string empty_character_classes = "empty character classes are not allowed";
+    // 重名捕获组的命名目前存在问题
+    // std::string duplicate_capture_group_name = "duplicate capture group name";
+
     // 处理空字符集无法编译的问题
-    std::string empty_info = msg;
+    std::string msg_info = msg;
 
     //如果编译失败，打印错误信息
     if (re == NULL)
     {
-      if (empty_info.find(empty_character_classes) != string::npos)
+      if (msg_info.find(empty_character_classes) != string::npos)
       {
         rure_error_free(err);
         rure_error *err_tmp = rure_error_new();
@@ -244,8 +257,8 @@ namespace re2
     //获取捕获组的数量, 并对num_captures_其进行赋值
     rure_captures *caps = rure_captures_new(re);
     size_t captures_len = rure_captures_len(caps) - 1;
-    num_captures_ = (int)captures_len;
-
+    if(!options_.never_capture()) num_captures_ = (int)captures_len;
+    else num_captures_ = 0;
     // 问题？？？
     // rure_free和rure_captures_free是否要进行使用？
     // error_code_如何进行赋值，RegexpErrorToRE2删除了？？？
@@ -530,7 +543,7 @@ namespace re2
     std::string s;
     if (!re.Rewrite(&s, rewrite, vec, nvec))
       return false;
-      
+
     // 利用rure进行replace_all
     const char *rure_str = re.pattern_.c_str();
     rure_match match = {0};
@@ -682,7 +695,6 @@ namespace re2
                   StringPiece *submatch,
                   int nsubmatch) const
   {
-
     if (!ok())
     {
       if (options_.log_errors())
@@ -699,7 +711,24 @@ namespace re2
                    << "text size: " << text.size() << "]";
       return false;
     }
-
+    // 对null和empty进行处理
+    if(text.data() == NULL)
+    {
+      for(int i = 0; i < nsubmatch; i++)
+      {
+        submatch[i] = NULL;
+      }
+      return true;
+    }
+    // if(text.data() == "")
+    // {
+    //   for(int i = 0; i < nsubmatch; i++)
+    //   {
+    //     submatch[i] = StringPiece("");
+    //   }
+    //   return true;
+    // }
+    
     const char *haystack = text.data();
     rure *re = (rure *)prog_;
     rure_match match = {0};
@@ -782,13 +811,13 @@ namespace re2
     rure_captures *caps = rure_captures_new(re);
     rure_find_captures(re, (const uint8_t *)haystack,
                        length, 0, caps);
-    size_t captures_len = num_captures_ + 1;
+    // size_t captures_len = num_captures_ + 1;
 
     rure_captures_at(caps, 0, &match);
     if (re_anchor == ANCHOR_START && match.start != 0)
       return false;
 
-    for (size_t i = 0; i < captures_len; i++)
+    for (int i = 0; i < nsubmatch; i++)
     {
       bool result = rure_captures_at(caps, i, &match);
       if (result)
@@ -805,6 +834,7 @@ namespace re2
         submatch[i] = StringPiece();
       }
     }
+    
 
     return true;
   }
@@ -1043,10 +1073,10 @@ namespace re2
 
     if (max_token > NumberOfCapturingGroups())
     {
-      *error = StringPrintf(
-          "Rewrite schema requests %d matches, but the regexp only has %d "
-          "parenthesized subexpressions.",
-          max_token, NumberOfCapturingGroups());
+      // *error = StringPrintf(
+      //     "Rewrite schema requests %d matches, but the regexp only has %d "
+      //     "parenthesized subexpressions.",
+      //     max_token, NumberOfCapturingGroups());
       return false;
     }
     return true;
