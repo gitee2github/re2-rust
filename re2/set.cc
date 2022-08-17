@@ -4,175 +4,250 @@
 
 #include "re2/set.h"
 
+#include <iostream>
 #include <stddef.h>
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <map>
 
 #include "util/util.h"
 #include "util/logging.h"
-// #include "re2/pod_array.h"
-// #include "re2/prog.h"
 #include "re2/re2.h"
-// #include "re2/regexp.h"
 #include "regex_internal.h"
 #include "re2/stringpiece.h"
-
-namespace re2 {
-
-RE2::Set::Set(const RE2::Options& options, RE2::Anchor anchor)
-    : options_(options),
-      anchor_(anchor),
-      compiled_(false),
-      size_(0) {
-  options_.set_never_capture(true);  // might unblock some optimisations
+extern "C"
+{
+  #include <rure.h>
 }
+using namespace std;
 
-RE2::Set::~Set() {
-  for (size_t i = 0; i < elem_.size(); i++)
-    ;// elem_[i].second->Decref();
-}
+namespace re2
+{
+  static int regex_counter = 0;
+  static std::map<int, const char *> regex_map;
 
-RE2::Set::Set(Set&& other)
-    : options_(other.options_),
-      anchor_(other.anchor_),
-      elem_(std::move(other.elem_)),
-      compiled_(other.compiled_),
-      size_(other.size_),
-      prog_(std::move(other.prog_)) {
-  other.elem_.clear();
-  other.elem_.shrink_to_fit();
-  other.compiled_ = false;
-  other.size_ = 0;
-  other.prog_.reset();
-}
+  RE2::Set::Set(const RE2::Options &options, RE2::Anchor anchor)
+      : options_(options),
+        anchor_(anchor),
+        compiled_(false),
+        size_(0)
+  {
+    options_.set_never_capture(true); // might unblock some optimisations
+  }
 
-RE2::Set& RE2::Set::operator=(Set&& other) {
-  this->~Set();
-  (void) new (this) Set(std::move(other));
-  return *this;
-}
+  RE2::Set::~Set()
+  {
+    // std::cout << "析构函数调用\n";
+    regex_counter = 0;
+    if(regex_map.size() != 0) regex_map.clear();
+    
+  }
 
-int RE2::Set::Add(const StringPiece& pattern, std::string* error) {
-  // if (compiled_) {
-  //   LOG(DFATAL) << "RE2::Set::Add() called after compiling";
-  //   return -1;
-  // }
+  RE2::Set::Set(Set &&other)
+      : options_(other.options_),
+        anchor_(other.anchor_),
+        compiled_(other.compiled_),
+        prog_(std::move(other.prog_))
+  {
+    other.compiled_ = false;
+    other.prog_.reset();
+    regex_map.clear();
+    regex_counter = 0;
 
-  // Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
-  //   options_.ParseFlags());
-  // RegexpStatus status;
-  // re2::Regexp* re = Regexp::Parse(pattern, pf, &status);
-  // if (re == NULL) {
-  //   if (error != NULL)
-  //     *error = status.Text();
-  //   if (options_.log_errors())
-  //     LOG(ERROR) << "Error parsing '" << pattern << "': " << status.Text();
-  //   return -1;
-  // }
+  }
 
-  // // Concatenate with match index and push on vector.
-  // int n = static_cast<int>(elem_.size());
-  // re2::Regexp* m = re2::Regexp::HaveMatch(n, pf);
-  // if (re->op() == kRegexpConcat) {
-  //   int nsub = re->nsub();
-  //   PODArray<re2::Regexp*> sub(nsub + 1);
-  //   for (int i = 0; i < nsub; i++)
-  //     sub[i] = re->sub()[i]->Incref();
-  //   sub[nsub] = m;
-  //   re->Decref();
-  //   re = re2::Regexp::Concat(sub.data(), nsub + 1, pf);
-  // } else {
-  //   re2::Regexp* sub[2];
-  //   sub[0] = re;
-  //   sub[1] = m;
-  //   re = re2::Regexp::Concat(sub, 2, pf);
-  // }
-  // elem_.emplace_back(std::string(pattern), re);
-  // return n;
-  return 0;
-}
+  RE2::Set &RE2::Set::operator=(Set &&other)
+  {
+    this->~Set();
+    (void)new (this) Set(std::move(other));
+    return *this;
+  }
 
-bool RE2::Set::Compile() {
-  // if (compiled_) {
-  //   LOG(DFATAL) << "RE2::Set::Compile() called more than once";
-  //   return false;
-  // }
-  // compiled_ = true;
-  // size_ = static_cast<int>(elem_.size());
+  
+  int RE2::Set::Add(const StringPiece &pattern, std::string *error)
+  {
+    int place_num = regex_counter;
+    const char *rure_str = pattern.data();
+    rure_error *err = rure_error_new();
+    rure *re = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, err);
+    
+    if (re == NULL)
+    {
+      const char *msg = rure_error_message(err);
+      if(error)
+      {
+        error->assign(msg);
+        LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
+      }
+      // rure_free(re);
+      // rure_error_free(err);
+      return -1;
+    }
+    else
+    {
+      regex_map.insert(pair<int, const char *>(regex_counter++, rure_str));
+      // rure_free(re);
+      return place_num;
+    }
+  }
 
-  // // Sort the elements by their patterns. This is good enough for now
-  // // until we have a Regexp comparison function. (Maybe someday...)
-  // std::sort(elem_.begin(), elem_.end(),
-  //           [](const Elem& a, const Elem& b) -> bool {
-  //             return a.first < b.first;
-  //           });
+  bool RE2::Set::Compile()
+  {
+    if (compiled_) {
+      LOG(DFATAL) << "RE2::Set::Compile() called more than once";
+      return false;
+    }
+    compiled_ = true;
+    const size_t PAT_COUNT = regex_map.size();
+    const char *patterns[PAT_COUNT];
+    size_t patterns_lengths[PAT_COUNT];
+    int i = 0;
+    for (auto it : regex_map) {
+      patterns[i] = it.second;
+      patterns_lengths[i++] = strlen(it.second);
+    }
 
-  // PODArray<re2::Regexp*> sub(size_);
-  // for (int i = 0; i < size_; i++)
-  //   sub[i] = elem_[i].second;
-  // elem_.clear();
-  // elem_.shrink_to_fit();
+    rure_error *err = rure_error_new();
+    rure_set *re = rure_compile_set((const uint8_t **) patterns, 
+                                      patterns_lengths, PAT_COUNT, 0, NULL, err);
+    
+    if(re == NULL){
+      const char *msg = rure_error_message(err);
+      std::cout << msg << std::endl;
+      compiled_ = false;
+      return false;
+    } 
+    prog_.reset((Prog *)re);
+    // rure_set_free(re);
+    compiled_ = true;
+    return true;
+  }
 
-  // Regexp::ParseFlags pf = static_cast<Regexp::ParseFlags>(
-  //   options_.ParseFlags());
-  // re2::Regexp* re = re2::Regexp::Alternate(sub.data(), size_, pf);
+  bool RE2::Set::Match(const StringPiece &text, std::vector<int> *v) const
+  {
+    return Match(text, v, NULL);
+  }
 
-  // prog_.reset(Prog::CompileSet(re, anchor_, options_.max_mem()));
-  // re->Decref();
-  return prog_ != nullptr;
-}
+  bool RE2::Set::Match(const StringPiece &text, std::vector<int> *v,
+                       ErrorInfo *error_info) const
+  {
+    // RE2::UNANCHORED     可以直接处理
+    // RE2::ANCHOR_BOTH   思路：可以使用上种处理方式进行处理，之后判断是否是完全匹配！
 
-bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v) const {
-  return Match(text, v, NULL);
-}
+    // 处理完成上面之后，再对vector进行赋值
+    // 1. v == NULL
+    // 2. v != NULL
 
-bool RE2::Set::Match(const StringPiece& text, std::vector<int>* v,
-                     ErrorInfo* error_info) const {
-//   if (!compiled_) {
-//     LOG(DFATAL) << "RE2::Set::Match() called before compiling";
-//     if (error_info != NULL)
-//       error_info->kind = kNotCompiled;
-//     return false;
-//   }
-// #ifdef RE2_HAVE_THREAD_LOCAL
-//   hooks::context = NULL;
-// #endif
-//   bool dfa_failed = false;
-//   std::unique_ptr<SparseSet> matches;
-//   if (v != NULL) {
-//     matches.reset(new SparseSet(size_));
-//     v->clear();
-//   }
-//   bool ret = prog_->SearchDFA(text, text, Prog::kAnchored, Prog::kManyMatch,
-//                               NULL, &dfa_failed, matches.get());
-//   if (dfa_failed) {
-//     if (options_.log_errors())
-//       LOG(ERROR) << "DFA out of memory: "
-//                  << "program size " << prog_->size() << ", "
-//                  << "list count " << prog_->list_count() << ", "
-//                  << "bytemap range " << prog_->bytemap_range();
-//     if (error_info != NULL)
-//       error_info->kind = kOutOfMemory;
-//     return false;
-//   }
-//   if (ret == false) {
-//     if (error_info != NULL)
-//       error_info->kind = kNoError;
-//     return false;
-//   }
-//   if (v != NULL) {
-//     if (matches->empty()) {
-//       LOG(DFATAL) << "RE2::Set::Match() matched, but no matches returned?!";
-//       if (error_info != NULL)
-//         error_info->kind = kInconsistent;
-//       return false;
-//     }
-//     v->assign(matches->begin(), matches->end());
-//   }
-//   if (error_info != NULL)
-//     error_info->kind = kNoError;
-  return true;
-}
+    if (!compiled_) {
+      LOG(DFATAL) << "RE2::Set::Match() called before compiling";
+      if (error_info != NULL)
+        error_info->kind = kNotCompiled;
+      return false;
+    }
+    
+    const char *pat_str = text.data();
+    size_t length = strlen(pat_str);
+    switch (anchor_)
+    {
+      case RE2::UNANCHORED:
+      {
+        if(v == NULL)
+        {
+          
+          bool result = rure_set_is_match((rure_set *)prog_.get(), 
+                                            (const uint8_t *)pat_str, length, 0);
+          return result;
+        }
+        else
+        { 
+          v->clear();
+          bool matches[regex_map.size()];
+          bool result = rure_set_matches((rure_set *)prog_.get(), 
+                                            (const uint8_t *)pat_str, length, 0, matches);
+          if(!result) return false;
+          for(size_t i = 0; i < regex_map.size(); i++)
+          {
+            if(matches[i]) v->push_back(i);
+          }
+          return true;
+        }
+        break;
+      }
 
-}  // namespace re2
+      case RE2::ANCHOR_BOTH:
+      {
+        if(v == NULL)
+        {
+          bool matches[regex_map.size()];
+          bool result = rure_set_matches((rure_set *)prog_.get(), 
+                                            (const uint8_t *)pat_str, length, 0, matches);
+          if(!result) return false;
+          for(size_t i = 0; i < regex_map.size(); i++)
+          {
+            if(matches[i])
+            {
+              const char *pattern = regex_map[i];
+              rure *re = rure_compile_must(pattern);
+              rure_match match = {0};
+              rure_find(re, (const uint8_t *)pat_str, strlen(pat_str),
+                             0, &match);
+              if(match.start == 0 && match.end == strlen(pat_str)) return true;
+            }
+            
+          }
+          return false;
+        }
+        else
+        { 
+          v->clear();
+          bool matches[regex_map.size()];
+          bool result = rure_set_matches((rure_set *)prog_.get(), 
+                                            (const uint8_t *)pat_str, length, 0, matches);
+          if(!result) return false;
+          for(size_t i = 0; i < regex_map.size(); i++)
+          {
+            if(matches[i])
+            {
+              const char *pattern = regex_map[i];
+              rure *re = rure_compile_must(pattern);
+              rure_match match = {0};
+              rure_find(re, (const uint8_t *)pat_str, strlen(pat_str),
+                             0, &match);
+              if(match.start == 0 && match.end == strlen(pat_str)) v->push_back(i);
+            }  
+          }
+          if(v->size()) return true;
+          else return false;
+        }
+        break;
+      }
+      case RE2::ANCHOR_START:
+      {
+        if(v == NULL)
+        {
+          
+          bool result = rure_set_is_match((rure_set *)prog_.get(), 
+                                            (const uint8_t *)pat_str, length, 0);
+          return result;
+        }
+        else
+        { 
+          v->clear();
+          bool matches[regex_map.size()];
+          bool result = rure_set_matches((rure_set *)prog_.get(), 
+                                            (const uint8_t *)pat_str, length, 0, matches);
+          if(!result) return false;
+          for(size_t i = 0; i < regex_map.size(); i++)
+          {
+            if(matches[i]) v->push_back(i);
+          }
+          return true;
+        }
+        break;
+      }
+    }
+    return true;
+  }
+
+} // namespace re2
