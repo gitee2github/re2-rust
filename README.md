@@ -22,10 +22,16 @@ $ cargo build --verbose
 ```
 对于编译完成的`librure.a`和`librure.so`文件需要进行手工安装
 ``` Shell
+# note: go to re2-rust root directory first.
+$ cd ../../
+
 # put the librure.a and librure.so into the /usr/lib
 
 $ sudo cp regex/target/debug/librure.a /usr/lib
 $ sudo cp regex/target/debug/librure.so /usr/lib
+
+# make librure.so visible
+$ sudo ldconfig
 ```
 手工安装rure.h文件
 ``` Shell
