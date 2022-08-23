@@ -12,15 +12,19 @@
 #include <unordered_map>
 #include <utility>
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 #include "util/benchmark.h"
 #include "util/test.h"
 #include "util/flags.h"
 #include "util/logging.h"
 #include "util/malloc_counter.h"
 #include "util/strutil.h"
-#include "re2/prog.h"
+// #include "re2/prog.h"
 #include "re2/re2.h"
-#include "re2/regexp.h"
+// #include "re2/regexp.h"
 #include "util/mutex.h"
 #include "util/pcre.h"
 
@@ -32,7 +36,7 @@ void MemoryUsage();
 typedef testing::MallocCounter MallocCounter;
 
 namespace re2 {
-
+/*
 void Test() {
   Regexp* re = Regexp::Parse("(\\d+)-(\\d+)-(\\d+)", Regexp::LikePerl, NULL);
   CHECK(re);
@@ -118,7 +122,7 @@ void MemoryUsage() {
   fprintf(stderr, "sizeof: PCRE=%zd RE2=%zd Prog=%zd Inst=%zd\n",
           sizeof(PCRE), sizeof(RE2), sizeof(Prog), sizeof(Prog::Inst));
 }
-
+*/
 int NumCPUs() {
   return static_cast<int>(std::thread::hardware_concurrency());
 }
@@ -126,7 +130,7 @@ int NumCPUs() {
 // Regular expression implementation wrappers.
 // Defined at bottom of file, but they are repetitive
 // and not interesting.
-
+/*
 typedef void SearchImpl(benchmark::State& state, const char* regexp,
                         const StringPiece& text, Prog::Anchor anchor,
                         bool expect_match);
@@ -149,7 +153,7 @@ ParseImpl Parse3NFA, Parse3OnePass, Parse3BitState, Parse3PCRE, Parse3RE2,
 ParseImpl SearchParse2CachedPCRE, SearchParse2CachedRE2;
 
 ParseImpl SearchParse1CachedPCRE, SearchParse1CachedRE2;
-
+*/
 // Benchmark: failed search for regexp in random text.
 
 // Generate random text that won't contain the search string,
@@ -175,12 +179,13 @@ std::string RandomText(int64_t nbytes) {
 
 // Makes text of size nbytes, then calls run to search
 // the text for regexp iters times.
+/*
 void Search(benchmark::State& state, const char* regexp, SearchImpl* search) {
   std::string s = RandomText(state.range(0));
   search(state, regexp, s, Prog::kUnanchored, false);
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
-
+*/
 
 // Benchmark: FindAndConsume
 
@@ -197,7 +202,7 @@ void FindAndConsume(benchmark::State& state) {
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-BENCHMARK_RANGE(FindAndConsume, 8, 16<<20)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(FindAndConsume, 8, 16)->ThreadRange(1, NumCPUs());
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -207,7 +212,7 @@ BENCHMARK_RANGE(FindAndConsume, 8, 16<<20)->ThreadRange(1, NumCPUs());
 // Runs implementation to search for regexp in text, iters times.
 // Expect_match says whether the regexp should be found.
 // Anchored says whether to run an anchored search.
-
+/*
 void SearchPCRE(benchmark::State& state, const char* regexp,
                 const StringPiece& text, Prog::Anchor anchor,
                 bool expect_match) {
@@ -283,6 +288,7 @@ void SearchCachedRE2(benchmark::State& state, const char* regexp,
       CHECK_EQ(RE2::PartialMatch(text, re), expect_match);
   }
 }
+
 
 void Parse3PCRE(benchmark::State& state, const char* regexp,
                 const StringPiece& text) {
@@ -396,6 +402,7 @@ void SearchParse1CachedRE2(benchmark::State& state, const char* regexp,
     CHECK(RE2::PartialMatch(text, re, &sp1));
   }
 }
+*/
 
 void EmptyPartialMatchPCRE(benchmark::State& state) {
   PCRE re("");
@@ -410,10 +417,24 @@ void EmptyPartialMatchRE2(benchmark::State& state) {
     RE2::PartialMatch("", re);
   }
 }
+
+void EmptyPartialMatchRE2_LiuZhitao(benchmark::State& state) {
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string s = buffer.str();
+  RE2 re("");
+  for (auto _ : state) {
+    RE2::PartialMatch(s.substr(0, state.range(0)), re);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
 #ifdef USEPCRE
 BENCHMARK(EmptyPartialMatchPCRE)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK(EmptyPartialMatchRE2)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(EmptyPartialMatchRE2_LiuZhitao, 8, 2<<9);
 
 void SimplePartialMatchPCRE(benchmark::State& state) {
   PCRE re("abcdefg");
@@ -519,10 +540,23 @@ void ASCIIMatchRE2(benchmark::State& state) {
   }
 }
 
+void ASCIIMatchRE2_LiuZhitao(benchmark::State& state) {
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string s = buffer.str();
+  RE2 re("(?-s)^([ -~]+)");
+  for (auto _ : state) {
+    RE2::PartialMatch(s.substr(0, state.range(0)), re);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
 #ifdef USEPCRE
 BENCHMARK(ASCIIMatchPCRE)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK(ASCIIMatchRE2)->ThreadRange(1, NumCPUs());
+BENCHMARK_RANGE(ASCIIMatchRE2_LiuZhitao, 8, 2<<9);
 
 void FullMatchPCRE(benchmark::State& state, const char *regexp) {
   std::string s = RandomText(state.range(0));
@@ -543,6 +577,51 @@ void FullMatchRE2(benchmark::State& state, const char *regexp) {
   }
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
+
+void FullMatchPCRE_LiuZhitao(benchmark::State& state, const char *regexp) {
+
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string s = buffer.str();
+  PCRE re(regexp);
+  for (auto _ : state) {
+    CHECK(PCRE::FullMatch(s.substr(0, state.range(0)), re));
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void FullMatchRE2_LiuZhitao(benchmark::State& state, const char *regexp) {
+
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string s = buffer.str();
+  RE2 re(regexp, RE2::Latin1);
+  for (auto _ : state) {
+    CHECK(RE2::FullMatch(s.substr(0, state.range(0)), re));
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+
+void FullMatch_DotStar_CachedPCRE_LiuZhitao(benchmark::State& state) { FullMatchPCRE_LiuZhitao(state, "(?s).*"); }
+void FullMatch_DotStar_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s).*"); }
+
+void FullMatch_DotStarDollar_CachedPCRE_LiuZhitao(benchmark::State& state) { FullMatchPCRE_LiuZhitao(state, "(?s).*$"); }
+void FullMatch_DotStarDollar_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s).*$"); }
+
+void FullMatch_DotStarCapture_CachedPCRE_LiuZhitao(benchmark::State& state) { FullMatchPCRE_LiuZhitao(state, "(?s)((.*)()()($))"); }
+void FullMatch_DotStarCapture_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s)((.*)()()($))"); }
+
+// BENCHMARK_RANGE(FullMatch_DotStar_CachedPCRE_LiuZhitao, 2<<9, 2<<9);
+BENCHMARK_RANGE(FullMatch_DotStar_CachedRE2_LiuZhitao, 8, 2<<9);
+
+// BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedPCRE_LiuZhitao, 2<<9, 2<<9);
+BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedRE2_LiuZhitao, 8, 2<<9);
+
+// BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedPCRE_LiuZhitao, 2<<9, 2<<9);
+BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2_LiuZhitao, 8, 2<<9);
 
 void FullMatch_DotStar_CachedPCRE(benchmark::State& state) { FullMatchPCRE(state, "(?s).*"); }
 void FullMatch_DotStar_CachedRE2(benchmark::State& state)  { FullMatchRE2(state, "(?s).*"); }
@@ -566,6 +645,7 @@ BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedRE2,  8, 2<<20);
 #ifdef USEPCRE
 BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedPCRE, 8, 2<<20);
 #endif
+
 BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2,  8, 2<<20);
 
 }  // namespace re2
