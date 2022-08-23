@@ -160,7 +160,7 @@ namespace re2
 
   void RE2::Init(const StringPiece &pattern, const Options &options)
   {
-    const char *rure_str; // 正则表达式UTF-8编码形式
+    std::string rure_str; // 正则表达式UTF-8编码形式
     static std::once_flag empty_once;
     std::call_once(empty_once, []() { //为了解决多线程中出现的资源竞争导致的数据不一致问题
       empty_string = new std::string;
@@ -192,15 +192,15 @@ namespace re2
     // 对传入的Latin-1编码的字符串要进行转换
     if (options.encoding() == 1)
     { // UTF-8编码
-      rure_str = pattern.data();
+      rure_str = pattern.ToString();
     }
     else
     { // Latin-1编码
-      rure_str = encodingLatin1ToUTF8(pattern.ToString()).c_str();
+      rure_str = encodingLatin1ToUTF8(pattern.ToString());
     }
 
     // 特殊处理
-    if(strcmp(rure_str, "a[[:foobar:]]") == 0)
+    if(strcmp(rure_str.c_str(), "a[[:foobar:]]") == 0)
     {
       error_code_ = ErrorInternal;
       return;
@@ -210,19 +210,16 @@ namespace re2
     if(options_.dot_nl()) flags = RURE_FLAG_DOTNL;
     if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
     // 空字符串的处理???
-    rure *re = rure_compile((const uint8_t *)rure_str, strlen(rure_str), flags, NULL, err);
-    const char *msg = rure_error_message(err);
-
-    std::string empty_character_classes = "empty character classes are not allowed";
-    // 重名捕获组的命名目前存在问题
-    // std::string duplicate_capture_group_name = "duplicate capture group name";
-
-    // 处理空字符集无法编译的问题
-    std::string msg_info = msg;
+    rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
 
     //如果编译失败，打印错误信息
     if (re == NULL)
     {
+      const char *msg = rure_error_message(err);
+      std::string empty_character_classes = "empty character classes are not allowed";
+
+      // 处理空字符集无法编译的问题
+      std::string msg_info = msg;
       if (msg_info.find(empty_character_classes) != string::npos)
       {
         rure_error_free(err);
@@ -231,7 +228,6 @@ namespace re2
         re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err_tmp);
         prog_ = (Prog *)re;
         rure_error_free(err_tmp);
-        // std::cout << "empty character classes are not allowed" << std::endl;
       }
       else
       {
@@ -874,26 +870,26 @@ namespace re2
     }
 
     // 判断是否FullMatch, 判空
-    const char *haystack;
+    std::string haystack;
     if (text.data() == NULL || text[0] == '\0')
     {
       haystack = "";
     }
     else
     {
-      haystack = text.data();
+      haystack = text.ToString();
     }
 
     // Latin-1编码转换
     if (options_.encoding() == 2)
     {
       // std::cout << "DoMatch-Latin-1\n";
-      haystack = encodingLatin1ToUTF8(text.as_string()).c_str();
+      haystack = encodingLatin1ToUTF8(text.as_string());
     }
 
     rure *re = (rure *)prog_;
     rure_match match = {0};
-    bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
+    bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), strlen(haystack.c_str()), 0, &match);
 
     // Count number of capture groups needed.
     int nvec;
@@ -915,7 +911,7 @@ namespace re2
         }
         else
         {
-          if (match.start == 0 && match.end == strlen(haystack))
+          if (match.start == 0 && match.end == strlen(haystack.c_str()))
           {
             // std::cout << "DoMatch : 0个捕获组, FullMatch成功!!\n";
             return true;
