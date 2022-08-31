@@ -598,7 +598,7 @@ void FullMatchRE2_LiuZhitao(benchmark::State& state, const char *regexp) {
 
 void Rure_Find_RE2(benchmark::State& state, const char *regexp)
 {
-  std::ifstream in("/home/freekeeper/Desktop/re2-rust/re2/testing/text_re2_1KB.txt");
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str().substr(0, state.range(0));
@@ -615,7 +615,7 @@ void Rure_Find_RE2(benchmark::State& state, const char *regexp)
 
 void Rure_is_Match_RE2(benchmark::State& state, const char *regexp)
 {
-  std::ifstream in("/home/freekeeper/Desktop/re2-rust/re2/testing/text_re2_1KB.txt");
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str().substr(0, state.range(0));
