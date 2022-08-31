@@ -28,6 +28,11 @@
 #include "util/mutex.h"
 #include "util/pcre.h"
 
+extern "C"
+{
+#include <rure.h>
+}
+
 namespace re2 {
 void Test();
 void MemoryUsage();
@@ -578,19 +583,6 @@ void FullMatchRE2(benchmark::State& state, const char *regexp) {
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-void FullMatchPCRE_LiuZhitao(benchmark::State& state, const char *regexp) {
-
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
-  std::stringstream buffer;
-  buffer << in.rdbuf();
-  std::string s = buffer.str();
-  PCRE re(regexp);
-  for (auto _ : state) {
-    CHECK(PCRE::FullMatch(s.substr(0, state.range(0)), re));
-  }
-  state.SetBytesProcessed(state.iterations() * state.range(0));
-}
-
 void FullMatchRE2_LiuZhitao(benchmark::State& state, const char *regexp) {
 
   std::ifstream in("re2/testing/text_re2_1KB.txt");
@@ -604,23 +596,62 @@ void FullMatchRE2_LiuZhitao(benchmark::State& state, const char *regexp) {
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
+void Rure_Find_RE2(benchmark::State& state, const char *regexp)
+{
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string s = buffer.str().substr(0, state.range(0));
+  RE2 re(regexp);
+  rure_error *err = rure_error_new();
+  rure *re1 = rure_compile((const uint8_t *)regexp, strlen(regexp), RURE_DEFAULT_FLAGS, NULL, err);
+  rure_match match = {0};
+  for (auto _ : state) {
+    bool matched = rure_find(re1, (const uint8_t *)s.c_str(), strlen(s.c_str()), 0, &match);
+    CHECK(matched);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
 
-void FullMatch_DotStar_CachedPCRE_LiuZhitao(benchmark::State& state) { FullMatchPCRE_LiuZhitao(state, "(?s).*"); }
+void Rure_is_Match_RE2(benchmark::State& state, const char *regexp)
+{
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string s = buffer.str().substr(0, state.range(0));
+  RE2 re(regexp);
+  rure_error *err = rure_error_new();
+  rure *re1 = rure_compile((const uint8_t *)regexp, strlen(regexp), RURE_DEFAULT_FLAGS, NULL, err);
+  for (auto _ : state) {
+    bool matched = rure_is_match(re1, (const uint8_t *)s.c_str(), strlen(s.c_str()), 0);
+    CHECK(matched);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void Rure_Find_RE2_Bench1(benchmark::State& state)  { Rure_Find_RE2(state, "(?s).*"); }
+void Rure_Find_RE2_Bench2(benchmark::State& state)  { Rure_Find_RE2(state, "(?s).*$"); }
+void Rure_Find_RE2_Bench3(benchmark::State& state)  { Rure_Find_RE2(state, "(?s)((.*)()()($))"); }
+
+BENCHMARK_RANGE(Rure_Find_RE2_Bench1, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_Find_RE2_Bench2, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_Find_RE2_Bench3, 2<<6, 2<<9);
+
+void Rure_is_Match_RE2_Bench1(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s).*"); }
+void Rure_is_Match_RE2_Bench2(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s).*$"); }
+void Rure_is_Match_RE2_Bench3(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s)((.*)()()($))"); }
+
+BENCHMARK_RANGE(Rure_is_Match_RE2_Bench1, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_is_Match_RE2_Bench2, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_is_Match_RE2_Bench3, 2<<6, 2<<9);
+
+
 void FullMatch_DotStar_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s).*"); }
-
-void FullMatch_DotStarDollar_CachedPCRE_LiuZhitao(benchmark::State& state) { FullMatchPCRE_LiuZhitao(state, "(?s).*$"); }
 void FullMatch_DotStarDollar_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s).*$"); }
-
-void FullMatch_DotStarCapture_CachedPCRE_LiuZhitao(benchmark::State& state) { FullMatchPCRE_LiuZhitao(state, "(?s)((.*)()()($))"); }
 void FullMatch_DotStarCapture_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s)((.*)()()($))"); }
 
-// BENCHMARK_RANGE(FullMatch_DotStar_CachedPCRE_LiuZhitao, 2<<9, 2<<9);
 BENCHMARK_RANGE(FullMatch_DotStar_CachedRE2_LiuZhitao, 8, 2<<9);
-
-// BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedPCRE_LiuZhitao, 2<<9, 2<<9);
 BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedRE2_LiuZhitao, 8, 2<<9);
-
-// BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedPCRE_LiuZhitao, 2<<9, 2<<9);
 BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2_LiuZhitao, 8, 2<<9);
 
 void FullMatch_DotStar_CachedPCRE(benchmark::State& state) { FullMatchPCRE(state, "(?s).*"); }
