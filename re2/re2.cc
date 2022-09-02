@@ -210,7 +210,11 @@ namespace re2
     if(options_.dot_nl()) flags = RURE_FLAG_DOTNL;
     if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
     // 空字符串的处理???
+    std::string FullMatch_rure_str = rure_str;
+    FullMatch_rure_str.insert(0, "^");
+    FullMatch_rure_str.append("$");
     rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
+    rure *re1 = rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
 
     //如果编译失败，打印错误信息
     if (re == NULL)
@@ -246,6 +250,7 @@ namespace re2
     else
     {
       prog_ = (Prog *)re;
+      rprog_ = (Prog *)re1;
       error_ = empty_string;
       error_code_ = RE2::NoError;
     }
@@ -724,12 +729,36 @@ namespace re2
     //   }
     //   return true;
     // }
-    
+    // rure_error *err = rure_error_new();
+    // rure *re = rure_compile((const uint8_t *) pattern_.c_str(), strlen(pattern_.c_str()), RURE_DEFAULT_FLAGS, NULL, err);
     const char *haystack = text.data();
     rure *re = (rure *)prog_;
+    rure *re1 = (rure *)rprog_;
     rure_match match = {0};
-    bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
+    // bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
+    if(re_anchor == UNANCHORED)
+    {
+      bool matched = rure_is_match(re, (const uint8_t *)haystack, strlen(haystack), 0);
+      if(!matched){
+        return false;
+      }
+      else if(!nsubmatch){
+        return true;
+      }
+    }
+    else if(re_anchor == ANCHOR_BOTH)
+    {
+      bool matched = rure_is_match(re1, (const uint8_t *)haystack, strlen(haystack), 0);
+      if(!matched){
+        return false;
+      }
+      else if(!nsubmatch){
+        return true;
+      }
+    }
+    
 
+    /*
     switch (re_anchor)
     {
     // ANCHOR_BOTH FullMatch
@@ -776,7 +805,8 @@ namespace re2
       }
       else
       {
-        if (matched && match.end != 0)
+        // if (matched && match.end != 0)
+        if (matched)
           return true;
         else
           return false;
@@ -799,9 +829,9 @@ namespace re2
       }
     }
     }
-
+    */
     // Demo  获取捕获组内容，存储到submatch数组中
-
+    /*
     size_t length = strlen(haystack);
 
     rure_captures *caps = rure_captures_new(re);
@@ -833,6 +863,7 @@ namespace re2
     
 
     return true;
+    */
   }
 
   // std::string_view in MSVC has iterators that aren't just pointers and
@@ -869,6 +900,7 @@ namespace re2
       return false;
     }
 
+    /*
     // 判断是否FullMatch, 判空
     std::string haystack;
     if (text.data() == NULL || text[0] == '\0')
@@ -890,6 +922,7 @@ namespace re2
     rure *re = (rure *)prog_;
     rure_match match = {0};
     bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), strlen(haystack.c_str()), 0, &match);
+    */
 
     // Count number of capture groups needed.
     int nvec;
@@ -897,6 +930,8 @@ namespace re2
       nvec = 0; // 0个捕获组
     else
       nvec = n + 1;
+
+    /*
     // 0个捕获组的匹配判断
     if (nvec == 0)
     {
@@ -963,7 +998,7 @@ namespace re2
       }
       }
     }
-
+    */
     StringPiece *vec;
     StringPiece stkvec[kVecSize];
     StringPiece *heapvec = NULL;
@@ -1003,12 +1038,12 @@ namespace re2
     // 结下来就是要对正表达式中存在的捕获组进行处理
 
     // 如果不需要捕获组，直接返回true
-    // if (n == 0 || args == NULL)
-    // {
-    //   // We are not interested in results
-    //   delete[] heapvec;
-    //   return true;
-    // }
+    if (n == 0 || args == NULL)
+    {
+      // We are not interested in results
+      delete[] heapvec;
+      return true;
+    }
 
     // If we got here, we must have matched the whole pattern.
     for (int i = 0; i < n; i++)
