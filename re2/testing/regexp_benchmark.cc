@@ -207,7 +207,7 @@ void FindAndConsume(benchmark::State& state) {
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-BENCHMARK_RANGE(FindAndConsume, 8, 16)->ThreadRange(1, NumCPUs());
+// BENCHMARK_RANGE(FindAndConsume, 8, 16)->ThreadRange(1, NumCPUs());
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -423,7 +423,7 @@ void EmptyPartialMatchRE2(benchmark::State& state) {
   }
 }
 
-void EmptyPartialMatchRE2_LiuZhitao(benchmark::State& state) {
+void EmptyPartialMatchRE2_text_re2_1KB(benchmark::State& state) {
   std::ifstream in("re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
@@ -439,7 +439,7 @@ void EmptyPartialMatchRE2_LiuZhitao(benchmark::State& state) {
 BENCHMARK(EmptyPartialMatchPCRE)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK(EmptyPartialMatchRE2)->ThreadRange(1, NumCPUs());
-BENCHMARK_RANGE(EmptyPartialMatchRE2_LiuZhitao, 8, 2<<9);
+BENCHMARK_RANGE(EmptyPartialMatchRE2_text_re2_1KB, 2<<6, 2<<9);
 
 void SimplePartialMatchPCRE(benchmark::State& state) {
   PCRE re("abcdefg");
@@ -545,7 +545,7 @@ void ASCIIMatchRE2(benchmark::State& state) {
   }
 }
 
-void ASCIIMatchRE2_LiuZhitao(benchmark::State& state) {
+void ASCIIMatchRE2_text_re2_1KB(benchmark::State& state) {
   std::ifstream in("re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
@@ -561,7 +561,7 @@ void ASCIIMatchRE2_LiuZhitao(benchmark::State& state) {
 BENCHMARK(ASCIIMatchPCRE)->ThreadRange(1, NumCPUs());
 #endif
 BENCHMARK(ASCIIMatchRE2)->ThreadRange(1, NumCPUs());
-BENCHMARK_RANGE(ASCIIMatchRE2_LiuZhitao, 8, 2<<9);
+BENCHMARK_RANGE(ASCIIMatchRE2_text_re2_1KB, 2<<6, 2<<9);
 
 void FullMatchPCRE(benchmark::State& state, const char *regexp) {
   std::string s = RandomText(state.range(0));
@@ -578,12 +578,13 @@ void FullMatchRE2(benchmark::State& state, const char *regexp) {
   s += "ABCDEFGHIJ";
   RE2 re(regexp, RE2::Latin1);
   for (auto _ : state) {
+    
     CHECK(RE2::FullMatch(s, re));
   }
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-void FullMatchRE2_LiuZhitao(benchmark::State& state, const char *regexp) {
+void FullMatchRE2_text_re2_1KB(benchmark::State& state, const char *regexp) {
 
   std::ifstream in("re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
@@ -591,6 +592,7 @@ void FullMatchRE2_LiuZhitao(benchmark::State& state, const char *regexp) {
   std::string s = buffer.str();
   RE2 re(regexp, RE2::Latin1);
   for (auto _ : state) {
+    
     CHECK(RE2::FullMatch(s.substr(0, state.range(0)), re));
   }
   state.SetBytesProcessed(state.iterations() * state.range(0));
@@ -602,7 +604,6 @@ void Rure_Find_RE2(benchmark::State& state, const char *regexp)
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str().substr(0, state.range(0));
-  RE2 re(regexp);
   rure_error *err = rure_error_new();
   rure *re1 = rure_compile((const uint8_t *)regexp, strlen(regexp), RURE_DEFAULT_FLAGS, NULL, err);
   rure_match match = {0};
@@ -619,40 +620,49 @@ void Rure_is_Match_RE2(benchmark::State& state, const char *regexp)
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str().substr(0, state.range(0));
-  RE2 re(regexp);
   rure_error *err = rure_error_new();
   rure *re1 = rure_compile((const uint8_t *)regexp, strlen(regexp), RURE_DEFAULT_FLAGS, NULL, err);
   for (auto _ : state) {
-    bool matched = rure_is_match(re1, (const uint8_t *)s.c_str(), strlen(s.c_str()), 0);
+    bool matched = rure_is_match((rure *)re1, (const uint8_t *)s.c_str(), strlen(s.c_str()), 0);
     CHECK(matched);
   }
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-void Rure_Find_RE2_Bench1(benchmark::State& state)  { Rure_Find_RE2(state, "(?s).*"); }
-void Rure_Find_RE2_Bench2(benchmark::State& state)  { Rure_Find_RE2(state, "(?s).*$"); }
-void Rure_Find_RE2_Bench3(benchmark::State& state)  { Rure_Find_RE2(state, "(?s)((.*)()()($))"); }
+void Rure_Find_RE2_DotStar_text_re2_1KB(benchmark::State& state)  { Rure_Find_RE2(state, "(?s).*"); }
+void Rure_Find_RE2_DotStarDollar_text_re2_1KB(benchmark::State& state)  { Rure_Find_RE2(state, "(?s).*$"); }
+void Rure_Find_RE2_DotStarCapture_text_re2_1KB(benchmark::State& state)  { Rure_Find_RE2(state, "(?s)((.*)()()($))"); }
 
-BENCHMARK_RANGE(Rure_Find_RE2_Bench1, 2<<6, 2<<9);
-BENCHMARK_RANGE(Rure_Find_RE2_Bench2, 2<<6, 2<<9);
-BENCHMARK_RANGE(Rure_Find_RE2_Bench3, 2<<6, 2<<9);
+// BENCHMARK_RANGE(Rure_Find_RE2_DotStar_text_re2_1KB, 2<<3, 2<<9);
+// BENCHMARK_RANGE(Rure_Find_RE2_DotStarDollar_text_re2_1KB, 2<<3, 2<<9);
+// BENCHMARK_RANGE(Rure_Find_RE2_DotStarCapture_text_re2_1KB, 2<<3, 2<<9);
 
-void Rure_is_Match_RE2_Bench1(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s).*"); }
-void Rure_is_Match_RE2_Bench2(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s).*$"); }
-void Rure_is_Match_RE2_Bench3(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s)((.*)()()($))"); }
+// 不加起止符 ^ 结束符 $ 的正则表达式，也就是PartialMatch，通过regex对外接口rure_is_match()函数直接测试
+void Rure_is_Match_RE2_DotStar_text_re2_1KB(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s).*"); }
+void Rure_is_Match_RE2_DotStarDollar_text_re2_1KB(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s).*$"); }
+void Rure_is_Match_RE2_DotStarCapture_text_re2_1KB(benchmark::State& state)  { Rure_is_Match_RE2(state, "(?s)((.*)()()($))"); }
 
-BENCHMARK_RANGE(Rure_is_Match_RE2_Bench1, 2<<6, 2<<9);
-BENCHMARK_RANGE(Rure_is_Match_RE2_Bench2, 2<<6, 2<<9);
-BENCHMARK_RANGE(Rure_is_Match_RE2_Bench3, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_is_Match_RE2_DotStar_text_re2_1KB, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_is_Match_RE2_DotStarDollar_text_re2_1KB, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_is_Match_RE2_DotStarCapture_text_re2_1KB, 2<<6, 2<<9);
 
+// 加起止符 ^ 结束符 $ 的正则表达式，也就是FullMatch，通过regex对外接口rure_is_match()函数直接测试
+void Rure_is_Match_RE2_Begin_DotStar_End_text_re2_1KB(benchmark::State& state)  { Rure_is_Match_RE2(state, "^(?s).*$"); }
+void Rure_is_Match_RE2_Begin_DotStarDollar_End_text_re2_1KB(benchmark::State& state)  { Rure_is_Match_RE2(state, "^(?s).*$$"); }
+void Rure_is_Match_RE2_Begin_DotStarCapture_End_text_re2_1KB(benchmark::State& state)  { Rure_is_Match_RE2(state, "^(?s)((.*)()()($))$"); }
 
-void FullMatch_DotStar_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s).*"); }
-void FullMatch_DotStarDollar_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s).*$"); }
-void FullMatch_DotStarCapture_CachedRE2_LiuZhitao(benchmark::State& state)  { FullMatchRE2_LiuZhitao(state, "(?s)((.*)()()($))"); }
+BENCHMARK_RANGE(Rure_is_Match_RE2_Begin_DotStar_End_text_re2_1KB, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_is_Match_RE2_Begin_DotStarDollar_End_text_re2_1KB, 2<<6, 2<<9);
+BENCHMARK_RANGE(Rure_is_Match_RE2_Begin_DotStarCapture_End_text_re2_1KB, 2<<6, 2<<9);
 
-BENCHMARK_RANGE(FullMatch_DotStar_CachedRE2_LiuZhitao, 8, 2<<9);
-BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedRE2_LiuZhitao, 8, 2<<9);
-BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2_LiuZhitao, 8, 2<<9);
+// 加起止符 ^ 结束符 $ 的正则表达式，也就是FullMatch，通过原本RE2项目对外接口FullMatch()函数测试
+void FullMatch_RE2_DotStar_text_re2_1KB(benchmark::State& state)  { FullMatchRE2_text_re2_1KB(state, "(?s).*"); }
+void FullMatch_RE2_DotStarDollar_text_re2_1KB(benchmark::State& state)  { FullMatchRE2_text_re2_1KB(state, "(?s).*$"); }
+void FullMatch_RE2_DotStarCapture_text_re2_1KB(benchmark::State& state)  { FullMatchRE2_text_re2_1KB(state, "(?s)((.*)()()($))"); }
+
+BENCHMARK_RANGE(FullMatch_RE2_DotStar_text_re2_1KB, 2<<6, 2<<9);
+BENCHMARK_RANGE(FullMatch_RE2_DotStarDollar_text_re2_1KB, 2<<6, 2<<9);
+BENCHMARK_RANGE(FullMatch_RE2_DotStarCapture_text_re2_1KB, 2<<6, 2<<9);
 
 void FullMatch_DotStar_CachedPCRE(benchmark::State& state) { FullMatchPCRE(state, "(?s).*"); }
 void FullMatch_DotStar_CachedRE2(benchmark::State& state)  { FullMatchRE2(state, "(?s).*"); }
@@ -666,17 +676,17 @@ void FullMatch_DotStarCapture_CachedRE2(benchmark::State& state)  { FullMatchRE2
 #ifdef USEPCRE
 BENCHMARK_RANGE(FullMatch_DotStar_CachedPCRE, 8, 2<<20);
 #endif
-BENCHMARK_RANGE(FullMatch_DotStar_CachedRE2,  8, 2<<20);
+BENCHMARK_RANGE(FullMatch_DotStar_CachedRE2,  2<<6, 2<<9);
 
 #ifdef USEPCRE
 BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedPCRE, 8, 2<<20);
 #endif
-BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedRE2,  8, 2<<20);
+BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedRE2,  2<<6, 2<<9);
 
 #ifdef USEPCRE
 BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedPCRE, 8, 2<<20);
 #endif
 
-BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2,  8, 2<<20);
+BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2,  2<<6, 2<<9);
 
 }  // namespace re2
