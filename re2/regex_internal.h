@@ -1,5 +1,5 @@
 // #include "re2/sparse_array.h"
-#include <rure.h>
+#include "regex-capi/include/rure.h"
 namespace re2 {
 // #include "re2/prog.h"
 // Compiled form of regexp program.

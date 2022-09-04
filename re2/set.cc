@@ -18,7 +18,7 @@
 #include "re2/stringpiece.h"
 extern "C"
 {
-  #include <rure.h>
+  #include "regex-capi/include/rure.h"
 }
 using namespace std;
 
