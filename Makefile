@@ -69,7 +69,7 @@ MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-scri
 endif
 
 .PHONY: all
-all: obj/libre2.a obj/so/libre2.$(SOEXT)
+all: librure.a obj/libre2.a obj/so/libre2.$(SOEXT)
 
 INSTALL_HFILES=\
 	re2/filtered_re2.h\
@@ -93,6 +93,7 @@ HFILES=\
 	re2/re2.h\
 	re2/set.h\
 	re2/stringpiece.h\
+	regex-capi/include/rure.h\
 	# re2/testing/exhaustive_tester.h\
 	# re2/testing/regexp_generator.h\
 	# re2/testing/string_generator.h\
@@ -103,6 +104,7 @@ OFILES=obj/re2/re2.o\
 	obj/re2/stringpiece.o\
 	obj/re2/set.o\
 	obj/re2/filtered_re2.o\
+	
 
 	# obj/util/rune.o\
 	# obj/util/strutil.o\
@@ -190,9 +192,13 @@ obj/so/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CXX) -c -o $@ -fPIC $(CPPFLAGS) $(RE2_CXXFLAGS) $(CXXFLAGS) -DNDEBUG $*.cc
 
+.PRECIOUS: librure.a
+librure.a: 
+	cargo build --release
+
 .PRECIOUS: obj/libre2.a
 obj/libre2.a: $(OFILES)
-	@mkdir -p obj
+	@mkdir -p obj 
 	$(AR) $(ARFLAGS) obj/libre2.a $(OFILES)
 
 .PRECIOUS: obj/dbg/libre2.a
@@ -252,7 +258,7 @@ distclean: clean
 
 .PHONY: clean
 clean:
-	rm -rf obj
+	rm -rf obj target
 	rm -f re2/*.pyc
 
 .PHONY: testofiles
@@ -299,13 +305,17 @@ static: obj/libre2.a
 
 .PHONY: static-install
 static-install: obj/libre2.a common-install
+	$(INSTALL) target/release/librure.a /usr/lib//librure.a
 	$(INSTALL) obj/libre2.a $(DESTDIR)$(libdir)/libre2.a
+	
 
 .PHONY: shared
 shared: obj/so/libre2.$(SOEXT)
 
 .PHONY: shared-install
 shared-install: obj/so/libre2.$(SOEXT) common-install
+	$(INSTALL) regex-capi/include/rure.h /usr/include/rure.h
+	$(INSTALL) target/release/librure.so /usr/lib/librure.so
 	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER00)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
