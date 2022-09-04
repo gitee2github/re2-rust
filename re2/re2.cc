@@ -217,7 +217,7 @@ namespace re2
     rure *re1 = rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
 
     //如果编译失败，打印错误信息
-    if (re == NULL)
+    if (re == NULL || re1 == NULL)
     {
       const char *msg = rure_error_message(err);
       std::string empty_character_classes = "empty character classes are not allowed";
@@ -231,6 +231,9 @@ namespace re2
         const char *empty_char = "";
         re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err_tmp);
         prog_ = (Prog *)re;
+        rprog_ = (Prog *)re;
+        error_ = new std::string(msg);
+        error_code_ = ErrorInternal;
         rure_error_free(err_tmp);
       }
       else
@@ -696,12 +699,12 @@ namespace re2
                   StringPiece *submatch,
                   int nsubmatch) const
   {
-    if (!ok())
-    {
-      if (options_.log_errors())
-        LOG(ERROR) << "Invalid RE2: " << *error_;
-      return false;
-    }
+    // if (!ok())
+    // {
+    //   if (options_.log_errors())
+    //     LOG(ERROR) << "Invalid RE2: " << *error_;
+    //   return false;
+    // }
 
     if (startpos > endpos || endpos > text.size())
     {
@@ -721,6 +724,8 @@ namespace re2
       }
       return true;
     }
+
+    
     // if(text.data() == "")
     // {
     //   for(int i = 0; i < nsubmatch; i++)
@@ -731,24 +736,50 @@ namespace re2
     // }
     // rure_error *err = rure_error_new();
     // rure *re = rure_compile((const uint8_t *) pattern_.c_str(), strlen(pattern_.c_str()), RURE_DEFAULT_FLAGS, NULL, err);
-    const char *haystack = text.data();
+    std::string haystack;
+    if (text.data() == NULL || text[0] == '\0')
+    {
+      haystack = "";
+    }
+    else
+    {
+      haystack = text.ToString();
+    }
+
+    // Latin-1编码转换
+    if (options_.encoding() == 2)
+    {
+      // std::cout << "DoMatch-Latin-1\n";
+      haystack = encodingLatin1ToUTF8(text.as_string());
+    }
     rure *re = (rure *)prog_;
     rure *re1 = (rure *)rprog_;
     rure_match match = {0};
+    size_t length = strlen(haystack.c_str());
     // bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
+    // 这里没有 if(re_anchor == ANCHOR_START)原因是因为：
+    // 只有Consume()使用了ANCHOR_START，而传入Consume()的参数通常是三个或者三个以上，
+    // 调用Consume()时，nsubmatch不为0，因此会去执行rure_captures_new()、rure_find_captures()、rure_captures_at()
     if(re_anchor == UNANCHORED)
     {
-      bool matched = rure_is_match(re, (const uint8_t *)haystack, strlen(haystack), 0);
+      // bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), length, 0, &match);
+      bool matched = rure_is_match(re, (const uint8_t *)haystack.c_str(), length, 0);
       if(!matched){
         return false;
       }
       else if(!nsubmatch){
-        return true;
+        if(error_code_ == ErrorInternal)
+        {
+          return false;
+        }else{
+          return true;
+        }
+        
       }
     }
     else if(re_anchor == ANCHOR_BOTH)
     {
-      bool matched = rure_is_match(re1, (const uint8_t *)haystack, strlen(haystack), 0);
+      bool matched = rure_is_match(re1, (const uint8_t *)haystack.c_str(), length, 0);
       if(!matched){
         return false;
       }
@@ -831,14 +862,14 @@ namespace re2
     }
     */
     // Demo  获取捕获组内容，存储到submatch数组中
-    /*
-    size_t length = strlen(haystack);
+    
+    // size_t length = strlen(haystack);
 
     rure_captures *caps = rure_captures_new(re);
-    rure_find_captures(re, (const uint8_t *)haystack,
+    rure_find_captures(re, (const uint8_t *)haystack.c_str(),
                        length, 0, caps);
     // size_t captures_len = num_captures_ + 1;
-
+    
     rure_captures_at(caps, 0, &match);
     if (re_anchor == ANCHOR_START && match.start != 0)
       return false;
@@ -863,7 +894,6 @@ namespace re2
     
 
     return true;
-    */
   }
 
   // std::string_view in MSVC has iterators that aren't just pointers and
