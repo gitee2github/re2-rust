@@ -12,6 +12,18 @@ $ cd re2-rust
 ### 编译、安装re2-rust
 
 ``` Shell
+$ mkdir build && cd build
+$ cmake ..
+$ make
+$ sudo make install
+$ g++ ../testinstall.cc -o testinstall -lre2
+$ ./testinstall
+```
+
+or
+
+
+``` Shell
 $ make
 $ sudo make install
 ```

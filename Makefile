@@ -15,7 +15,7 @@
 CXX?=g++
 # can override
 CXXFLAGS?=-O3 -g
-LDFLAGS?=-lrure 
+LDFLAGS?=-lrure -ldl
 # required
 RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)
 RE2_LDFLAGS?=-pthread $(LDICU) $(LDPCRE)
@@ -316,17 +316,20 @@ shared: obj/so/libre2.$(SOEXT)
 shared-install: obj/so/libre2.$(SOEXT) common-install
 	$(INSTALL) regex-capi/include/rure.h /usr/include/rure.h
 	$(INSTALL) target/release/librure.so /usr/lib/librure.so
+	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2rust.$(SOEXTVER00)
+	ln -sf libre2rust.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2rust.$(SOEXTVER)
+	ln -sf libre2rust.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2rust.$(SOEXT)
 	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER00)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
 	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
 
 .PHONY: common-install
 common-install:
-	mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)/pkgconfig
+	# mkdir -p $(DESTDIR)$(includedir)/re2 $(DESTDIR)$(libdir)/pkgconfig
 	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
-	$(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@includedir@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	$(SED_INPLACE) -e "s#@libdir@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	# $(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	# $(SED_INPLACE) -e "s#@includedir@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
+	# $(SED_INPLACE) -e "s#@libdir@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
 .PHONY: testinstall
 testinstall: static-testinstall shared-testinstall
