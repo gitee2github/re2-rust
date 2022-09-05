@@ -15,7 +15,7 @@
 CXX?=g++
 # can override
 CXXFLAGS?=-O3 -g
-LDFLAGS?=-lrure
+LDFLAGS?=-lrure 
 # required
 RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)
 RE2_LDFLAGS?=-pthread $(LDICU) $(LDPCRE)
@@ -209,7 +209,7 @@ obj/dbg/libre2.a: $(DOFILES)
 .PRECIOUS: obj/so/libre2.$(SOEXT)
 obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	@mkdir -p obj/so
-	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES)
+	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES) -L./target/release -lrure
 	ln -sf libre2.$(SOEXTVER) $@
 
 .PRECIOUS: obj/dbg/test/%
@@ -305,7 +305,7 @@ static: obj/libre2.a
 
 .PHONY: static-install
 static-install: obj/libre2.a common-install
-	$(INSTALL) target/release/librure.a /usr/lib//librure.a
+	$(INSTALL) target/release/librure.a /usr/lib/librure.a
 	$(INSTALL) obj/libre2.a $(DESTDIR)$(libdir)/libre2.a
 	
 
@@ -351,7 +351,7 @@ endif
 
 .PHONY: shared-testinstall
 shared-testinstall: CXXFLAGS:=-std=c++11 -pthread -I$(DESTDIR)$(includedir) $(CXXFLAGS)
-shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) $(LDFLAGS)
+shared-testinstall: LDFLAGS:=-pthread -L$(DESTDIR)$(libdir) -lre2 $(LDICU) 
 shared-testinstall:
 	@mkdir -p obj
 	@cp testinstall.cc obj
