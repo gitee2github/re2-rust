@@ -266,6 +266,7 @@ namespace re2
     // 问题？？？
     // rure_free和rure_captures_free是否要进行使用？
     // error_code_如何进行赋值，RegexpErrorToRE2删除了？？？
+    error_code_ = RE2::NoError;
     // rure_free(re);
   }
 
