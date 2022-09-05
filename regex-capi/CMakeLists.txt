@@ -12,11 +12,11 @@ endif()
 # configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.cargo/config.in ${CMAKE_CURRENT_SOURCE_DIR}/.cargo/config)
 
 # if(CMAKE_BUILD_TYPE MATCHES "^Release")
-    list(APPEND CARGO_BUILD_OPT "--release")
+    # list(APPEND CARGO_BUILD_OPT "--release")
 # endif()
 
 add_custom_target(librure ALL
     # create rust regex library
-    COMMAND cargo build -v ${CARGO_BUILD_OPT}
+    COMMAND cargo build -v --release
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )

@@ -14,8 +14,9 @@ $ cd re2-rust
 ``` Shell
 $ mkdir build && cd build
 $ cmake ..
-$ make --release
+$ make
 $ sudo make install
+$ g++ ../testinstall.cc -o testinstall -lre2
 $ ./testinstall
 ```
 

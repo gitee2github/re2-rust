@@ -150,12 +150,12 @@ install(FILES ${RE2_HEADERS}
 install(TARGETS re2 EXPORT re2Config
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        # RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 # install(EXPORT re2Config
 #         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/re2 NAMESPACE re2::)
 
-add_executable(testinstall testinstall.cc)
-link_directories(/usr/local/lib/)
+# add_executable(testinstall testinstall.cc)
+# link_directories(/usr/local/lib/)
 # add_dependencies(testinstall libre2)
-target_link_libraries(testinstall re2)
+# target_link_libraries(testinstall re2)
