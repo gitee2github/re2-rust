@@ -15,7 +15,7 @@
 CXX?=g++
 # can override
 CXXFLAGS?=-O3 -g
-LDFLAGS?=-lrure 
+LDFLAGS?=-lrure -ldl
 # required
 RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)
 RE2_LDFLAGS?=-pthread $(LDICU) $(LDPCRE)

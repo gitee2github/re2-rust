@@ -2,4 +2,6 @@
 build
 target
 Cargo.lock
+obj/
+regex-capi/.Cargo.toml.swp
 
