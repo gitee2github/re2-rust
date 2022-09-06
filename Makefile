@@ -314,8 +314,8 @@ shared: obj/so/libre2.$(SOEXT)
 
 .PHONY: shared-install
 shared-install: obj/so/libre2.$(SOEXT) common-install
-	$(INSTALL) regex-capi/include/rure.h /usr/include/rure.h
-	$(INSTALL) target/release/librure.so /usr/lib/librure.so
+	$(INSTALL) regex-capi/include/rure.h $(DESTDIR)$(includedir)/rure.h
+	$(INSTALL) target/release/librure.so $(DESTDIR)$(libdir)/librure.so
 	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2rust.$(SOEXTVER00)
 	ln -sf libre2rust.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2rust.$(SOEXTVER)
 	ln -sf libre2rust.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2rust.$(SOEXT)

@@ -604,6 +604,15 @@ const char *rure_replace(rure *re, const uint8_t *haystack, size_t len_h,
 const char *rure_replace_all(rure *re, const uint8_t *haystack, size_t len_h,
 			 const uint8_t *rewrite, size_t len_r);
 
+/*
+ *  Simple way to use regex
+ */
+// rure *rure_compile(const uint8_t *pattern, size_t length,
+//                    uint32_t flags, rure_options *options,
+//                    rure_error *error);
+rure *rure_new(const uint8_t *pattern, size_t length);
+bool rure_consume(rure *re, const uint8_t *haystack, size_t length, rure_match *match);
+
 #ifdef __cplusplus
 }
 #endif

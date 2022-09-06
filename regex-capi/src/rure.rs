@@ -160,7 +160,7 @@ ffi_fn! {
         re: *const Regex,
         haystack: *const u8,
         len: size_t,
-        start: size_t,
+        _start: size_t,
     ) -> bool {
         let re = unsafe { &*re };
         let haystack = unsafe { slice::from_raw_parts(haystack, len) };
@@ -677,4 +677,69 @@ ffi_fn! {
         c_esc_pat.into_raw() as *const c_char
         
     }
+}
+
+/*
+ *  Simple way to use regex
+ */
+
+/*
+ *  Simple way to use regex
+ */
+
+ ffi_fn! {
+    fn rure_new(
+        pattern: *const u8,
+        length: size_t,
+    ) -> *const Regex {
+        let pat = unsafe { slice::from_raw_parts(pattern, length) };
+        let pat = match str::from_utf8(pat) {
+            Ok(pat) => pat,
+            Err(err) => {
+                unsafe {
+                    return ptr::null();
+                }
+            }
+        };
+        let exp = match bytes::Regex::new(pat) {
+           Ok(val) => Box::into_raw(Box::new(val)),
+           Err(_) => ptr::null()
+        };
+        exp as *const Regex
+    }
+}
+
+ffi_fn! {
+    fn rure_consume(
+        re: *const Regex,
+        haystack: *const u8,
+        len: size_t,
+        match_info: *mut rure_match,
+    ) -> bool {
+        let exp = unsafe { &*re };
+        let haystack = unsafe { slice::from_raw_parts(haystack, len) };
+        exp.find(haystack).map(|m| unsafe {
+            if !match_info.is_null() {
+                (*match_info).start = m.start();
+                (*match_info).end = m.end();
+            }
+        }).is_some()
+    }
+    // fn rure_consume(
+    //     raw_exp: *mut Regex,
+    //     p: *const u8,
+    //     len: size_t,
+    //     match_info: *mut rure_match,
+    // ) -> bool {
+    //     let exp = unsafe { Box::from_raw(raw_exp) };
+    //     let s = unsafe { slice::from_raw_parts(p, len as usize) };
+    //     let m = exp.find(s).unwrap();
+    //     unsafe { 
+    //         if !match_info.is_null() {
+    //             (*match_info).start = m.start();
+    //             (*match_info).end = m.end();
+    //         }
+    //     }
+    //     true
+    // }
 }

@@ -268,6 +268,7 @@ namespace re2
     // error_code_如何进行赋值，RegexpErrorToRE2删除了？？？
     // error_code_ = RE2::NoError;
     // rure_free(re);
+    suffix_regexp_ = (re2::Regexp *)rure_new((const uint8_t *)pattern.data(), pattern.size());
   }
 
   // Returns rprog_, computing it if needed.
@@ -291,14 +292,14 @@ namespace re2
 
   RE2::~RE2()
   {
-    if (suffix_regexp_)
-      // suffix_regexp_->Decref();
-      if (entire_regexp_)
-        // entire_regexp_->Decref();
-        // delete prog_;
-        // delete rprog_;
-        if (error_ != empty_string)
-          delete error_;
+    // if (suffix_regexp_)
+    //   // suffix_regexp_->Decref();
+    //   if (entire_regexp_)
+    //     // entire_regexp_->Decref();
+    //     // delete prog_;
+    //     // delete rprog_;
+    //     if (error_ != empty_string)
+    //       delete error_;
     if (named_groups_ != NULL && named_groups_ != empty_named_groups)
       delete named_groups_;
     if (group_names_ != NULL && group_names_ != empty_group_names)
@@ -929,6 +930,14 @@ namespace re2
     {
       // RE has fewer capturing groups than number of Arg pointers passed in.
       return false;
+    }
+    
+    rure_match match;
+    if(consumed && n == 0 &&
+        rure_consume((rure *)suffix_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), &match))
+    {
+      *consumed = match.end;
+      return true;
     }
 
     /*
