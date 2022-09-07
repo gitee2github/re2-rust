@@ -683,10 +683,6 @@ ffi_fn! {
  *  Simple way to use regex
  */
 
-/*
- *  Simple way to use regex
- */
-
  ffi_fn! {
     fn rure_new(
         pattern: *const u8,
@@ -725,21 +721,5 @@ ffi_fn! {
             }
         }).is_some()
     }
-    // fn rure_consume(
-    //     raw_exp: *mut Regex,
-    //     p: *const u8,
-    //     len: size_t,
-    //     match_info: *mut rure_match,
-    // ) -> bool {
-    //     let exp = unsafe { Box::from_raw(raw_exp) };
-    //     let s = unsafe { slice::from_raw_parts(p, len as usize) };
-    //     let m = exp.find(s).unwrap();
-    //     unsafe { 
-    //         if !match_info.is_null() {
-    //             (*match_info).start = m.start();
-    //             (*match_info).end = m.end();
-    //         }
-    //     }
-    //     true
-    // }
+
 }
