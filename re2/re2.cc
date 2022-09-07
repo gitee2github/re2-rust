@@ -781,8 +781,8 @@ namespace re2
     }
     else if(re_anchor == ANCHOR_BOTH)
     {
-      bool matched = rure_is_match(re1, (const uint8_t *)haystack.c_str(), length, 0);
-      if(!matched){
+      bool matched = rure_find(re1, (const uint8_t *)haystack.c_str(), length, 0, &match);
+      if(!matched || match.start != 0 || match.end != length){
         return false;
       }
       else if(!nsubmatch){
