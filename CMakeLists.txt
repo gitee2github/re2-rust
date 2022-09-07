@@ -145,6 +145,10 @@ set(RE2_HEADERS
     re2/stringpiece.h
     )
 
+install(FILES regex-capi/include/rure.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES target/release/librure.so
+        DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES ${RE2_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/re2)
 install(TARGETS re2 EXPORT re2Config
