@@ -1,0 +1,306 @@
+'../3200.txt' loaded. (Length: 16013977 bytes)
+-----------------
+Regex: 'Twain'
+[      ctre] time:     7.2 ms (+/-  8.5 %), matches:      811
+[     boost] time:    13.2 ms (+/-  4.2 %), matches:      811
+[    cppstd] time:   845.2 ms (+/-  0.4 %), matches:      811
+[      pcre] time:     7.0 ms (+/- 24.2 %), matches:      811
+[  pcre-dfa] time:     5.4 ms (+/- 11.4 %), matches:      811
+[  pcre-jit] time:     2.2 ms (+/- 38.6 %), matches:      811
+[       re2] time:     2.4 ms (+/- 18.1 %), matches:      811
+[      onig] time:    13.5 ms (+/-  1.9 %), matches:      811
+[       tre] time:   183.2 ms (+/-  0.8 %), matches:      811
+[     hscan] time:     1.3 ms (+/- 12.3 %), matches:      811
+[      yara] time:    22.8 ms (+/-  1.7 %), matches:      811
+[  re2-rust] time:     1.5 ms (+/- 17.1 %), matches:      811
+[rust_regex] time:     1.3 ms (+/-  7.5 %), matches:      811
+[rust_regrs] time:    10.8 ms (+/- 40.1 %), matches:      811
+-----------------
+Regex: '(?i)Twain'
+[      ctre] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[     boost] time:   209.5 ms (+/-  3.8 %), matches:      965
+[    cppstd] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[      pcre] time:   120.2 ms (+/-  0.9 %), matches:      965
+[  pcre-dfa] time:   100.0 ms (+/-  2.9 %), matches:      965
+[  pcre-jit] time:     1.5 ms (+/- 15.6 %), matches:      965
+[       re2] time:     8.7 ms (+/-  8.5 %), matches:      965
+[      onig] time:   249.9 ms (+/-  1.3 %), matches:      965
+[       tre] time:   232.0 ms (+/-  1.0 %), matches:      965
+[     hscan] time:     1.7 ms (+/- 19.5 %), matches:      965
+[      yara] time:    34.7 ms (+/-  0.8 %), matches:      965
+[  re2-rust] time:     2.1 ms (+/-  5.4 %), matches:      965
+[rust_regex] time:     1.9 ms (+/-  4.4 %), matches:      965
+[rust_regrs] time:    78.1 ms (+/-  1.2 %), matches:      965
+-----------------
+Regex: '[a-z]shing'
+[      ctre] time:    43.8 ms (+/-  1.8 %), matches:     1540
+[     boost] time:  1012.1 ms (+/-  0.8 %), matches:     1540
+[    cppstd] time:  1227.1 ms (+/-  0.7 %), matches:     1540
+[      pcre] time:  1006.0 ms (+/-  0.5 %), matches:     1540
+[  pcre-dfa] time:   804.6 ms (+/-  1.2 %), matches:     1540
+[  pcre-jit] time:     1.9 ms (+/- 19.7 %), matches:     1540
+[       re2] time:    24.7 ms (+/-  4.0 %), matches:     1540
+[      onig] time:    14.1 ms (+/- 38.0 %), matches:     1540
+[       tre] time:   262.1 ms (+/-  0.8 %), matches:     1540
+[     hscan] time:     3.5 ms (+/- 10.6 %), matches:     1540
+[      yara] time:    30.6 ms (+/-  1.2 %), matches:     1540
+[  re2-rust] time:     1.7 ms (+/-  4.8 %), matches:     1540
+[rust_regex] time:     1.7 ms (+/- 12.5 %), matches:     1540
+[rust_regrs] time:   696.9 ms (+/-  0.4 %), matches:     1540
+-----------------
+Regex: 'Huck[a-zA-Z]+|Saw[a-zA-Z]+'
+[      ctre] time:     9.3 ms (+/-  3.3 %), matches:      262
+[     boost] time:    13.5 ms (+/-  3.4 %), matches:      262
+[    cppstd] time:  1574.9 ms (+/-  0.4 %), matches:      262
+[      pcre] time:    18.2 ms (+/-  1.5 %), matches:      262
+[  pcre-dfa] time:    16.0 ms (+/-  3.0 %), matches:      262
+[  pcre-jit] time:     1.7 ms (+/- 16.3 %), matches:      262
+[       re2] time:    23.3 ms (+/-  3.2 %), matches:      262
+[      onig] time:   174.8 ms (+/-  0.5 %), matches:      262
+[       tre] time:   260.4 ms (+/-  2.4 %), matches:      262
+[     hscan] time:     1.9 ms (+/-  5.9 %), matches:      977
+[      yara] time:    23.1 ms (+/-  2.3 %), matches:      262
+[  re2-rust] time:     1.9 ms (+/-  6.9 %), matches:      262
+[rust_regex] time:     3.9 ms (+/- 111.2 %), matches:      262
+[rust_regrs] time:     6.1 ms (+/-  4.8 %), matches:      262
+-----------------
+Regex: '\b\w+nn\b'
+[      ctre] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[     boost] time:   450.7 ms (+/-  0.5 %), matches:      262
+[    cppstd] time:  8010.7 ms (+/-  0.6 %), matches:      262
+[      pcre] time:  1449.4 ms (+/-  0.6 %), matches:      262
+[  pcre-dfa] time:  1095.4 ms (+/-  0.5 %), matches:      262
+[  pcre-jit] time:    77.4 ms (+/-  5.3 %), matches:      262
+[       re2] time:    23.9 ms (+/-  2.6 %), matches:      262
+[      onig] time:  2445.3 ms (+/-  0.7 %), matches:      262
+[       tre] time:   584.0 ms (+/-  1.4 %), matches:      262
+[     hscan] time:    90.0 ms (+/-  0.7 %), matches:      262
+[      yara] time:    32.7 ms (+/-  1.7 %), matches:      262
+[  re2-rust] time:   322.6 ms (+/-  1.0 %), matches:      262
+[rust_regex] time:   330.8 ms (+/-  2.0 %), matches:      262
+[rust_regrs] time:  1139.8 ms (+/-  0.4 %), matches:      262
+-----------------
+Regex: '[a-q][^u-z]{13}x'
+[      ctre] time:    85.6 ms (+/-  0.6 %), matches:     4094
+[     boost] time:   859.7 ms (+/-  1.6 %), matches:     4094
+[    cppstd] time:  3069.8 ms (+/-  0.4 %), matches:     4094
+[      pcre] time:   874.8 ms (+/-  0.3 %), matches:     4094
+[  pcre-dfa] time:  2753.9 ms (+/-  0.4 %), matches:     4094
+[  pcre-jit] time:   123.2 ms (+/-  3.5 %), matches:     4094
+[       re2] time:   130.5 ms (+/- 20.5 %), matches:     4094
+[      onig] time:    31.5 ms (+/-  1.2 %), matches:     4094
+[       tre] time:   680.6 ms (+/-  0.6 %), matches:     4094
+[     hscan] time:   191.5 ms (+/-  3.3 %), matches:     4094
+[      yara] time:    30.6 ms (+/-  1.5 %), matches:     4094
+[  re2-rust] time:  4280.7 ms (+/-  2.5 %), matches:     4094
+[rust_regex] time:  4251.2 ms (+/-  2.5 %), matches:     4094
+[rust_regrs] time:  2426.3 ms (+/-  0.9 %), matches:     4094
+-----------------
+Regex: 'Tom|Sawyer|Huckleberry|Finn'
+[      ctre] time:    20.8 ms (+/- 12.8 %), matches:     2598
+[     boost] time:    19.3 ms (+/-  1.6 %), matches:     2598
+[    cppstd] time:  2981.3 ms (+/-  0.3 %), matches:     2598
+[      pcre] time:    33.3 ms (+/-  1.8 %), matches:     2598
+[  pcre-dfa] time:    24.4 ms (+/-  0.4 %), matches:     2598
+[  pcre-jit] time:    15.9 ms (+/-  2.5 %), matches:     2598
+[       re2] time:    24.2 ms (+/-  2.4 %), matches:     2598
+[      onig] time:   181.0 ms (+/-  1.2 %), matches:     2598
+[       tre] time:   411.6 ms (+/-  1.8 %), matches:     2598
+[     hscan] time:     2.3 ms (+/- 23.0 %), matches:     2598
+[      yara] time:    23.4 ms (+/-  1.0 %), matches:     2598
+[  re2-rust] time:     2.3 ms (+/-  1.8 %), matches:     2598
+[rust_regex] time:     2.1 ms (+/-  3.3 %), matches:     2598
+[rust_regrs] time:    27.8 ms (+/-  1.9 %), matches:     2598
+-----------------
+Regex: '(?i)Tom|Sawyer|Huckleberry|Finn'
+[      ctre] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[     boost] time:   530.2 ms (+/-  5.3 %), matches:     4152
+[    cppstd] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[      pcre] time:   629.5 ms (+/-  0.5 %), matches:     4152
+[  pcre-dfa] time:   376.3 ms (+/-  0.4 %), matches:     4152
+[  pcre-jit] time:    49.1 ms (+/-  1.5 %), matches:     4152
+[       re2] time:    25.2 ms (+/-  1.5 %), matches:     4152
+[      onig] time:   566.7 ms (+/-  0.9 %), matches:     4152
+[       tre] time:   596.7 ms (+/-  0.2 %), matches:     4152
+[     hscan] time:     2.5 ms (+/-  9.7 %), matches:     4152
+[      yara] time:    60.6 ms (+/-  1.9 %), matches:     4152
+[  re2-rust] time:     4.7 ms (+/-  3.2 %), matches:     4152
+[rust_regex] time:     4.4 ms (+/-  6.9 %), matches:     4152
+[rust_regrs] time:   549.7 ms (+/-  0.4 %), matches:     4152
+-----------------
+Regex: '.{0,2}(Tom|Sawyer|Huckleberry|Finn)'
+[      ctre] time:    64.0 ms (+/-  3.6 %), matches:     2598
+[     boost] time:  2170.7 ms (+/-  0.6 %), matches:     2598
+[    cppstd] time: 10237.0 ms (+/-  0.1 %), matches:     2598
+[      pcre] time:  9996.5 ms (+/-  0.4 %), matches:     2598
+[  pcre-dfa] time:  5079.2 ms (+/-  3.1 %), matches:     2598
+[  pcre-jit] time:   180.8 ms (+/-  4.3 %), matches:     2598
+[       re2] time:    25.3 ms (+/-  1.9 %), matches:     2598
+[      onig] time:   295.2 ms (+/-  5.7 %), matches:     2598
+[       tre] time:  1450.8 ms (+/-  5.9 %), matches:     2598
+[     hscan] time:     2.9 ms (+/- 23.7 %), matches:     2598
+[      yara] time:    26.8 ms (+/-  2.5 %), matches:     6923
+[  re2-rust] time:    26.1 ms (+/-  2.6 %), matches:     2598
+[rust_regex] time:    25.5 ms (+/-  1.2 %), matches:     2598
+[rust_regrs] time:  8635.5 ms (+/-  1.9 %), matches:     2598
+-----------------
+Regex: '.{2,4}(Tom|Sawyer|Huckleberry|Finn)'
+[      ctre] time:    42.2 ms (+/-  2.8 %), matches:     2419
+[     boost] time:  2196.9 ms (+/-  0.8 %), matches:     2419
+[    cppstd] time: 10792.4 ms (+/-  0.8 %), matches:     1976
+[      pcre] time: 10199.9 ms (+/-  0.5 %), matches:     1976
+[  pcre-dfa] time:  5627.5 ms (+/-  0.4 %), matches:     1976
+[  pcre-jit] time:   168.6 ms (+/-  0.6 %), matches:     1976
+[       re2] time:    24.0 ms (+/-  2.5 %), matches:     1976
+[      onig] time:   287.3 ms (+/-  2.0 %), matches:     1976
+[       tre] time:  1988.5 ms (+/-  1.2 %), matches:     1976
+[     hscan] time:     3.0 ms (+/- 13.2 %), matches:     2598
+[      yara] time:    24.3 ms (+/-  1.7 %), matches:     6362
+[  re2-rust] time:    25.9 ms (+/-  3.8 %), matches:     1976
+[rust_regex] time:    25.7 ms (+/-  3.2 %), matches:     1976
+[rust_regrs] time:  8821.5 ms (+/-  0.3 %), matches:     1976
+-----------------
+Regex: 'Tom.{10,25}river|river.{10,25}Tom'
+[      ctre] time:    18.3 ms (+/-  2.0 %), matches:        4
+[     boost] time:    59.7 ms (+/-  1.1 %), matches:        4
+[    cppstd] time:  1590.2 ms (+/-  0.3 %), matches:        2
+[      pcre] time:   108.1 ms (+/-  2.1 %), matches:        2
+[  pcre-dfa] time:    77.2 ms (+/-  1.3 %), matches:        2
+[  pcre-jit] time:     3.4 ms (+/-  8.6 %), matches:        2
+[       re2] time:    23.0 ms (+/-  4.4 %), matches:        2
+[      onig] time:   228.2 ms (+/-  2.7 %), matches:        2
+[       tre] time:   311.2 ms (+/-  1.6 %), matches:        2
+[     hscan] time:     2.9 ms (+/- 14.7 %), matches:        4
+[      yara] time:    32.4 ms (+/-  1.4 %), matches:        2
+[  re2-rust] time:    31.5 ms (+/- 12.6 %), matches:        2
+[rust_regex] time:     3.0 ms (+/- 37.8 %), matches:        2
+[rust_regrs] time:    69.1 ms (+/-  1.6 %), matches:        2
+-----------------
+Regex: '[a-zA-Z]+ing'
+[      ctre] time:    75.5 ms (+/-  1.0 %), matches:    78424
+[     boost] time:   379.0 ms (+/-  1.2 %), matches:    78424
+[    cppstd] time:  3898.1 ms (+/-  0.6 %), matches:    78424
+[      pcre] time:  2377.1 ms (+/-  0.7 %), matches:    78424
+[  pcre-dfa] time:  2395.2 ms (+/-  0.6 %), matches:    78424
+[  pcre-jit] time:    54.7 ms (+/-  4.2 %), matches:    78424
+[       re2] time:    45.2 ms (+/-  1.9 %), matches:    78424
+[      onig] time:  1963.3 ms (+/-  0.3 %), matches:    78424
+[       tre] time:   340.2 ms (+/-  2.2 %), matches:    78424
+[     hscan] time:    23.6 ms (+/-  1.9 %), matches:    78872
+[      yara] time:    93.7 ms (+/-  1.9 %), matches:   335969
+[  re2-rust] time:    21.2 ms (+/-  0.4 %), matches:    78424
+[rust_regex] time:    17.4 ms (+/-  1.2 %), matches:    78424
+[rust_regrs] time:  1726.9 ms (+/-  0.4 %), matches:    78424
+-----------------
+Regex: '\s[a-zA-Z]{0,12}ing\s'
+[      ctre] time:    68.8 ms (+/-  1.5 %), matches:    55248
+[     boost] time:   486.0 ms (+/-  0.3 %), matches:    55248
+[    cppstd] time:  2108.1 ms (+/-  0.3 %), matches:    55248
+[      pcre] time:   931.5 ms (+/-  0.5 %), matches:    55248
+[  pcre-dfa] time:   891.8 ms (+/-  1.0 %), matches:    55248
+[  pcre-jit] time:    70.1 ms (+/-  0.2 %), matches:    55248
+[       re2] time:    40.6 ms (+/-  2.3 %), matches:    55248
+[      onig] time:   107.1 ms (+/-  2.4 %), matches:    55248
+[       tre] time:   472.6 ms (+/-  1.4 %), matches:    55248
+[     hscan] time:    34.7 ms (+/-  2.2 %), matches:    55640
+[      yara] time:    89.7 ms (+/-  0.8 %), matches:    55640
+[  re2-rust] time:    35.8 ms (+/-  0.9 %), matches:    55248
+[rust_regex] time:    32.8 ms (+/-  1.9 %), matches:    55248
+[rust_regrs] time:   757.8 ms (+/-  2.0 %), matches:    55248
+-----------------
+Regex: '([A-Za-z]awyer|[A-Za-z]inn)\s'
+[      ctre] time:    57.1 ms (+/-  1.1 %), matches:      209
+[     boost] time:  2173.7 ms (+/-  0.6 %), matches:      209
+[    cppstd] time:  2618.8 ms (+/-  0.9 %), matches:      209
+[      pcre] time:  2172.2 ms (+/-  0.7 %), matches:      209
+[  pcre-dfa] time:  1386.6 ms (+/-  0.6 %), matches:      209
+[  pcre-jit] time:    10.7 ms (+/-  3.3 %), matches:      209
+[       re2] time:    23.4 ms (+/-  2.6 %), matches:      209
+[      onig] time:   448.8 ms (+/-  1.1 %), matches:      209
+[       tre] time:   509.0 ms (+/-  2.1 %), matches:      209
+[     hscan] time:     3.7 ms (+/-  5.4 %), matches:      209
+[      yara] time:    46.1 ms (+/-  1.9 %), matches:      209
+[  re2-rust] time:    25.8 ms (+/-  1.5 %), matches:      209
+[rust_regex] time:    25.2 ms (+/-  1.6 %), matches:      209
+[rust_regrs] time:  1639.5 ms (+/-  1.3 %), matches:      209
+-----------------
+Regex: '["'][^"']{0,30}[?!\.]["']'
+[      ctre] time:    30.7 ms (+/-  2.5 %), matches:     8886
+[     boost] time:    25.6 ms (+/-  2.4 %), matches:     8886
+[    cppstd] time:  1038.1 ms (+/-  0.3 %), matches:     8886
+[      pcre] time:   103.6 ms (+/-  1.2 %), matches:     8886
+[  pcre-dfa] time:   114.2 ms (+/-  0.6 %), matches:     8886
+[  pcre-jit] time:     7.2 ms (+/-  6.0 %), matches:     8886
+[       re2] time:    26.9 ms (+/-  2.6 %), matches:     8886
+[      onig] time:   263.2 ms (+/-  3.2 %), matches:     8886
+[       tre] time:   254.8 ms (+/-  0.9 %), matches:     8886
+[     hscan] time:    12.6 ms (+/-  5.0 %), matches:     8898
+[      yara] time:  1328.5 ms (+/-  1.3 %), matches:     8898
+[  re2-rust] time:    10.2 ms (+/-  7.6 %), matches:     8886
+[rust_regex] time:     9.6 ms (+/-  5.7 %), matches:     8886
+[rust_regrs] time:   128.6 ms (+/-  1.3 %), matches:     8886
+-----------------
+Regex: '∞|✓'
+[      ctre] time:     0.0 ms (+/- 223.6 %), matches:        0
+[     boost] time:     8.7 ms (+/-  2.3 %), matches:        2
+[    cppstd] time:  1553.7 ms (+/-  0.4 %), matches:        2
+[      pcre] time:     1.2 ms (+/- 10.4 %), matches:        2
+[  pcre-dfa] time:     1.2 ms (+/- 10.5 %), matches:        2
+[  pcre-jit] time:     1.5 ms (+/- 14.7 %), matches:        2
+[       re2] time:     1.1 ms (+/-  8.1 %), matches:        0
+[      onig] time:    25.9 ms (+/-  1.3 %), matches:        2
+[       tre] time:   220.2 ms (+/-  1.9 %), matches:        2
+[     hscan] time:     1.5 ms (+/-  8.2 %), matches:        2
+[      yara] time:    22.1 ms (+/-  1.6 %), matches:        2
+[  re2-rust] time:     1.7 ms (+/-  3.2 %), matches:        2
+[rust_regex] time:     1.8 ms (+/-  5.9 %), matches:        2
+[rust_regrs] time:     1.2 ms (+/- 15.7 %), matches:        2
+-----------------
+Regex: '\p{Sm}'
+[      ctre] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[     boost] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[    cppstd] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[      pcre] time:  1234.3 ms (+/-  0.8 %), matches:       68
+[  pcre-dfa] time:   856.1 ms (+/-  1.5 %), matches:       68
+[  pcre-jit] time:    39.9 ms (+/-  1.2 %), matches:       68
+[       re2] time:    22.3 ms (+/-  1.5 %), matches:       68
+Onig compilation failed
+TRE compilation failed with error 10
+[     hscan] time:     1.5 ms (+/- 28.5 %), matches:       68
+[      yara] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[  re2-rust] time:    25.4 ms (+/-  1.5 %), matches:       69
+[rust_regex] time:    26.0 ms (+/-  8.6 %), matches:       69
+-----------------
+Regex: '(.*?,){13}z'
+[      ctre] time:  9943.5 ms (+/-  1.4 %), matches:        0
+[     boost] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[    cppstd] time: 67174.1 ms (+/-  1.3 %), matches:        0
+[      pcre] time:  1590.8 ms (+/-  0.5 %), matches:        0
+[  pcre-dfa] time:  1035.5 ms (+/-  0.8 %), matches:        0
+[  pcre-jit] time:    41.3 ms (+/-  2.0 %), matches:        0
+[       re2] time:    21.8 ms (+/-  1.8 %), matches:        0
+[      onig] time: 36352.1 ms (+/-  0.1 %), matches:        0
+[       tre] time:   548.1 ms (+/-  1.3 %), matches:        0
+[     hscan] time:     1.4 ms (+/- 16.8 %), matches:        0
+[      yara] time: 999999.0 ms (+/-  0.0 %), matches:        0
+[  re2-rust] time:   116.7 ms (+/-  2.9 %), matches:        0
+[rust_regex] time:    26.0 ms (+/-  3.8 %), matches:        0
+[rust_regrs] time: 21056.7 ms (+/-  0.3 %), matches:        0
+-----------------
+Total Results:
+[      ctre] time:  4010462.7 ms, score:      6 points,
+[     boost] time:  2010606.4 ms, score:      3 points,
+[    cppstd] time:  3118716.6 ms, score:      0 points,
+[      pcre] time:  32853.7 ms, score:      4 points,
+[  pcre-dfa] time:  22640.6 ms, score:      5 points,
+[  pcre-jit] time:    851.1 ms, score:     45 points,
+[       re2] time:    516.4 ms, score:     42 points,
+[      onig] time:  43648.0 ms, score:      6 points,
+[       tre] time:   9306.2 ms, score:      0 points,
+[     hscan] time:    382.4 ms, score:     69 points,
+[      yara] time:  2001920.1 ms, score:     13 points,
+[  re2-rust] time:   4937.7 ms, score:     44 points,
+[rust_regex] time:   4790.2 ms, score:     56 points,
+[rust_regrs] time:  47772.1 ms, score:      6 points,
+
+
