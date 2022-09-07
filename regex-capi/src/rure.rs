@@ -258,7 +258,8 @@ ffi_fn! {
         unsafe {
             let it = &mut *it;
             while let Some(ptr) = it.name_ptrs.pop(){
-                CString::from_raw(ptr);
+                // CString::from_raw(ptr);
+                drop(CString::from_raw(ptr))
             }
             Box::from_raw(it);
         }
@@ -624,7 +625,7 @@ fn rure_escape(
 
 ffi_fn! {
     fn rure_cstring_free(s: *mut c_char) {
-        unsafe { CString::from_raw(s); }
+        unsafe { drop(CString::from_raw(s)); }
     }
 }
 
@@ -691,10 +692,8 @@ ffi_fn! {
         let pat = unsafe { slice::from_raw_parts(pattern, length) };
         let pat = match str::from_utf8(pat) {
             Ok(pat) => pat,
-            Err(err) => {
-                unsafe {
-                    return ptr::null();
-                }
+            Err(_err) => {
+                return ptr::null();
             }
         };
         let exp = match bytes::Regex::new(pat) {
