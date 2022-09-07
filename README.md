@@ -53,7 +53,7 @@ Total Results:
 [rust_regex] time:   4790.2 ms, score:     56 points,
 [rust_regrs] time:  47772.1 ms, score:      6 points,
 ```
-从测试结果看re2-rust评分比re2略高，但是耗时re2-rust比re2增加很多，通过仔细分析发现正则表达式'[a-q][^u-z]{13}x'耗时特别高4280.7 - 130.5 = 4150.2 ms，另外'\b\w+nn\b'耗时322.6 - 23.9 = 298.7，除去这两个异常测试项外的16个测试项耗时re2-rust：334.4 ms vs. re2:362 ms ，也就是说re2-rust在大多数情况下性能比re2要好。
+从测试结果看re2-rust评分比re2略高，但是耗时re2-rust比re2增加很多，通过仔细分析发现正则表达式'[a-q][^u-z]{13}x'耗时特别高4280.7 - 130.5 = 4150.2 ms，另外'\b\w+nn\b'耗时322.6 - 23.9 = 298.7，除去这两个异常测试项外的16个测试项耗时re2-rust：334.4 ms vs. re2: 362 ms ，也就是说re2-rust在大多数情况下性能比re2要好。
 
 从测试耗时看re2-rust和rust_regex两者相差3%（多次测评结果看两者差距上下浮动5%以内），总体看re2-rust和rust_regex性能基本一致。
 
@@ -64,6 +64,7 @@ Total Results:
 * https://github.com/rust-lang/regex
 * https://gitee.com/src-openeuler/re2
 * https://github.com/google/re2
+* https://gitee.com/mengning997/regex-performance for re2-rust
 
 
 
