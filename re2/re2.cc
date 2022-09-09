@@ -210,14 +210,14 @@ namespace re2
     if(options_.dot_nl()) flags = RURE_FLAG_DOTNL;
     if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
     // 空字符串的处理???
-    std::string FullMatch_rure_str = rure_str;
-    FullMatch_rure_str.insert(0, "^");
-    FullMatch_rure_str.append("$");
+    // std::string FullMatch_rure_str = rure_str;
+    // FullMatch_rure_str.insert(0, "^");
+    // FullMatch_rure_str.append("$");
     rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
-    rure *re1 = rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
+    // rure *re1 = rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
 
     //如果编译失败，打印错误信息
-    if (re == NULL || re1 == NULL)
+    if (re == NULL)
     {
       const char *msg = rure_error_message(err);
       std::string empty_character_classes = "empty character classes are not allowed";
@@ -226,15 +226,16 @@ namespace re2
       std::string msg_info = msg;
       if (msg_info.find(empty_character_classes) != string::npos)
       {
-        rure_error_free(err);
-        rure_error *err_tmp = rure_error_new();
-        const char *empty_char = "";
-        re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err_tmp);
-        prog_ = (Prog *)re;
-        rprog_ = (Prog *)re;
+        // rure_error_free(err);
+        // rure_error *err_tmp = rure_error_new();
+        // const char *empty_char = "";
+        // re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err_tmp);
+        // prog_ = (Prog *)re;
+        // rprog_ = (Prog *)re;
+        pattern_ = "";
         error_ = new std::string(msg);
         error_code_ = ErrorInternal;
-        rure_error_free(err_tmp);
+        // rure_error_free(err_tmp);
       }
       else
       {
@@ -246,14 +247,14 @@ namespace re2
         error_code_ = ErrorInternal; // 暂时对这个错误进行赋值，如何处理错误类型？？？
         // rure_free(re);
         // rure_error_free(err);
-
-        return;
+        
       }
+      return;
     }
     else
     {
       prog_ = (Prog *)re;
-      rprog_ = (Prog *)re1;
+      // rprog_ = (Prog *)re1;
       error_ = empty_string;
       error_code_ = RE2::NoError;
     }
@@ -701,12 +702,16 @@ namespace re2
                   StringPiece *submatch,
                   int nsubmatch) const
   {
-    // if (!ok())
-    // {
-    //   if (options_.log_errors())
-    //     LOG(ERROR) << "Invalid RE2: " << *error_;
-    //   return false;
-    // }
+    if(text.size() == 0 && pattern() == "")
+    {
+      return true;
+    }
+    if (!ok())
+    {
+      if (options_.log_errors())
+        LOG(ERROR) << "Invalid RE2: " << *error_;
+      return false;
+    }
 
     if (startpos > endpos || endpos > text.size())
     {
@@ -755,7 +760,7 @@ namespace re2
       haystack = encodingLatin1ToUTF8(text.as_string());
     }
     rure *re = (rure *)prog_;
-    rure *re1 = (rure *)rprog_;
+    // rure *re1 = (rure *)rprog_;
     rure_match match = {0};
     size_t length = strlen(haystack.c_str());
     // bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
@@ -770,7 +775,7 @@ namespace re2
         return false;
       }
       else if(!nsubmatch){
-        if(error_code_ == ErrorInternal)
+        if(error_code_)
         {
           return false;
         }else{
@@ -781,7 +786,7 @@ namespace re2
     }
     else if(re_anchor == ANCHOR_BOTH)
     {
-      bool matched = rure_find(re1, (const uint8_t *)haystack.c_str(), length, 0, &match);
+      bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), length, 0, &match);
       if(!matched || match.start != 0 || match.end != length){
         return false;
       }
