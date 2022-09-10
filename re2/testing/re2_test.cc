@@ -778,12 +778,10 @@ TEST(RE2, NULTerminated) {
 #define MAP_ANONYMOUS MAP_ANON
 #endif
   v = static_cast<char*>(mmap(NULL, 2*pagesize, PROT_READ|PROT_WRITE,
-                              MAP_ANONYMOUS|MAP_PRIVATE, -1, 0));
-  /*待处理的                            
+                              MAP_ANONYMOUS|MAP_PRIVATE, -1, 0));                           
   ASSERT_TRUE(v != reinterpret_cast<char*>(-1));
   LOG(INFO) << "Memory at " << (void*)v;
   ASSERT_EQ(munmap(v + pagesize, pagesize), 0) << " error " << errno;
-  */
   v[pagesize - 1] = '1';
 
   x = 0;
