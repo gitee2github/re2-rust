@@ -469,16 +469,42 @@ int FilteredRE2::FirstMatch(const StringPiece& text,
     return -1;
   }
   std::vector<int> regexps;
-  // 根据atoms获取regexp
-  // 注意这里是
-
-  // for(size_t i = 0; i < atoms.size(); i++){
-  //   for(size_t j = 0; j < re2_vec_.size(); j++){
-  //     if(RE2::PartialMatch(atoms[i], re2_vec_[j]->pattern())){
-  //       regexps.push_back(j);
-  //     }
-  //   }
-  // }
+  // 根据atoms索引获取regexp索引的规则
+  /*
+   * 如果没有原子, 那么直接会把re加进去。
+   * 如果这个正则表达式有原子，那么要把该正则表达式的所有的原子的索引全加入，这个正则表达式才能加入成功。
+   */
+  for(size_t i = 0; i < re2_vec_.size(); i++)
+  {
+    my_atoms.clear();
+    vec_atoms_tmp.clear(); 
+    vec_con.clear();
+    atoms_tmp.clear();
+    MyCompile(re2_vec_[i]->pattern(), 0, re2_vec_[i]->pattern().size() - 1);
+    if(my_atoms.size() == 0)
+    {
+      regexps.push_back(i);
+      continue;
+    }
+    else
+    {
+      for(auto x : my_atoms)
+      {
+        int flag = 0;
+        for(auto y : atoms)
+        {
+          if(x == my_atoms[y]) 
+            continue;
+          else
+          {
+            flag = 1;
+            break;
+          }
+          if(flag == 0) regexps.push_back(i);
+        }
+      }
+    }
+  }
 
   for (size_t i = 0; i < regexps.size(); i++)
     if (RE2::PartialMatch(text, *re2_vec_[regexps[i]]))
