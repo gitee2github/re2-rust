@@ -145,8 +145,7 @@ TESTS=\
 	obj/test/set_test\
 	obj/test/re2_test\
 	obj/test/re2_arg_test\
-
-	#obj/test/filtered_re2_test\
+	obj/test/filtered_re2_test\
 
 	# obj/test/charclass_test\
 	# obj/test/compile_test\
