@@ -11,6 +11,24 @@ $ cd re2-rust
 
 ### 编译、安装re2-rust
 
+使用openEuler 22.03-LTS
+
+``` Shell
+dnf install git
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+dnf install g++
+git clone https://gitee.com/openeuler/re2-rust.git
+cd re2-rust
+make
+make install
+make test
+g++ ../testinstall.cc -o testinstall -lre2
+./testinstall
+```
+
+Ubuntu 20.04
+
 ``` Shell
 $ mkdir build && cd build
 $ cmake ..
