@@ -283,6 +283,21 @@ void MyCompile(std::string str, int start_post, int end_post)
 
   for (int i = start_post; i <= end_post; i++)
   {
+    // 处理
+    if(str[i]=='\\')
+    {
+      if(atoms_tmp_string.size() > 0)
+      {
+        my_atoms.push_back(atoms_tmp_string);
+        atoms_tmp_string.clear();
+      }
+        
+      int escape_char_post = i;
+      if(JudgeIsCharOrNumber(++escape_char_post)) ++i;
+      int escape_plus_post = i;
+      if(str[++escape_plus_post] == '+') ++i;
+      continue;   
+    }
     if(str[i] == '*')
     {
       continue;
@@ -462,6 +477,8 @@ int FilteredRE2::SlowFirstMatch(const StringPiece& text) const {
   return -1;
 }
 
+
+
 int FilteredRE2::FirstMatch(const StringPiece& text,
                             const std::vector<int>& atoms) const {
   if (!compiled_) {
@@ -518,10 +535,42 @@ bool FilteredRE2::AllMatches(
     std::vector<int>* matching_regexps) const {
   matching_regexps->clear();
   std::vector<int> regexps;
-  // for(int i = 0; i < atoms_tmp.size(); i++){
-    
-  // }
-  // prefilter_tree_->RegexpsGivenStrings(atoms, &regexps);
+  // 根据atoms索引获取regexp索引的规则
+  /*
+   * 如果没有原子, 那么直接会把re加进去。
+   * 如果这个正则表达式有原子，那么要把该正则表达式的所有的原子的索引全加入，这个正则表达式才能加入成功。
+   */
+  for(size_t i = 0; i < re2_vec_.size(); i++)
+  {
+    my_atoms.clear();
+    vec_atoms_tmp.clear(); 
+    vec_con.clear();
+    atoms_tmp.clear();
+    MyCompile(re2_vec_[i]->pattern(), 0, re2_vec_[i]->pattern().size() - 1);
+    if(my_atoms.size() == 0)
+    {
+      regexps.push_back(i);
+      continue;
+    }
+    else
+    {
+      for(auto x : my_atoms)
+      {
+        int flag = 0;
+        for(auto y : atoms)
+        {
+          if(x == my_atoms[y]) 
+            continue;
+          else
+          {
+            flag = 1;
+            break;
+          }
+          if(flag == 0) regexps.push_back(i);
+        }
+      }
+    }
+  }
   for (size_t i = 0; i < re2_vec_.size(); i++)
     if (RE2::PartialMatch(text, *re2_vec_[i]))
       matching_regexps->push_back(i);
