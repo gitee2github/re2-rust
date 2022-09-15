@@ -434,7 +434,7 @@ TEST(QuoteMeta, SimpleNegative) {
 }
 
 TEST(QuoteMeta, Latin1) {
-  // TestQuoteMeta("3\xb2 = 9", RE2::Latin1);
+  TestQuoteMeta("3\xb2 = 9", RE2::Latin1);
 }
 
 TEST(QuoteMeta, UTF8) {
@@ -1107,7 +1107,7 @@ TEST(RE2, UTF8) {
 
   // Both should match in either mode, bytes or UTF-8
   RE2 re_test1(".........", RE2::Latin1);
-  // ASSERT_TRUE(RE2::FullMatch(utf8_string, re_test1));
+  ASSERT_TRUE(RE2::FullMatch(utf8_string, re_test1));
   RE2 re_test2("...");
   ASSERT_TRUE(RE2::FullMatch(utf8_string, re_test2));
 
@@ -1125,7 +1125,7 @@ TEST(RE2, UTF8) {
 
   // Check that string matches itself in either mode
   RE2 re_test5(utf8_string, RE2::Latin1);
-  // ASSERT_TRUE(RE2::FullMatch(utf8_string, re_test5));
+  ASSERT_TRUE(RE2::FullMatch(utf8_string, re_test5));
   RE2 re_test6(utf8_string);
   ASSERT_TRUE(RE2::FullMatch(utf8_string, re_test6));
 

@@ -188,7 +188,7 @@ namespace re2
     rure_error *err = rure_error_new();
 
     // 对传入的Latin-1编码的字符串要进行转换
-    if (options.encoding() == 1)
+    if (options.encoding() == re2::RE2::Options::EncodingUTF8)
     { // UTF-8编码
       rure_str = pattern.ToString();
     }
@@ -947,7 +947,7 @@ namespace re2
       return true;
     }
     // for FullMatch(no captures)
-    if(re_anchor == ANCHOR_BOTH && n == 0)
+    if(re_anchor == ANCHOR_BOTH && n == 0 && options_.encoding() == re2::RE2::Options::EncodingUTF8)
     {
       bool matched = rure_is_match((rure *)entire_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), 0);
       return matched;
