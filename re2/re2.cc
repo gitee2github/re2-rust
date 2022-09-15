@@ -186,9 +186,7 @@ namespace re2
     group_names_ = NULL;
 
     rure_error *err = rure_error_new();
-    // pattern --> rure --> Prog
-    // Compile
-    // 要对flages进行设置，对应RE2中传入的option
+
     // 对传入的Latin-1编码的字符串要进行转换
     if (options.encoding() == 1)
     { // UTF-8编码
@@ -199,43 +197,30 @@ namespace re2
       rure_str = encodingLatin1ToUTF8(pattern.ToString());
     }
 
-    // 特殊处理
-    if(strcmp(rure_str.c_str(), "a[[:foobar:]]") == 0)
-    {
-      error_code_ = ErrorInternal;
-      return;
-    }
-
     uint32_t flags = RURE_DEFAULT_FLAGS;
     if(options_.dot_nl()) flags = RURE_FLAG_DOTNL;
     if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
-    // 空字符串的处理???
-    // std::string FullMatch_rure_str = rure_str;
-    // FullMatch_rure_str.insert(0, "^");
-    // FullMatch_rure_str.append("$");
+    // for All
     rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
-    // rure *re1 = rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
-
+    if(rure_str == "")
+    {
+      const char *empty_char = "";
+      re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err);
+    }
     //如果编译失败，打印错误信息
     if (re == NULL)
     {
       const char *msg = rure_error_message(err);
+      LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
       std::string empty_character_classes = "empty character classes are not allowed";
 
       // 处理空字符集无法编译的问题
       std::string msg_info = msg;
       if (msg_info.find(empty_character_classes) != string::npos)
       {
-        // rure_error_free(err);
-        // rure_error *err_tmp = rure_error_new();
-        // const char *empty_char = "";
-        // re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err_tmp);
-        // prog_ = (Prog *)re;
-        // rprog_ = (Prog *)re;
         pattern_ = "";
         error_ = new std::string(msg);
         error_code_ = ErrorInternal;
-        // rure_error_free(err_tmp);
       }
       else
       {
@@ -244,32 +229,47 @@ namespace re2
           LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
         }
         error_ = new std::string(msg);
-        error_code_ = ErrorInternal; // 暂时对这个错误进行赋值，如何处理错误类型？？？
-        // rure_free(re);
-        // rure_error_free(err);
-        
+        error_code_ = ErrorInternal; // 暂时对这个错误进行赋值，如何处理错误类型？？？    
       }
       return;
     }
+    prog_ = (Prog *)re;
+    // for Consume and FindAndConsume
+    suffix_regexp_ = (re2::Regexp *)rure_new((const uint8_t *)pattern.data(), pattern.size());
+    // for FullMatch
+    if(rure_str != "")
+    {
+      std::string FullMatch_rure_str = rure_str;
+      FullMatch_rure_str.insert(0, "^(");
+      FullMatch_rure_str.append(")$");
+      entire_regexp_ = (re2::Regexp *)rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
+      if(entire_regexp_ == NULL)
+      {
+        const char *msg = rure_error_message(err);
+        LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
+      }
+    }
     else
     {
-      prog_ = (Prog *)re;
-      // rprog_ = (Prog *)re1;
-      error_ = empty_string;
-      error_code_ = RE2::NoError;
+      entire_regexp_ = (re2::Regexp *)re;
     }
 
     //获取捕获组的数量, 并对num_captures_其进行赋值
     rure_captures *caps = rure_captures_new(re);
     size_t captures_len = rure_captures_len(caps) - 1;
-    if(!options_.never_capture()) num_captures_ = (int)captures_len;
-    else num_captures_ = 0;
-    // 问题？？？
-    // rure_free和rure_captures_free是否要进行使用？
-    // error_code_如何进行赋值，RegexpErrorToRE2删除了？？？
-    // error_code_ = RE2::NoError;
-    // rure_free(re);
-    suffix_regexp_ = (re2::Regexp *)rure_new((const uint8_t *)pattern.data(), pattern.size());
+    if(!options_.never_capture()) 
+    {
+      num_captures_ = (int)captures_len;
+    }
+    else 
+    {
+      num_captures_ = 0;
+    }
+
+    rure_captures_free(caps);
+    rure_error_free(err);
+    error_ = empty_string;
+    error_code_ = RE2::NoError;   
   }
 
   // Returns rprog_, computing it if needed.
@@ -294,13 +294,14 @@ namespace re2
   RE2::~RE2()
   {
     // if (suffix_regexp_)
-    //   // suffix_regexp_->Decref();
-    //   if (entire_regexp_)
-    //     // entire_regexp_->Decref();
-    //     // delete prog_;
+    //   rure_free((rure *)suffix_regexp_);
+    // if (entire_regexp_)
+    //   rure_free((rure *)entire_regexp_);
+    // if(prog_)
+    //   rure_free((rure *)prog_);
     //     // delete rprog_;
-    //     if (error_ != empty_string)
-    //       delete error_;
+    if (error_ != empty_string)
+      delete error_;
     if (named_groups_ != NULL && named_groups_ != empty_named_groups)
       delete named_groups_;
     if (group_names_ != NULL && group_names_ != empty_group_names)
@@ -937,12 +938,19 @@ namespace re2
       return false;
     }
     
+    // for Consume and FindAndConsume
     rure_match match;
     if(consumed && n == 0 &&
         rure_consume((rure *)suffix_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), &match))
     {
       *consumed = match.end;
       return true;
+    }
+    // for FullMatch(no captures)
+    if(re_anchor == ANCHOR_BOTH && n == 0)
+    {
+      bool matched = rure_is_match((rure *)entire_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), 0);
+      return matched;
     }
 
     /*
