@@ -202,11 +202,12 @@ namespace re2
     if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
     // for All
     rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
-    if(rure_str == "")
-    {
-      const char *empty_char = "";
-      re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err);
-    }
+    //这里应该被注释，如果rure_str为空，re会为空，会去执行if(re == NULL)判断，从而对空的正则表达式进行处理
+    // if(rure_str == "")
+    // {
+    //   const char *empty_char = "";
+    //   re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err);
+    // }
     //如果编译失败，打印错误信息
     if (re == NULL)
     {
@@ -764,6 +765,8 @@ namespace re2
           return true;
         }
         if(matched && nsubmatch){
+          haystack = temp;
+          length = strlen(haystack.c_str());
           goto L1;
         }
         strs = strs.substr(pos + 1, length + 1);
