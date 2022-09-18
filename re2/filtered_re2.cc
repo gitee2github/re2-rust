@@ -76,21 +76,21 @@ RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
 
 /**
  * 负责对字符集进行连接操作
- * 
+ *
  */
 std::vector<std::string> Connection(std::string str, std::vector<std::string> vec1, std::vector<char> vec2)
 {
   std::vector<std::string> vec_tmp;
-  if(str.size() > 0)
+  if (str.size() > 0)
   {
-    for(size_t i = 0; i < vec2.size(); i++)
+    for (size_t i = 0; i < vec2.size(); i++)
     {
       vec_tmp.push_back(str + vec2[i]);
     }
   }
-  else if(vec1.size() == 0)
+  else if (vec1.size() == 0)
   {
-    for(auto x : vec2)
+    for (auto x : vec2)
     {
       std::string str;
       str.push_back(x);
@@ -99,11 +99,11 @@ std::vector<std::string> Connection(std::string str, std::vector<std::string> ve
   }
   else
   {
-    for(size_t i = 0; i < vec1.size(); i++)
+    for (size_t i = 0; i < vec1.size(); i++)
     {
-      for(size_t j = 0; j < vec2.size(); j++)
+      for (size_t j = 0; j < vec2.size(); j++)
       {
-        
+
         vec_tmp.push_back(vec1[i] + vec2[j]);
       }
     }
@@ -112,31 +112,29 @@ std::vector<std::string> Connection(std::string str, std::vector<std::string> ve
   return vec_tmp;
 }
 
-
 /**
  * 处理
- * a[a-c]a[zv] 
+ * a[a-c]a[zv]
  * [abc]
  * [a-c]+
  */
 std::vector<char> CharClassExpansion(std::string str, int start_post, int end_post)
 {
-  std::vector<char> atoms;   // 字符集中的atoms
+  std::vector<char> atoms; // 字符集中的atoms
   std::vector<char> vec_tmp;
-  std::vector<char> vec_op;
+  // std::vector<char> vec_op;
   std::vector<char> vec_char;
   std::string str_tmp;
 
   vec_tmp.clear();
-  vec_op.clear();
+  // vec_op.clear();
   vec_char.clear();
   int flag_connect = 0;
-  int flag_plus = 0;
   for (int i = start_post; i <= end_post; i++)
   {
-    if (str[i] == '[')
+    if (str[i] == '[' || str[i] == ']')
     {
-      vec_op.push_back(str[i]);
+      continue;
     }
     else if ((str[i] >= 'a' && str[i] <= 'z') || (str[i] >= 0 && str[i] <= 9))
     {
@@ -145,17 +143,7 @@ std::vector<char> CharClassExpansion(std::string str, int start_post, int end_po
     else if (str[i] == '-')
     {
       flag_connect = 1;
-      vec_op.push_back(str[i]);
-    }
-    else if (str[i] == ']')
-    {
-      vec_op.push_back(str[i]);
-    }
-    else
-    {
-      flag_plus = 0;
-      vec_char.clear();
-      vec_op.clear();
+      continue;
     }
   }
 
@@ -166,12 +154,10 @@ std::vector<char> CharClassExpansion(std::string str, int start_post, int end_po
     char x1 = vec_char[0];
     for (int i = int(x1); i <= int(x2); i++)
     {
-      // std::string str_real;
-      // str_real += char(i);
       atoms.push_back(char(i));
     }
   }
-  else if (flag_connect == 0 && flag_plus == 0)
+  else if (flag_connect == 0)
   {
     for (auto x : vec_char)
     {
@@ -180,7 +166,6 @@ std::vector<char> CharClassExpansion(std::string str, int start_post, int end_po
   }
   return atoms;
 }
-
 
 /**
  *  (abc123|abc|ghi789|abc1234)
@@ -261,48 +246,67 @@ bool JudgeIsCharOrNumber(char x)
     return true;
   return false;
 }
-static std::vector<std::string> my_atoms; // 最终存储所有的atoms
-static std::vector<std::string> vec_atoms_tmp; // 暂时存储atoms
-static std::vector<std::string> vec_con;
-static std::vector<char> atoms_tmp;
-void MyCompile(std::string str, int start_post, int end_post)
-{
-  std::string atoms_tmp_string;          // 暂时存储
-  // int start_post = 0;             // 开始位置
-  // int end_post = 0;               // 结束位置
-  // 将字符串所有的大写转换为小写  non-ASCII的字符现在没有进行处理
-  if(start_post > end_post)
-  {
-    for (size_t i = 0; i < vec_atoms_tmp.size(); i++)
-    {
-      my_atoms.push_back(vec_atoms_tmp[i]);
-    }
-    return;
-  }
-  UpperToLower(str, 0, str.size());
 
-  for (int i = start_post; i <= end_post; i++)
+std::vector<std::string> MyCompile(std::string str)
+{
+  std::vector<std::string> my_atoms;      // 最终得到的所有atoms
+  std::vector<std::string> vec_atoms_tmp; // 暂存的atom
+  std::vector<std::string> vec_con;
+  std::vector<char> atoms_tmp;
+  std::string atoms_tmp_string;
+  // 将字符串中的大写字符变为小写
+  UpperToLower(str, 0, str.size());
+  for (size_t i = 0; i < str.length(); i++)
   {
-    // 处理
-    if(str[i]=='\\')
+    // 处理括号分组
+    if (str[i] == '(')
     {
-      if(atoms_tmp_string.size() > 0)
+      int group_start_post = i;
+      do
+        ++i;
+      while (str[i] != ')');
+      int group_end_post = i;
+
+      std::vector<std::string> vec = Group_multiple_selection(str, group_start_post, group_end_post);
+      int tmp_post_group = i;
+      if (str[tmp_post_group + 1] == '.' && vec.size() != 0)
+      {
+        ++i;
+        for (auto x : vec)
+        {
+          my_atoms.push_back(x);
+        }
+      }
+      // "(abc123|def456|ghi789).*mnop[x-z]+"
+      continue;
+    }
+    if (JudgeIsCharOrNumber(str[i]))
+    {
+      atoms_tmp_string += str[i];
+      continue;
+    }
+    // 处理
+    if (str[i] == '\\')
+    {
+      if (atoms_tmp_string.size() > 0)
       {
         my_atoms.push_back(atoms_tmp_string);
         atoms_tmp_string.clear();
       }
-        
+
       int escape_char_post = i;
-      if(JudgeIsCharOrNumber(++escape_char_post)) ++i;
+      if (JudgeIsCharOrNumber(++escape_char_post))
+        ++i;
       int escape_plus_post = i;
-      if(str[++escape_plus_post] == '+') ++i;
-      continue;   
+      if (str[++escape_plus_post] == '+')
+        ++i;
+      continue;
     }
-    if(str[i] == '*')
+    if (str[i] == '*')
     {
       continue;
     }
-    if (str[i] == '.' )
+    if (str[i] == '.')
     {
       if (atoms_tmp_string.size() > 2 && vec_atoms_tmp.size() == 0)
       {
@@ -310,9 +314,9 @@ void MyCompile(std::string str, int start_post, int end_post)
         atoms_tmp_string.clear();
         continue;
       }
-      else if(atoms_tmp_string.size() > 0 && vec_atoms_tmp.size() != 0)
+      else if (atoms_tmp_string.size() > 0 && vec_atoms_tmp.size() != 0)
       {
-        for(auto x : vec_atoms_tmp)
+        for (auto x : vec_atoms_tmp)
         {
           my_atoms.push_back(x + atoms_tmp_string);
         }
@@ -323,57 +327,19 @@ void MyCompile(std::string str, int start_post, int end_post)
       {
         continue;
       }
-
     }
-    // 先处理普通字符
-    if (JudgeIsCharOrNumber(str[i]))
+    // 处理多个字符集
+    // a[a-b]a
+    // a[a-b][a-b]
+    if(str[i] == '[')
     {
-      atoms_tmp_string += str[i];
-      continue;
-    }
-
-    // 处理括号分组
-    if(str[i] == '(')
-    {
-      int group_start_post = i;
-      do
-      {
-        ++i;
-      } while(str[i] != ')');
-      int group_end_post = i;
-      
-      std::vector<std::string> vec = Group_multiple_selection(str, group_start_post, group_end_post);
-      int tmp_post_group = i;
-      if(str[tmp_post_group + 1] == '.' && vec.size() != 0)
-      {
-        ++i;
-        for(auto x : vec)
-        {
-          my_atoms.push_back(x);
-        }
-      }
-      // "(abc123|def456|ghi789).*mnop[x-z]+"
-      continue; 
-
-    }
-
-    // 处理字符集
-    // [a-z]+
-    // 012345
-    if (str[i] == '[')
-    {
-
-      start_post = i;
-      while(str[++i] != ']')
-      {
-
-      }
-      int tmp_post = i;
+      int start_post = i;
+      do ++i; while(str[i] != ']');
+      int plus_tmp = i;
       // 看是否有 + 号
-
-      if(str[++tmp_post] == '+')
+      if(str[++plus_tmp] == '+')
       {
-        end_post = ++i;
+        
         if(atoms_tmp_string.size() > 2)
         {
           my_atoms.push_back(atoms_tmp_string);
@@ -392,7 +358,7 @@ void MyCompile(std::string str, int start_post, int end_post)
           }
           atoms_tmp_string.clear();
         }
-        end_post = tmp_post - 1;
+        int end_post = i;
         atoms_tmp.clear();
         atoms_tmp = CharClassExpansion(str, start_post, end_post);
         vec_con.clear();
@@ -406,36 +372,22 @@ void MyCompile(std::string str, int start_post, int end_post)
 
       }
     }
-    int start = end_post + 1;
-    if(str[start] == '[' || JudgeIsCharOrNumber(str[start]))
+  }
+  if(vec_atoms_tmp.size() > 0)
+  {
+    for(auto x : vec_atoms_tmp)
     {
-      MyCompile(str, start, str.size() - 1);       
-      
+      my_atoms.push_back(x);
     }
-    else
-    {
-      for (size_t i = 0; i < vec_atoms_tmp.size(); i++)
-      {
-        my_atoms.push_back(vec_atoms_tmp[i]);
-      }
-      
-    }
-    if(i == int(str.length() - 1) && atoms_tmp_string.size() > 2)
-    {
-      my_atoms.push_back(atoms_tmp_string);
-    }
-
   }
   if(atoms_tmp_string.size() > 2)
   {
     my_atoms.push_back(atoms_tmp_string);
-    atoms_tmp_string.clear();
   }
+  return my_atoms;
 }
 
 
-
-// static std::vector<std::string> atoms_tmp;
 
 void FilteredRE2::Compile(std::vector<std::string>* atoms) {
   if (compiled_) {
@@ -448,27 +400,14 @@ void FilteredRE2::Compile(std::vector<std::string>* atoms) {
     return;
   }
   atoms->clear();
-  /*
-    获取到所有的atoms
-    存在在atoms和atoms_tmp中
-  */
   for(size_t i = 0; i < re2_vec_.size(); i++)
   {
-    my_atoms.clear();
-    vec_atoms_tmp.clear(); 
-    vec_con.clear();
-    atoms_tmp.clear();
-
-    MyCompile(re2_vec_[i]->pattern(), 0, re2_vec_[i]->pattern().size() - 1);
+    std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern());
     for(auto x : my_atoms)
-    {
-     atoms->push_back(x);
-    }
-
+      atoms->push_back(x);
   }
   compiled_ = true;
 }
-
 
 int FilteredRE2::SlowFirstMatch(const StringPiece& text) const {
   for (size_t i = 0; i < re2_vec_.size(); i++)
@@ -477,15 +416,8 @@ int FilteredRE2::SlowFirstMatch(const StringPiece& text) const {
   return -1;
 }
 
-
-
-int FilteredRE2::FirstMatch(const StringPiece& text,
-                            const std::vector<int>& atoms) const {
-  if (!compiled_) {
-    LOG(DFATAL) << "FirstMatch called before Compile.";
-    return -1;
-  }
-  std::vector<int> regexps;
+void AtomsToRegexps(std::vector<RE2*> re2_vec_, std::vector<int> atoms, std::vector<int> *regexps)
+{
   // 根据atoms索引获取regexp索引的规则
   /*
    * 如果没有原子, 那么直接会把re加进去。
@@ -493,14 +425,11 @@ int FilteredRE2::FirstMatch(const StringPiece& text,
    */
   for(size_t i = 0; i < re2_vec_.size(); i++)
   {
-    my_atoms.clear();
-    vec_atoms_tmp.clear(); 
-    vec_con.clear();
-    atoms_tmp.clear();
-    MyCompile(re2_vec_[i]->pattern(), 0, re2_vec_[i]->pattern().size() - 1);
+    std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern());
+
     if(my_atoms.size() == 0)
     {
-      regexps.push_back(i);
+      regexps->push_back(i);
       continue;
     }
     else
@@ -517,12 +446,22 @@ int FilteredRE2::FirstMatch(const StringPiece& text,
             flag = 1;
             break;
           }
-          if(flag == 0) regexps.push_back(i);
+          if(flag == 0) regexps->push_back(i);
         }
       }
     }
   }
+}
 
+int FilteredRE2::FirstMatch(const StringPiece& text,
+                            const std::vector<int>& atoms) const {
+  if (!compiled_) {
+    LOG(DFATAL) << "FirstMatch called before Compile.";
+    return -1;
+  }
+  std::vector<int> regexps;
+  AtomsToRegexps(re2_vec_, atoms, &regexps);
+  
   for (size_t i = 0; i < regexps.size(); i++)
     if (RE2::PartialMatch(text, *re2_vec_[regexps[i]]))
       return static_cast<int>(i);
@@ -534,43 +473,10 @@ bool FilteredRE2::AllMatches(
     const std::vector<int>& atoms,
     std::vector<int>* matching_regexps) const {
   matching_regexps->clear();
+
   std::vector<int> regexps;
-  // 根据atoms索引获取regexp索引的规则
-  /*
-   * 如果没有原子, 那么直接会把re加进去。
-   * 如果这个正则表达式有原子，那么要把该正则表达式的所有的原子的索引全加入，这个正则表达式才能加入成功。
-   */
-  for(size_t i = 0; i < re2_vec_.size(); i++)
-  {
-    my_atoms.clear();
-    vec_atoms_tmp.clear(); 
-    vec_con.clear();
-    atoms_tmp.clear();
-    MyCompile(re2_vec_[i]->pattern(), 0, re2_vec_[i]->pattern().size() - 1);
-    if(my_atoms.size() == 0)
-    {
-      regexps.push_back(i);
-      continue;
-    }
-    else
-    {
-      for(auto x : my_atoms)
-      {
-        int flag = 0;
-        for(auto y : atoms)
-        {
-          if(x == my_atoms[y]) 
-            continue;
-          else
-          {
-            flag = 1;
-            break;
-          }
-          if(flag == 0) regexps.push_back(i);
-        }
-      }
-    }
-  }
+  AtomsToRegexps(re2_vec_, atoms, &regexps);
+
   for (size_t i = 0; i < re2_vec_.size(); i++)
     if (RE2::PartialMatch(text, *re2_vec_[i]))
       matching_regexps->push_back(i);
@@ -581,16 +487,13 @@ bool FilteredRE2::AllMatches(
 void FilteredRE2::AllPotentials(
     const std::vector<int>& atoms,
     std::vector<int>* potential_regexps) const {
-  // prefilter_tree_->RegexpsGivenStrings(atoms, potential_regexps);
+  AtomsToRegexps(re2_vec_, atoms, potential_regexps);
 }
 
 void FilteredRE2::RegexpsGivenStrings(const std::vector<int>& matched_atoms,
                                       std::vector<int>* passed_regexps) {
-  // prefilter_tree_->RegexpsGivenStrings(matched_atoms, passed_regexps);
+  AtomsToRegexps(re2_vec_, matched_atoms, passed_regexps);
 }
 
-void FilteredRE2::PrintPrefilter(int regexpid) {
-  // prefilter_tree_->PrintPrefilter(regexpid);
-}
 
 }  // namespace re2
