@@ -733,17 +733,6 @@ namespace re2
       return true;
     }
 
-    
-    // if(text.data() == "")
-    // {
-    //   for(int i = 0; i < nsubmatch; i++)
-    //   {
-    //     submatch[i] = StringPiece("");
-    //   }
-    //   return true;
-    // }
-    // rure_error *err = rure_error_new();
-    // rure *re = rure_compile((const uint8_t *) pattern_.c_str(), strlen(pattern_.c_str()), RURE_DEFAULT_FLAGS, NULL, err);
     std::string haystack;
     if (text.data() == NULL || text[0] == '\0')
     {
@@ -757,13 +746,31 @@ namespace re2
     // Latin-1编码转换
     if (options_.encoding() == 2)
     {
-      // std::cout << "DoMatch-Latin-1\n";
       haystack = encodingLatin1ToUTF8(text.as_string());
     }
     rure *re = (rure *)prog_;
     // rure *re1 = (rure *)rprog_;
     rure_match match = {0};
     size_t length = strlen(haystack.c_str());
+    if(options_.never_nl())
+    {
+      std::string strs = haystack + '\n';
+      size_t pos = strs.find('\n');
+      while(pos != strs.npos)
+      {
+        std::string temp = strs.substr(0, pos);
+        bool matched = rure_is_match(re, (const uint8_t *)temp.c_str(), strlen(temp.c_str()), 0);
+        if(matched && !nsubmatch){
+          return true;
+        }
+        if(matched && nsubmatch){
+          goto L1;
+        }
+        strs = strs.substr(pos + 1, length + 1);
+        pos = strs.find('\n');
+      }
+      return false;
+    }
     // bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
     // 这里没有 if(re_anchor == ANCHOR_START)原因是因为：
     // 只有Consume()使用了ANCHOR_START，而传入Consume()的参数通常是三个或者三个以上，
@@ -776,13 +783,7 @@ namespace re2
         return false;
       }
       else if(!nsubmatch){
-        if(error_code_)
-        {
-          return false;
-        }else{
-          return true;
-        }
-        
+        return true;
       }
     }
     else if(re_anchor == ANCHOR_BOTH)
@@ -796,83 +797,8 @@ namespace re2
       }
     }
     
-
-    /*
-    switch (re_anchor)
-    {
-    // ANCHOR_BOTH FullMatch
-    case ANCHOR_BOTH:
-    {
-      // 是否是FullMatch
-      if (nsubmatch != 0)
-      {
-
-        if (!matched)
-        {
-          return false;
-        }
-        else
-        {
-          if (match.start != 0 || match.end != strlen(haystack))
-          {
-            return false;
-          }
-        }
-      }
-      else
-      {
-        if (matched && match.start == startpos && match.end == endpos)
-        {
-          return true;
-        }
-        else
-        {
-          return false;
-        }
-      }
-      break;
-    }
-    // UNANCHORED  PartialMatch
-    case UNANCHORED:
-    {
-      if (nsubmatch != 0)
-      {
-        if (!matched)
-        {
-          return false;
-        }
-      }
-      else
-      {
-        // if (matched && match.end != 0)
-        if (matched)
-          return true;
-        else
-          return false;
-      }
-      break;
-    }
-    case ANCHOR_START:
-    {
-      if (nsubmatch == 0)
-      {
-        if (matched && match.start == startpos)
-          return true;
-        else
-          return false;
-      }
-      else
-      {
-        if (!matched)
-          return false;
-      }
-    }
-    }
-    */
     // Demo  获取捕获组内容，存储到submatch数组中
-    
-    // size_t length = strlen(haystack);
-
+    L1:
     rure_captures *caps = rure_captures_new(re);
     rure_find_captures(re, (const uint8_t *)haystack.c_str(),
                        length, 0, caps);
@@ -890,17 +816,13 @@ namespace re2
         size_t start = match.start;
         size_t end = match.end;
         size_t len = end - start;
-
         submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len));
-        // std::cout << "i=" << i << ", start=" << start << ", submatch=" << submatch[i] << endl;
       }
       else
       {
         submatch[i] = StringPiece();
       }
     }
-    
-
     return true;
   }
 
@@ -953,30 +875,6 @@ namespace re2
       return matched;
     }
 
-    /*
-    // 判断是否FullMatch, 判空
-    std::string haystack;
-    if (text.data() == NULL || text[0] == '\0')
-    {
-      haystack = "";
-    }
-    else
-    {
-      haystack = text.ToString();
-    }
-
-    // Latin-1编码转换
-    if (options_.encoding() == 2)
-    {
-      // std::cout << "DoMatch-Latin-1\n";
-      haystack = encodingLatin1ToUTF8(text.as_string());
-    }
-
-    rure *re = (rure *)prog_;
-    rure_match match = {0};
-    bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), strlen(haystack.c_str()), 0, &match);
-    */
-
     // Count number of capture groups needed.
     int nvec;
     if (n == 0 && consumed == NULL)
@@ -984,74 +882,6 @@ namespace re2
     else
       nvec = n + 1;
 
-    /*
-    // 0个捕获组的匹配判断
-    if (nvec == 0)
-    {
-      switch (re_anchor)
-      {
-      // ANCHOR_BOTH FullMatch
-      case ANCHOR_BOTH:
-      {
-        if (!matched)
-        {
-          return false;
-        }
-        else
-        {
-          if (match.start == 0 && match.end == strlen(haystack.c_str()))
-          {
-            // std::cout << "DoMatch : 0个捕获组, FullMatch成功!!\n";
-            return true;
-          }
-          else
-          {
-            // std::cout << "位置不对\n";
-            return false;
-          }
-        }
-
-        break;
-      }
-      // ANCHOR_START
-      case ANCHOR_START:
-      {
-        if (!matched)
-        {
-          return false;
-        }
-        else
-        {
-          if (match.start == 0)
-          {
-            return true;
-          }
-          else
-          {
-            // std::cout << "位置不对\n";
-            return false;
-          }
-        }
-        break;
-      }
-
-      // UNANCHORED  PartialMatch
-      case UNANCHORED:
-      {
-        if (!matched)
-        {
-          return false;
-        }
-        else
-        {
-          return true;
-        }
-
-        break;
-      }
-      }
-    }
-    */
     StringPiece *vec;
     StringPiece stkvec[kVecSize];
     StringPiece *heapvec = NULL;
