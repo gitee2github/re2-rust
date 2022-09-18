@@ -1341,9 +1341,7 @@ static struct NeverTest {
   { "(?s)(abc.*def)", "abc\ndef\n", NULL },
   { "(abc(.|\n)*def)", "abc\ndef\n", NULL },
   { "(abc[^x]*def)", "abc\ndef\n", NULL },
-  /*待处理的，这个测试用例通不过是因为捕获组的处理暂时没有处理好
   { "(abc[^x]*def)", "abczzzdef\ndef\n", "abczzzdef" },
-  */
 };
 
 TEST(RE2, NeverNewline) {
