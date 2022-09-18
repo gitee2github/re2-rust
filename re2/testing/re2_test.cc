@@ -455,16 +455,12 @@ TEST(QuoteMeta, HasNull) {
 
   // string with one null character
   has_null += '\0';
-  /*待处理的
   TestQuoteMeta(has_null);
-  */
   NegativeTestQuoteMeta(has_null, "");
 
   // Don't want null-followed-by-'1' to be interpreted as '\01'.
   has_null += '1';
-  /*待处理的
   TestQuoteMeta(has_null);
-  */
   NegativeTestQuoteMeta(has_null, "\1");
 }
 
