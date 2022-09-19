@@ -1556,7 +1556,6 @@ TEST(RE2, Bug10131674) {
   EXPECT_FALSE(RE2::FullMatch("hello world", re));
 }
 
-/*待处理的
 TEST(RE2, Bug18391750) {
   // Stray write past end of match_ in nfa.cc, caught by fuzzing + address sanitizer.
   const char t[] = {
@@ -1576,7 +1575,6 @@ TEST(RE2, Bug18391750) {
   ASSERT_TRUE(re.ok());
   RE2::PartialMatch(t, re);
 }
-*/
 
 TEST(RE2, Bug18458852) {
   // Bug in parser accepting invalid (too large) rune,
