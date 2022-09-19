@@ -61,10 +61,8 @@ TEST(FilteredRE2Test, SmallLatinTest) {
   v.opts.set_encoding(RE2::Options::EncodingLatin1);
   v.f.Add("\xde\xadQ\xbe\xef", v.opts, &id);
   v.f.Compile(&v.atoms);
-  /* Compile处理十六进制字符串问题
   EXPECT_EQ(1, v.atoms.size());
   EXPECT_EQ(v.atoms[0], "\xde\xadq\xbe\xef");
-  */
   v.atom_indices.push_back(0);
   v.f.AllMatches("foo\xde\xadQ\xbe\xeflemur", v.atom_indices, &v.matches);
   EXPECT_EQ(1, v.matches.size());
@@ -131,9 +129,7 @@ AtomTest atom_tests[] = {
       "xbcdea", "xbcdeb",
       "ybcdea", "ybcdeb"
     }
-  },
-  /* Compile 处理non-ASCII编码的字符串的大小写问题
-   {
+  },{
     // Test upper/lower of non-ASCII.
     "UnicodeLower", {
       "(?i)ΔδΠϖπΣςσ",
@@ -145,7 +141,6 @@ AtomTest atom_tests[] = {
       "ψρστυ",
     },
   },
-  */
 };
 
 void AddRegexpsAndCompile(const char* regexps[],
@@ -281,20 +276,21 @@ TEST(FilteredRE2Test, MatchTests) {
   v.f.AllMatches(text, atom_ids, &matching_regexps);
   EXPECT_EQ(2, matching_regexps.size());
 }
+/*
+TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
+  // Bug due to find() finding "" at the start of everything in a string
+  // set and thus SimplifyStringSet() would end up erasing everything.
+  // In order to test this, we have to keep PrefilterTree from discarding
+  // the OR entirely, so we have to make the minimum atom length zero.
 
-// TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
-//   // Bug due to find() finding "" at the start of everything in a string
-//   // set and thus SimplifyStringSet() would end up erasing everything.
-//   // In order to test this, we have to keep PrefilterTree from discarding
-//   // the OR entirely, so we have to make the minimum atom length zero.
-
-//   FilterTestVars v(0);  // override the minimum atom length
-//   const char* regexps[] = {"-R.+(|ADD=;AA){12}}"};
-//   const char* atoms[] = {"", "-r", "add=;aa", "}"};
-//   AddRegexpsAndCompile(regexps, arraysize(regexps), &v);
-//   EXPECT_TRUE(CheckExpectedAtoms(atoms, arraysize(atoms),
-//                                  "EmptyStringInStringSetBug", &v));
-// }
+  FilterTestVars v(0);  // override the minimum atom length
+  const char* regexps[] = {"-R.+(|ADD=;AA){12}}"};
+  const char* atoms[] = {"", "-r", "add=;aa", "}"};
+  AddRegexpsAndCompile(regexps, arraysize(regexps), &v);
+  EXPECT_TRUE(CheckExpectedAtoms(atoms, arraysize(atoms),
+                                 "EmptyStringInStringSetBug", &v));
+}
+*/
 
 TEST(FilteredRE2Test, MoveSemantics) {
   FilterTestVars v1;

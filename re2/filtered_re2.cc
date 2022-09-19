@@ -234,16 +234,64 @@ std::vector<std::string> Group_multiple_selection(std::string str, int start_poi
  * 1. 标准ASCII
  * 2. 非标准ASCII  如希腊字母
  */
+
 void UpperToLower(std::string &str, int start_post, int end_post)
 {
   // 标准ASCII转小写
   transform(str.begin(), str.end(), str.begin(), ::tolower);
 }
 
+void HandleCharacterCase(std::string &str)
+{
+  std::map<std::string, std::string> m = {{"\u0391", "\u03B1"}, {"\u0392", "\u03B2"}, {"\u0393", "\u03B3"},
+                                            {"\u0394", "\u03B4"}, {"\u0395", "\u03B5"}, {"\u0396", "\u03B6"},
+                                            {"\u0397", "\u03B7"}, {"\u0398", "\u03B8"}, {"\u0399", "\u03B9"},
+                                            {"\u039A", "\u03BA"}, {"\u039B", "\u03BB"}, {"\u039C", "\u03BC"},
+                                            {"\u039D", "\u03BD"}, {"\u039E", "\u03BE"}, {"\u039F", "\u03BF"}, 
+                                            {"\u03A0", "\u03C0"}, {"\u03A1", "\u03C1"}, {"\u03A2", "\u03C2"},
+                                            {"\u03A3", "\u03C3"}, {"\u03A4", "\u03C4"}, {"\u03A5", "\u03C5"},
+                                            {"\u03A6", "\u03C6"}, {"\u03A7", "\u03C7"}, {"\u03A8", "\u03C8"},
+                                            {"\u03A9", "\u03C9"}};
+  for(size_t i = 0; i < str.length(); i += 2)
+  {
+    std::string subStr = str.substr(i, 2);
+    if(m.count(subStr) > 0)
+    {
+      str.replace(i, 2, m[subStr]);
+      continue;
+    }
+    else if(subStr == "ϖ")
+    {
+      str.replace(i, 2, "π");
+      continue;
+    }
+    else if(subStr == "ς")
+    {
+      str.replace(i, 2, "σ");
+      continue;
+    }
+  }
+}
+
+
 bool JudgeIsCharOrNumber(char x)
 {
   if ((x >= 'a' && x <= 'z') || (x >= 0 && x <= 9))
     return true;
+  return false;
+}
+
+bool JudedIsGreekAlphabet(std::string str)
+{
+  std::vector<std::string> vec_alphabet = {"\u03B1", "\u03B2", "\u03B3", "\u03B4", "\u03B5", 
+                                            "\u03B6", "\u03B7", "\u03B8", "\u03B9", "\u03BA", 
+                                            "\u03BB", "\u03BC", "\u03BD", "\u03BE", "\u03BF",
+                                            "\u03C0", "\u03C1", "\u03C2", "\u03C3", "\u03C4",
+                                            "\u03C5", "\u03C6", "\u03C7", "\u03C8", "\u03C9"};
+  for(auto x : vec_alphabet)
+  {
+    if(x == str) return true;
+  }
   return false;
 }
 
@@ -254,10 +302,22 @@ std::vector<std::string> MyCompile(std::string str)
   std::vector<std::string> vec_con;
   std::vector<char> atoms_tmp;
   std::string atoms_tmp_string;
+  std::string subStr;
   // 将字符串中的大写字符变为小写
   UpperToLower(str, 0, str.size());
+  HandleCharacterCase(str);
   for (size_t i = 0; i < str.length(); i++)
   {
+    // 处理希腊字母
+    subStr.clear();
+    subStr = str.substr(i, 2);
+    if(JudedIsGreekAlphabet(subStr))
+    {
+      ++i;
+      atoms_tmp_string += subStr;
+      continue;
+    }
+
     // 处理括号分组
     if (str[i] == '(')
     {
@@ -371,6 +431,11 @@ std::vector<std::string> MyCompile(std::string str)
         }
 
       }
+    }
+    if(int(str[i]) < 0)
+    {
+      atoms_tmp_string += str[i];
+      continue;
     }
   }
   if(vec_atoms_tmp.size() > 0)
