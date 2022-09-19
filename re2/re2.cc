@@ -199,7 +199,11 @@ namespace re2
 
     uint32_t flags = RURE_DEFAULT_FLAGS;
     if(options_.dot_nl()) flags = RURE_FLAG_DOTNL;
-    if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
+    // if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
+    if(options_.encoding() == RE2::Options::EncodingLatin1){
+      flags |= RURE_FLAG_UNICODE; 
+    }
+
     // for All
     rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
     //这里应该被注释，如果rure_str为空，re会为空，会去执行if(re == NULL)判断，从而对空的正则表达式进行处理
