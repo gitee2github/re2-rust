@@ -15,10 +15,15 @@ namespace re2 {
 class Prefilter {};
 // #include "re2/prefilter_tree.h"
   class PrefilterTree {
-    public:
-    PrefilterTree(){};
-    explicit PrefilterTree(int min_atom_len){};
+   public:
+    PrefilterTree():min_atom_len_(3){};
+    explicit PrefilterTree(int min_atom_len):min_atom_len_(min_atom_len){};
     ~PrefilterTree(){};
+    int getMinAtomLen(){
+      return min_atom_len_;
+    }
+   private:
+    const int min_atom_len_;
   };
 };
 
@@ -175,7 +180,8 @@ std::vector<char> CharClassExpansion(std::string str, int start_post, int end_po
     7-abc1234
  * abc  abc123  ghi789  abc1234
  */
-std::vector<std::string> Group_multiple_selection(std::string str, int start_point, int end_point)
+std::vector<std::string> Group_multiple_selection(std::string str, int start_point, 
+                                                  int end_point, size_t min_atoms_len)
 {
   std::string str_tmp; // 暂存atoms
   std::multimap<int, std::string> atoms_tmp;
@@ -189,7 +195,7 @@ std::vector<std::string> Group_multiple_selection(std::string str, int start_poi
       continue;
     if (str[i] == '|' || str[i] == ')')
     {
-      if (str_tmp.size() >= 3)
+      if (str_tmp.size() >= min_atoms_len)
       {
         atoms_tmp.insert(make_pair(str_tmp.size(), str_tmp));
       }
@@ -211,17 +217,17 @@ std::vector<std::string> Group_multiple_selection(std::string str, int start_poi
   {
     for (size_t j = 0; j < vec_atoms_two.size(); j++)
     {
-      if (vec_atoms_two[j].find(vec_atoms_one[i]) != std::string::npos &&
-          vec_atoms_one[i] != vec_atoms_two[j])
+      if(vec_atoms_two[j].find(vec_atoms_one[i]) != std::string::npos && vec_atoms_one[i] != vec_atoms_two[j]
+                                    && vec_atoms_one[i].size() != 0 && vec_atoms_two[j].size() != 0)
       { // 如果包含，则置为空
-        vec_atoms_two[j] = "";
+        vec_atoms_two[j] = "-1";
       }
     }
   }
   // 重新赋值给 vec_atoms_real
   for (size_t i = 0; i < vec_atoms_two.size(); i++)
   {
-    if (vec_atoms_two[i] != "")
+    if (vec_atoms_two[i] != "-1")
     {
       vec_atoms_real.push_back(vec_atoms_two[i]);
     }
@@ -281,6 +287,23 @@ bool JudgeIsCharOrNumber(char x)
   return false;
 }
 
+bool JudgeMinux(char x)
+{
+  if(x == '-') return true;
+  return false;
+}
+
+bool JudgeRBrace(char x)
+{
+  if(x == '}') return true;
+  return false;
+}
+bool JudgeLBrace(char x)
+{
+  if(x == '{') return true;
+  return false;
+}
+
 bool JudedIsGreekAlphabet(std::string str)
 {
   std::vector<std::string> vec_alphabet = {"\u03B1", "\u03B2", "\u03B3", "\u03B4", "\u03B5", 
@@ -295,7 +318,7 @@ bool JudedIsGreekAlphabet(std::string str)
   return false;
 }
 
-std::vector<std::string> MyCompile(std::string str)
+std::vector<std::string> MyCompile(std::string str, size_t min_atoms_len)
 {
   std::vector<std::string> my_atoms;      // 最终得到的所有atoms
   std::vector<std::string> vec_atoms_tmp; // 暂存的atom
@@ -317,7 +340,11 @@ std::vector<std::string> MyCompile(std::string str)
       atoms_tmp_string += subStr;
       continue;
     }
-
+    if(JudgeLBrace(str[i]))
+    {
+      do ++i; while(!JudgeRBrace(str[i]));
+      ++i;
+    }
     // 处理括号分组
     if (str[i] == '(')
     {
@@ -327,20 +354,23 @@ std::vector<std::string> MyCompile(std::string str)
       while (str[i] != ')');
       int group_end_post = i;
 
-      std::vector<std::string> vec = Group_multiple_selection(str, group_start_post, group_end_post);
+      std::vector<std::string> vec = Group_multiple_selection(str, group_start_post, group_end_post, min_atoms_len);
       int tmp_post_group = i;
-      if (str[tmp_post_group + 1] == '.' && vec.size() != 0)
+      ++tmp_post_group;
+      if (str[tmp_post_group] == '.' && vec.size() != 0)
       {
         ++i;
-        for (auto x : vec)
-        {
-          my_atoms.push_back(x);
-        }
+        for (auto x : vec) my_atoms.push_back(x);
+      }
+      else if(str[tmp_post_group] == '{' && vec.size() != 0)
+      {
+        for (auto x : vec) my_atoms.push_back(x);
+
       }
       // "(abc123|def456|ghi789).*mnop[x-z]+"
       continue;
     }
-    if (JudgeIsCharOrNumber(str[i]))
+    if (JudgeIsCharOrNumber(str[i]) || JudgeMinux(str[i]) || JudgeRBrace(str[i]))
     {
       atoms_tmp_string += str[i];
       continue;
@@ -368,7 +398,7 @@ std::vector<std::string> MyCompile(std::string str)
     }
     if (str[i] == '.')
     {
-      if (atoms_tmp_string.size() > 2 && vec_atoms_tmp.size() == 0)
+      if (atoms_tmp_string.size() >= min_atoms_len && vec_atoms_tmp.size() == 0)
       {
         my_atoms.push_back(atoms_tmp_string);
         atoms_tmp_string.clear();
@@ -445,7 +475,7 @@ std::vector<std::string> MyCompile(std::string str)
       my_atoms.push_back(x);
     }
   }
-  if(atoms_tmp_string.size() > 2)
+  if(atoms_tmp_string.size() >= min_atoms_len)
   {
     my_atoms.push_back(atoms_tmp_string);
   }
@@ -465,9 +495,10 @@ void FilteredRE2::Compile(std::vector<std::string>* atoms) {
     return;
   }
   atoms->clear();
+  
   for(size_t i = 0; i < re2_vec_.size(); i++)
   {
-    std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern());
+    std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern(), prefilter_tree_->getMinAtomLen());
     for(auto x : my_atoms)
       atoms->push_back(x);
   }
@@ -481,7 +512,7 @@ int FilteredRE2::SlowFirstMatch(const StringPiece& text) const {
   return -1;
 }
 
-void AtomsToRegexps(std::vector<RE2*> re2_vec_, std::vector<int> atoms, std::vector<int> *regexps)
+void AtomsToRegexps(std::vector<RE2*> re2_vec_, std::vector<int> atoms, std::vector<int> *regexps, int min_atom_len)
 {
   // 根据atoms索引获取regexp索引的规则
   /*
@@ -490,7 +521,7 @@ void AtomsToRegexps(std::vector<RE2*> re2_vec_, std::vector<int> atoms, std::vec
    */
   for(size_t i = 0; i < re2_vec_.size(); i++)
   {
-    std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern());
+    std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern(), min_atom_len);
 
     if(my_atoms.size() == 0)
     {
@@ -525,7 +556,8 @@ int FilteredRE2::FirstMatch(const StringPiece& text,
     return -1;
   }
   std::vector<int> regexps;
-  AtomsToRegexps(re2_vec_, atoms, &regexps);
+ 
+  AtomsToRegexps(re2_vec_, atoms, &regexps, prefilter_tree_->getMinAtomLen());
   
   for (size_t i = 0; i < regexps.size(); i++)
     if (RE2::PartialMatch(text, *re2_vec_[regexps[i]]))
@@ -540,7 +572,7 @@ bool FilteredRE2::AllMatches(
   matching_regexps->clear();
 
   std::vector<int> regexps;
-  AtomsToRegexps(re2_vec_, atoms, &regexps);
+  AtomsToRegexps(re2_vec_, atoms, &regexps, prefilter_tree_->getMinAtomLen());
 
   for (size_t i = 0; i < re2_vec_.size(); i++)
     if (RE2::PartialMatch(text, *re2_vec_[i]))
@@ -552,12 +584,12 @@ bool FilteredRE2::AllMatches(
 void FilteredRE2::AllPotentials(
     const std::vector<int>& atoms,
     std::vector<int>* potential_regexps) const {
-  AtomsToRegexps(re2_vec_, atoms, potential_regexps);
+  AtomsToRegexps(re2_vec_, atoms, potential_regexps, prefilter_tree_->getMinAtomLen());
 }
 
 void FilteredRE2::RegexpsGivenStrings(const std::vector<int>& matched_atoms,
                                       std::vector<int>* passed_regexps) {
-  AtomsToRegexps(re2_vec_, matched_atoms, passed_regexps);
+  AtomsToRegexps(re2_vec_, matched_atoms, passed_regexps, prefilter_tree_->getMinAtomLen());
 }
 
 

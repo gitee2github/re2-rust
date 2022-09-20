@@ -276,7 +276,7 @@ TEST(FilteredRE2Test, MatchTests) {
   v.f.AllMatches(text, atom_ids, &matching_regexps);
   EXPECT_EQ(2, matching_regexps.size());
 }
-/*
+
 TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
   // Bug due to find() finding "" at the start of everything in a string
   // set and thus SimplifyStringSet() would end up erasing everything.
@@ -290,7 +290,8 @@ TEST(FilteredRE2Test, EmptyStringInStringSetBug) {
   EXPECT_TRUE(CheckExpectedAtoms(atoms, arraysize(atoms),
                                  "EmptyStringInStringSetBug", &v));
 }
-*/
+
+
 
 TEST(FilteredRE2Test, MoveSemantics) {
   FilterTestVars v1;
