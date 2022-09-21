@@ -1111,11 +1111,10 @@ TEST(RE2, UTF8) {
   // Check that '.' matches one byte or UTF-8 character
   // according to the mode.
   std::string s;
-  /*待处理的
   RE2 re_test3("(.)", RE2::Latin1);
   ASSERT_TRUE(RE2::PartialMatch(utf8_string, re_test3, &s));
   ASSERT_EQ(s, std::string("\xe6"));
-  */
+
   RE2 re_test4("(.)");
   ASSERT_TRUE(RE2::PartialMatch(utf8_string, re_test4, &s));
   ASSERT_EQ(s, std::string("\xe6\x97\xa5"));
