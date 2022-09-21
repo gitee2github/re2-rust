@@ -823,7 +823,13 @@ namespace re2
         size_t start = match.start;
         size_t end = match.end;
         size_t len = end - start;
-        submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len));
+        if(options_.encoding() == RE2::Options::EncodingUTF8){
+          submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len));
+        }
+        else{
+          submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len/2));
+        }
+        
       }
       else
       {
