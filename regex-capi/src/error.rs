@@ -22,15 +22,16 @@ pub enum ErrorKind {
 
 impl Error {
     pub fn new(kind: ErrorKind) -> Error {
-        Error { message: None, kind: kind }
+        Error {
+            message: None,
+            kind: kind,
+        }
     }
 
     pub fn is_err(&self) -> bool {
         match self.kind {
             ErrorKind::None => false,
-            ErrorKind::Str(_) | ErrorKind::Regex(_) | ErrorKind::Nul(_) => {
-                true
-            }
+            ErrorKind::Str(_) | ErrorKind::Regex(_) | ErrorKind::Nul(_) => true,
         }
     }
 }
