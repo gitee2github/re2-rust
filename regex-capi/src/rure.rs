@@ -135,8 +135,8 @@ ffi_fn! {
                     }
                 }
                 let re = Regex {
-                    re: re,
-                    capture_names: capture_names,
+                    re,
+                    capture_names,
                 };
                 Box::into_raw(Box::new(re))
             }
@@ -240,7 +240,7 @@ ffi_fn! {
             Err(_) => return -1,
             Ok(name) => name,
         };
-        re.capture_names.get(name).map(|&i|i).unwrap_or(-1)
+        re.capture_names.get(name).copied().unwrap_or(-1)
     }
 }
 
@@ -283,12 +283,12 @@ ffi_fn! {
             // Top-level iterator ran out of capture groups
             None => return false,
             Some(val) => {
-                let name = match val {
+                
+                match val {
                     // inner Option didn't have a name
                     None => "",
                     Some(name) => name
-                };
-                name
+                }
             }
         };
 
@@ -311,7 +311,7 @@ ffi_fn! {
         re: *const Regex,
     ) -> *mut Iter {
         Box::into_raw(Box::new(Iter {
-            re: re,
+            re,
             last_end: 0,
             last_match: None,
         }))
@@ -515,7 +515,7 @@ ffi_fn! {
         builder.unicode(flags & RURE_FLAG_UNICODE > 0);
         match builder.build() {
             Ok(re) => {
-                Box::into_raw(Box::new(RegexSet { re: re }))
+                Box::into_raw(Box::new(RegexSet { re }))
             }
             Err(err) => {
                 unsafe {
@@ -557,7 +557,7 @@ ffi_fn! {
         matches: *mut bool
     ) -> bool {
         let re = unsafe { &*re };
-        let mut matches = unsafe {
+        let matches = unsafe {
             slice::from_raw_parts_mut(matches, re.len())
         };
         let haystack = unsafe { slice::from_raw_parts(haystack, len) };
@@ -566,7 +566,7 @@ ffi_fn! {
         for item in matches.iter_mut() {
             *item = false;
         }
-        re.read_matches_at(&mut matches, haystack, start)
+        re.read_matches_at(matches, haystack, start)
     }
 }
 

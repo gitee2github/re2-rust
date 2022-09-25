@@ -4,7 +4,7 @@ use std::fmt;
 use std::str;
 
 use libc::c_char;
-use regex;
+
 
 #[derive(Debug)]
 pub struct Error {
@@ -24,7 +24,7 @@ impl Error {
     pub fn new(kind: ErrorKind) -> Error {
         Error {
             message: None,
-            kind: kind,
+            kind,
         }
     }
 
