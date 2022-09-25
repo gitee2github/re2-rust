@@ -70,7 +70,10 @@ impl Deref for RegexSet {
 
 impl Default for Options {
     fn default() -> Options {
-        Options { size_limit: 10 * (1 << 20), dfa_size_limit: 2 * (1 << 20) }
+        Options {
+            size_limit: 10 * (1 << 20),
+            dfa_size_limit: 2 * (1 << 20),
+        }
     }
 }
 
@@ -595,11 +598,7 @@ ffi_fn! {
 /// This should ideally be exposed, but it needs API design work. In
 /// particular, this should not return a C string, but a `const uint8_t *`
 /// instead, since it may contain a NUL byte.
-fn rure_escape(
-    pattern: *const u8,
-    length: size_t,
-    error: *mut Error,
-) -> *const c_char {
+fn rure_escape(pattern: *const u8, length: size_t, error: *mut Error) -> *const c_char {
     let pat: &[u8] = unsafe { slice::from_raw_parts(pattern, length) };
     let str_pat = match str::from_utf8(pat) {
         Ok(val) => val,
@@ -650,7 +649,7 @@ ffi_fn! {
             },
         };
         c_esc_pat.into_raw() as *const c_char
-        
+
     }
 }
 
@@ -676,7 +675,7 @@ ffi_fn! {
             },
         };
         c_esc_pat.into_raw() as *const c_char
-        
+
     }
 }
 
@@ -684,7 +683,7 @@ ffi_fn! {
  *  Simple way to use regex
  */
 
- ffi_fn! {
+ffi_fn! {
     fn rure_new(
         pattern: *const u8,
         length: size_t,
