@@ -92,7 +92,7 @@ namespace re2
   {
     Init(pattern, options);
   }
-
+  /*
   int RE2::Options::ParseFlags() const
   {
     int flags = Regexp::ClassNL;
@@ -138,6 +138,7 @@ namespace re2
 
     return flags;
   }
+  */
 
   std::string encodingLatin1ToUTF8(std::string str)
   {
@@ -276,25 +277,26 @@ namespace re2
     error_ = empty_string;
     error_code_ = RE2::NoError;   
   }
-
+  /*
   // Returns rprog_, computing it if needed.
   re2::Prog *RE2::ReverseProg() const
   {
-    // std::call_once(rprog_once_, [](const RE2* re) {
-    //   re->rprog_ =
-    //       re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
-    //   if (re->rprog_ == NULL) {
-    //     if (re->options_.log_errors())
-    //       LOG(ERROR) << "Error reverse compiling '" << trunc(re->pattern_) << "'";
-    //     // We no longer touch error_ and error_code_ because failing to compile
-    //     // the reverse Prog is not a showstopper: falling back to NFA execution
-    //     // is fine. More importantly, an RE2 object is supposed to be logically
-    //     // immutable: whatever ok() would have returned after Init() completed,
-    //     // it should continue to return that no matter what ReverseProg() does.
-    //   }
-    // }, this);
+    std::call_once(rprog_once_, [](const RE2* re) {
+      re->rprog_ =
+          re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
+      if (re->rprog_ == NULL) {
+        if (re->options_.log_errors())
+          LOG(ERROR) << "Error reverse compiling '" << trunc(re->pattern_) << "'";
+        // We no longer touch error_ and error_code_ because failing to compile
+        // the reverse Prog is not a showstopper: falling back to NFA execution
+        // is fine. More importantly, an RE2 object is supposed to be logically
+        // immutable: whatever ok() would have returned after Init() completed,
+        // it should continue to return that no matter what ReverseProg() does.
+      }
+    }, this);
     return rprog_;
   }
+  */
 
   RE2::~RE2()
   {
@@ -312,66 +314,66 @@ namespace re2
     if (group_names_ != NULL && group_names_ != empty_group_names)
       delete group_names_;
   }
-
+  /*
   int RE2::ProgramSize() const
   {
-    // if (prog_ == NULL)
-    //   return -1;
-    // return prog_->size();
+    if (prog_ == NULL)
+      return -1;
+    return prog_->size();
     return 0;
   }
 
   int RE2::ReverseProgramSize() const
   {
-    // if (prog_ == NULL)
-    //   return -1;
-    // Prog* prog = ReverseProg();
-    // if (prog == NULL)
-    //   return -1;
-    // return prog->size();
+    if (prog_ == NULL)
+      return -1;
+    Prog* prog = ReverseProg();
+    if (prog == NULL)
+      return -1;
+    return prog->size();
     return 0;
   }
 
-  // // Finds the most significant non-zero bit in n.
-  // static int FindMSBSet(uint32_t n) {
-  //   DCHECK_NE(n, 0);
-  // #if defined(__GNUC__)
-  //   return 31 ^ __builtin_clz(n);
-  // #elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
-  //   unsigned long c;
-  //   _BitScanReverse(&c, n);
-  //   return static_cast<int>(c);
-  // #else
-  //   int c = 0;
-  //   for (int shift = 1 << 4; shift != 0; shift >>= 1) {
-  //     uint32_t word = n >> shift;
-  //     if (word != 0) {
-  //       n = word;
-  //       c += shift;
-  //     }
-  //   }
-  //   return c;
-  // #endif
-  // }
+  // Finds the most significant non-zero bit in n.
+  static int FindMSBSet(uint32_t n) {
+    DCHECK_NE(n, 0);
+  #if defined(__GNUC__)
+    return 31 ^ __builtin_clz(n);
+  #elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+    unsigned long c;
+    _BitScanReverse(&c, n);
+    return static_cast<int>(c);
+  #else
+    int c = 0;
+    for (int shift = 1 << 4; shift != 0; shift >>= 1) {
+      uint32_t word = n >> shift;
+      if (word != 0) {
+        n = word;
+        c += shift;
+      }
+    }
+    return c;
+  #endif
+  }
 
-  // static int Fanout(Prog* prog, std::vector<int>* histogram) {
-  //   SparseArray<int> fanout(prog->size());
-  //   prog->Fanout(&fanout);
-  //   int data[32] = {};
-  //   int size = 0;
-  //   for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
-  //     if (i->value() == 0)
-  //       continue;
-  //     uint32_t value = i->value();
-  //     int bucket = FindMSBSet(value);
-  //     bucket += value & (value-1) ? 1 : 0;
-  //     ++data[bucket];
-  //     size = std::max(size, bucket+1);
-  //   }
-  //   if (histogram != NULL)
-  //     histogram->assign(data, data+size);
-  //   return size-1;
-  // }
+  static int Fanout(Prog* prog, std::vector<int>* histogram) {
+    SparseArray<int> fanout(prog->size());
+    prog->Fanout(&fanout);
+    int data[32] = {};
+    int size = 0;
+    for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
+      if (i->value() == 0)
+        continue;
+      uint32_t value = i->value();
+      int bucket = FindMSBSet(value);
+      bucket += value & (value-1) ? 1 : 0;
+      ++data[bucket];
+      size = std::max(size, bucket+1);
+    }
+    if (histogram != NULL)
+      histogram->assign(data, data+size);
+    return size-1;
+  }
 
   int RE2::ProgramFanout(std::vector<int> *histogram) const
   {
@@ -391,6 +393,7 @@ namespace re2
     // return Fanout(prog, histogram);
     return 0;
   }
+  */
 
   // Returns named_groups_, computing it if needed.
   const std::map<std::string, int> &RE2::NamedCapturingGroups() const
@@ -411,7 +414,7 @@ namespace re2
 
     return *named_groups_;
   }
-
+  /*
   // Returns group_names_, computing it if needed.
   const std::map<int, std::string> &RE2::CapturingGroupNames() const
   {
@@ -431,6 +434,7 @@ namespace re2
 
     return *group_names_;
   }
+  */
 
   /***** Convenience interfaces *****/
 
@@ -795,6 +799,7 @@ namespace re2
     }
     else if(re_anchor == ANCHOR_BOTH)
     {
+
       bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), length, 0, &match);
       if(!matched || match.start != 0 || match.end != length){
         return false;
@@ -802,6 +807,20 @@ namespace re2
       else if(!nsubmatch){
         return true;
       }
+      // bool matched;
+      // if(options_.encoding() == RE2::Options::EncodingUTF8){
+      //   matched = rure_is_match((rure *)entire_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), 0);
+      // }
+      // else{
+      //   matched = rure_is_match(re, (const uint8_t *)haystack.c_str(), length, 0);
+      // }
+      
+      // if(!matched){
+      //   return false;
+      // }
+      // else if(!nsubmatch){
+      //   return true;
+      // }
     }
     
     // Demo  获取捕获组内容，存储到submatch数组中
