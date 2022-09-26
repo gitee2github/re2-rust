@@ -189,7 +189,7 @@ namespace re2
     rure_error *err = rure_error_new();
 
     // 对传入的Latin-1编码的字符串要进行转换
-    if (options.encoding() == re2::RE2::Options::EncodingUTF8)
+    if (options.encoding() == RE2::Options::EncodingUTF8)
     { // UTF-8编码
       rure_str = pattern.ToString();
     }
@@ -510,16 +510,12 @@ namespace re2
   {
     StringPiece vec[kVecSize];
     int nvec = 1 + MaxSubmatch(rewrite);
-    if (nvec > 1 + re.NumberOfCapturingGroups())
+    if (nvec > 1 + re.NumberOfCapturingGroups() || nvec > static_cast<int>(arraysize(vec)))
       return false;
-    if (nvec > static_cast<int>(arraysize(vec)))
-      return false;
-    if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
+    std::string s;
+    if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec) || !re.Rewrite(&s, rewrite, vec, nvec))
       return false;
 
-    std::string s;
-    if (!re.Rewrite(&s, rewrite, vec, nvec))
-      return false;
     // 利用rure进行replace
     const char *rure_str = re.pattern_.c_str();
     // 对rewrite进行处理
@@ -551,14 +547,10 @@ namespace re2
     StringPiece vec[kVecSize];
     int count = 0;
     int nvec = 1 + MaxSubmatch(rewrite);
-    if (nvec > 1 + re.NumberOfCapturingGroups())
-      return false;
-    if (nvec > static_cast<int>(arraysize(vec)))
-      return false;
-    if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec))
+    if (nvec > 1 + re.NumberOfCapturingGroups() || nvec > static_cast<int>(arraysize(vec)))
       return false;
     std::string s;
-    if (!re.Rewrite(&s, rewrite, vec, nvec))
+    if (!re.Match(*str, 0, str->size(), UNANCHORED, vec, nvec) || !re.Rewrite(&s, rewrite, vec, nvec))
       return false;
 
     // 利用rure进行replace_all
@@ -589,9 +581,7 @@ namespace re2
   {
     StringPiece vec[kVecSize];
     int nvec = 1 + MaxSubmatch(rewrite);
-    if (nvec > 1 + re.NumberOfCapturingGroups())
-      return false;
-    if (nvec > static_cast<int>(arraysize(vec)))
+    if (nvec > 1 + re.NumberOfCapturingGroups() || nvec > static_cast<int>(arraysize(vec)))
       return false;
     if (!re.Match(text, 0, text.size(), UNANCHORED, vec, nvec))
       return false;
@@ -644,64 +634,67 @@ namespace re2
     return result;
   }
 
+  /*
   bool RE2::PossibleMatchRange(std::string *min, std::string *max,
                                int maxlen) const
   {
-    // if (prog_ == NULL)
-    //   return false;
+    if (prog_ == NULL)
+      return false;
 
-    // int n = static_cast<int>(prefix_.size());
-    // if (n > maxlen)
-    //   n = maxlen;
+    int n = static_cast<int>(prefix_.size());
+    if (n > maxlen)
+      n = maxlen;
 
-    // // Determine initial min max from prefix_ literal.
-    // *min = prefix_.substr(0, n);
-    // *max = prefix_.substr(0, n);
-    // if (prefix_foldcase_) {
-    //   // prefix is ASCII lowercase; change *min to uppercase.
-    //   for (int i = 0; i < n; i++) {
-    //     char& c = (*min)[i];
-    //     if ('a' <= c && c <= 'z')
-    //       c += 'A' - 'a';
-    //   }
-    // }
+    // Determine initial min max from prefix_ literal.
+    *min = prefix_.substr(0, n);
+    *max = prefix_.substr(0, n);
+    if (prefix_foldcase_) {
+      // prefix is ASCII lowercase; change *min to uppercase.
+      for (int i = 0; i < n; i++) {
+        char& c = (*min)[i];
+        if ('a' <= c && c <= 'z')
+          c += 'A' - 'a';
+      }
+    }
 
-    // // Add to prefix min max using PossibleMatchRange on regexp.
-    // std::string dmin, dmax;
-    // maxlen -= n;
-    // if (maxlen > 0 && prog_->PossibleMatchRange(&dmin, &dmax, maxlen)) {
-    //   min->append(dmin);
-    //   max->append(dmax);
-    // } else if (!max->empty()) {
-    //   // prog_->PossibleMatchRange has failed us,
-    //   // but we still have useful information from prefix_.
-    //   // Round up *max to allow any possible suffix.
-    //   PrefixSuccessor(max);
-    // } else {
-    //   // Nothing useful.
-    //   *min = "";
-    //   *max = "";
-    //   return false;
-    // }
+    // Add to prefix min max using PossibleMatchRange on regexp.
+    std::string dmin, dmax;
+    maxlen -= n;
+    if (maxlen > 0 && prog_->PossibleMatchRange(&dmin, &dmax, maxlen)) {
+      min->append(dmin);
+      max->append(dmax);
+    } else if (!max->empty()) {
+      // prog_->PossibleMatchRange has failed us,
+      // but we still have useful information from prefix_.
+      // Round up *max to allow any possible suffix.
+      PrefixSuccessor(max);
+    } else {
+      // Nothing useful.
+      *min = "";
+      *max = "";
+      return false;
+    }
 
     return true;
   }
+  
 
-  // // Avoid possible locale nonsense in standard strcasecmp.
-  // // The string a is known to be all lowercase.
-  // static int ascii_strcasecmp(const char* a, const char* b, size_t len) {
-  //   const char* ae = a + len;
+  // Avoid possible locale nonsense in standard strcasecmp.
+  // The string a is known to be all lowercase.
+  static int ascii_strcasecmp(const char* a, const char* b, size_t len) {
+    const char* ae = a + len;
 
-  //   for (; a < ae; a++, b++) {
-  //     uint8_t x = *a;
-  //     uint8_t y = *b;
-  //     if ('A' <= y && y <= 'Z')
-  //       y += 'a' - 'A';
-  //     if (x != y)
-  //       return x - y;
-  //   }
-  //   return 0;
-  // }
+    for (; a < ae; a++, b++) {
+      uint8_t x = *a;
+      uint8_t y = *b;
+      if ('A' <= y && y <= 'Z')
+        y += 'a' - 'A';
+      if (x != y)
+        return x - y;
+    }
+    return 0;
+  }
+  */
 
   /***** Actual matching and rewriting code *****/
 
@@ -753,7 +746,7 @@ namespace re2
     }
 
     // Latin-1编码转换
-    if (options_.encoding() == 2)
+    if (options_.encoding() == RE2::Options::EncodingLatin1)
     {
       haystack = encodingLatin1ToUTF8(text.as_string());
     }
@@ -901,7 +894,7 @@ namespace re2
       return true;
     }
     // for FullMatch(no captures)
-    if(re_anchor == ANCHOR_BOTH && n == 0 && options_.encoding() == re2::RE2::Options::EncodingUTF8)
+    if(re_anchor == ANCHOR_BOTH && n == 0 && options_.encoding() == RE2::Options::EncodingUTF8)
     {
       bool matched = rure_is_match((rure *)entire_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), 0);
       return matched;
@@ -1425,6 +1418,7 @@ namespace re2
 
   } // namespace re2_internal
 
+/*
   namespace hooks
   {
 
@@ -1463,5 +1457,6 @@ namespace re2
 #undef DEFINE_HOOK
 
   } // namespace hooks
+  */
 
 } // namespace re2
