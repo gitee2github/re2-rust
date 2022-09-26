@@ -5,7 +5,6 @@ use std::str;
 
 use libc::c_char;
 
-
 #[derive(Debug)]
 pub struct Error {
     message: Option<CString>,
@@ -54,8 +53,8 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_error_free(err: *mut Error) {
-        unsafe { Box::from_raw(err); }
+    fn rure_error_free(_err: *mut Error) {
+        // unsafe { Box::from_raw(err); }
     }
 }
 

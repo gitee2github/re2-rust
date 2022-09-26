@@ -153,8 +153,8 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_free(re: *const Regex) {
-        unsafe { Box::from_raw(re as *mut Regex); }
+    fn rure_free(_re: *const Regex) {
+        // unsafe { Box::from_raw(re as *mut Regex); }
     }
 }
 
@@ -264,7 +264,7 @@ ffi_fn! {
                 // CString::from_raw(ptr);
                 drop(CString::from_raw(ptr))
             }
-            Box::from_raw(it);
+            // Box::from_raw(it);
         }
     }
 }
@@ -283,7 +283,7 @@ ffi_fn! {
             // Top-level iterator ran out of capture groups
             None => return false,
             Some(val) => {
-                
+
                 match val {
                     // inner Option didn't have a name
                     None => "",
@@ -319,8 +319,8 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_iter_free(it: *mut Iter) {
-        unsafe { Box::from_raw(it); }
+    fn rure_iter_free(_it: *mut Iter) {
+        // unsafe { Box::from_raw(it); }
     }
 }
 
@@ -410,8 +410,8 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_captures_free(captures: *const Captures) {
-        unsafe { Box::from_raw(captures as *mut Captures); }
+    fn rure_captures_free(_captures: *const Captures) {
+        // unsafe { Box::from_raw(captures as *mut Captures); }
     }
 }
 
@@ -450,8 +450,8 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_options_free(options: *mut Options) {
-        unsafe { Box::from_raw(options); }
+    fn rure_options_free(_options: *mut Options) {
+        // unsafe { Box::from_raw(options); }
     }
 }
 
@@ -530,8 +530,8 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_set_free(re: *const RegexSet) {
-        unsafe { Box::from_raw(re as *mut RegexSet); }
+    fn rure_set_free(_re: *const RegexSet) {
+        // unsafe { Box::from_raw(re as *mut RegexSet); }
     }
 }
 
