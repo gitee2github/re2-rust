@@ -839,7 +839,7 @@ namespace re2
           submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len));
         }
         else{
-          submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len/2));
+          submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len / 2));
         }
         
       }

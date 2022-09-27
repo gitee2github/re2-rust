@@ -774,8 +774,8 @@ TEST(RE2, NULTerminated) {
 #ifndef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
 #endif
-  v = static_cast<char*>(mmap(NULL, 2*pagesize, PROT_READ|PROT_WRITE,
-                              MAP_ANONYMOUS|MAP_PRIVATE, -1, 0));                           
+  v = static_cast<char*>(mmap(NULL, 2 * pagesize, PROT_READ | PROT_WRITE,
+                              MAP_ANONYMOUS | MAP_PRIVATE, -1, 0));                           
   ASSERT_TRUE(v != reinterpret_cast<char*>(-1));
   LOG(INFO) << "Memory at " << (void*)v;
   ASSERT_EQ(munmap(v + pagesize, pagesize), 0) << " error " << errno;
@@ -1223,7 +1223,7 @@ TEST(RE2, Recursion) {
 TEST(RE2, BigCountedRepetition) {
   // Test that counted repetition works, given tons of memory.
   RE2::Options opt;
-  opt.set_max_mem(256<<20);
+  opt.set_max_mem(256 << 20);
 
   RE2 re(".{512}x", opt);
   ASSERT_TRUE(re.ok());
