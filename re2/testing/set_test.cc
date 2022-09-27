@@ -41,6 +41,33 @@ TEST(Set, Unanchored) {
   ASSERT_EQ(v[0], 1);
 }
 
+TEST(Set, AnchorStart) {
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_START);
+
+  ASSERT_EQ(s.Add("foo", NULL), 0);
+  ASSERT_EQ(s.Add("(", NULL), -1);
+  ASSERT_EQ(s.Add("bar", NULL), 1);
+  ASSERT_EQ(s.Compile(), true);
+
+  ASSERT_EQ(s.Match("foobar", NULL), true);
+  ASSERT_EQ(s.Match("fooba", NULL), true);
+  ASSERT_EQ(s.Match("oobar", NULL), true);
+
+  std::vector<int> v;
+  ASSERT_EQ(s.Match("foobar", &v), true);
+  ASSERT_EQ(v.size(), 2);
+  ASSERT_EQ(v[0], 0);
+  ASSERT_EQ(v[1], 1);
+
+  ASSERT_EQ(s.Match("fooba", &v), true);
+  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v[0], 0);
+
+  ASSERT_EQ(s.Match("oobar", &v), true);
+  ASSERT_EQ(v.size(), 1);
+  ASSERT_EQ(v[0], 1);
+}
+
 TEST(Set, UnanchoredFactored) {
   RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
 
