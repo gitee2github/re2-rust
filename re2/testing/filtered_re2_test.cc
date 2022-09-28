@@ -1,7 +1,7 @@
 // Copyright 2009 The RE2 Authors.  All Rights Reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
+#include <iostream>
 #include <stddef.h>
 #include <algorithm>
 #include <memory>
@@ -336,6 +336,66 @@ TEST(FilteredRE2Test, MoveSemantics) {
   EXPECT_EQ(0, v1.matches[0]);
   v1.f.AllMatches("abc bar2 xyz", {0}, &v1.matches);
   EXPECT_EQ(0, v1.matches.size());
+}
+
+TEST(FilteredRE2Test, SlowFirstMatch) {
+  FilterTestVars v;  // override the minimum atom length
+  int id1;
+  v.f.Add("h.*o", v.opts, &id1);
+  int id2;
+  v.f.Add("(\\w+):(\\d+)", v.opts, &id2);
+
+  v.f.Compile(&v.atoms);
+  EXPECT_EQ(0, v.atoms.size());
+
+  std::string text = "hello world";
+  std::vector<int> atom_ids;
+  std::vector<int> matching_regexps;
+
+  EXPECT_EQ(0, v.f.FirstMatch(text, atom_ids));
+}
+
+TEST(FilteredRE2Test, AllPotentials) {
+  FilterTestVars v;
+  AtomTest* t = &atom_tests[1];
+  EXPECT_EQ("AllAtomsGtMinLengthFound", std::string(t->testname));
+  size_t nregexp;
+  for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
+    if (t->regexps[nregexp] == NULL)
+      break;
+  AddRegexpsAndCompile(t->regexps, nregexp, &v);
+  std::vector<int> atoms;
+  atoms.push_back(0);
+  atoms.push_back(1);
+  atoms.push_back(2);
+  atoms.push_back(3);
+  atoms.push_back(4);
+  atoms.push_back(5);
+  atoms.push_back(6);
+  atoms.push_back(7);
+  std::vector<int> potential_regexps;
+  v.f.AllPotentials(atoms, &potential_regexps);
+  EXPECT_EQ(3 ,potential_regexps.size());
+
+}
+
+TEST(FilteredRE2Test, RegexpsGivenStrings) {
+  FilterTestVars v;
+  AtomTest* t = &atom_tests[2];
+
+  EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", std::string(t->testname));
+  size_t nregexp;
+  for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
+    if (t->regexps[nregexp] == NULL)
+      break;
+  AddRegexpsAndCompile(t->regexps, nregexp, &v);
+  std::vector<int> atoms;
+
+  atoms.push_back(5);
+  atoms.push_back(6);
+  std::vector<int> potential_regexps;
+  v.f.AllPotentials(atoms, &potential_regexps);
+  EXPECT_EQ(1 ,potential_regexps.size());
 }
 
 }  //  namespace re2
