@@ -519,34 +519,53 @@ void AtomsToRegexps(std::vector<RE2*> re2_vec_, std::vector<int> atoms, std::vec
    * 如果没有原子, 那么直接会把re加进去。
    * 如果这个正则表达式有原子，那么要把该正则表达式的所有的原子的索引全加入，这个正则表达式才能加入成功。
    */
+  // std::map<std::string, bool> map;
+  
+  std::vector<std::string> atoms_total;
+  std::vector<int> vec_per_num;
+  std::vector<std::string> atoms_tmp;
+  std::vector<size_t> re_v;
+
   for(size_t i = 0; i < re2_vec_.size(); i++)
   {
     std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern(), min_atom_len);
 
-    if(my_atoms.size() == 0)
+    if(my_atoms.size() != 0)
     {
+      for(auto x : my_atoms)
+        atoms_total.push_back(x);
+    }
+
+  }
+  for(size_t i = 0; i < atoms.size(); i++)
+  {
+    atoms_tmp.push_back(atoms_total[atoms[i]]);
+  }
+  for(size_t i = 0; i < re2_vec_.size(); i++)
+  {
+    std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern(), min_atom_len);
+    if(my_atoms.size() == 0){
       regexps->push_back(i);
       continue;
     }
     else
     {
-      for(auto x : my_atoms)
+      int count = 0;
+      for(size_t ii = 0; ii < my_atoms.size(); ii++)
       {
-        int flag = 0;
-        for(auto y : atoms)
+        for(size_t jj = 0; jj < atoms_tmp.size(); jj++)
         {
-          if(x == my_atoms[y]) 
-            continue;
-          else
-          {
-            flag = 1;
+          if(my_atoms[ii] == atoms_tmp[jj]){
+            count++;
             break;
           }
-          if(flag == 0) regexps->push_back(i);
         }
       }
+      if(count == (int)my_atoms.size()) regexps->push_back(int(i));
     }
   }
+  
+
 }
 
 int FilteredRE2::FirstMatch(const StringPiece& text,
