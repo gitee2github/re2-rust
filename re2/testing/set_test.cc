@@ -254,4 +254,33 @@ TEST(Set, MoveSemantics) {
   ASSERT_EQ(s1.Match("abc bar2 xyz", NULL), false);
 }
 
+TEST(Set, FailCompile) {
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_START);
+  ASSERT_EQ(s.Add("foo", NULL), 0);
+  ASSERT_EQ(s.Add("(", NULL), -1);
+  ASSERT_EQ(s.Add("bar", NULL), 1);
+  ASSERT_EQ(s.Compile(), true);
+  ASSERT_EQ(s.Compile(), false);  // RE2::Set::Compile() called more than once
+}
+
+TEST(Set, FailMatch) {  
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_START);
+  ASSERT_EQ(s.Add("foo", NULL), 0);
+  ASSERT_EQ(s.Add("(", NULL), -1);
+  ASSERT_EQ(s.Add("bar", NULL), 1);
+  std::vector<int> v;
+  RE2::Set::ErrorInfo error;
+  ASSERT_EQ(s.Match("foobar", &v, &error), false);  // RE2::Set::Match() called before compiling
+}
+
+TEST(Set, FailAdd) {  
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_START);
+  ASSERT_EQ(s.Add("foo", NULL), 0);
+  std::string error;
+  ASSERT_EQ(s.Add("(", &error), -1);    // Regexp Error
+  ASSERT_EQ(s.Add("bar", NULL), 1);
+}
+
+
+
 }  // namespace re2
