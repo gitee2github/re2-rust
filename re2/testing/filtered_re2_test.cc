@@ -339,20 +339,20 @@ TEST(FilteredRE2Test, MoveSemantics) {
 }
 
 TEST(FilteredRE2Test, SlowFirstMatch) {
-  FilterTestVars v;  // override the minimum atom length
+  FilterTestVars v;
   int id1;
-  v.f.Add("h.*o", v.opts, &id1);
+  v.f.Add("\\w+:\\d+", v.opts, &id1);
   int id2;
-  v.f.Add("(\\w+):(\\d+)", v.opts, &id2);
-
+  v.f.Add("h.*o", v.opts, &id2);
   v.f.Compile(&v.atoms);
   EXPECT_EQ(0, v.atoms.size());
+  std::string text1 = "ruby:123";
+  std::string text2 = "hello";
+  std::string text3 = "[]";
+  EXPECT_EQ(0, v.f.SlowFirstMatch(text1));
+  EXPECT_EQ(1, v.f.SlowFirstMatch(text2));
+  EXPECT_EQ(-1, v.f.SlowFirstMatch(text3));
 
-  std::string text = "hello world";
-  std::vector<int> atom_ids;
-  std::vector<int> matching_regexps;
-
-  EXPECT_EQ(0, v.f.FirstMatch(text, atom_ids));
 }
 
 TEST(FilteredRE2Test, AllPotentials) {
@@ -379,24 +379,6 @@ TEST(FilteredRE2Test, AllPotentials) {
 
 }
 
-TEST(FilteredRE2Test, RegexpsGivenStrings) {
-  FilterTestVars v;
-  AtomTest* t = &atom_tests[2];
-
-  EXPECT_EQ("SubstrAtomRemovesSuperStrInOr", std::string(t->testname));
-  size_t nregexp;
-  for (nregexp = 0; nregexp < arraysize(t->regexps); nregexp++)
-    if (t->regexps[nregexp] == NULL)
-      break;
-  AddRegexpsAndCompile(t->regexps, nregexp, &v);
-  std::vector<int> atoms;
-
-  atoms.push_back(5);
-  atoms.push_back(6);
-  std::vector<int> potential_regexps;
-  v.f.AllPotentials(atoms, &potential_regexps);
-  EXPECT_EQ(1 ,potential_regexps.size());
-}
 
 }  //  namespace re2
 
