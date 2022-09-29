@@ -507,8 +507,11 @@ void FilteredRE2::Compile(std::vector<std::string>* atoms) {
 
 int FilteredRE2::SlowFirstMatch(const StringPiece& text) const {
   for (size_t i = 0; i < re2_vec_.size(); i++)
-    if (RE2::PartialMatch(text, *re2_vec_[i]))
+  {
+    if (RE2::PartialMatch(text, re2_vec_[i]->pattern())){
       return static_cast<int>(i);
+    } 
+  }
   return -1;
 }
 
@@ -606,10 +609,6 @@ void FilteredRE2::AllPotentials(
   AtomsToRegexps(re2_vec_, atoms, potential_regexps, prefilter_tree_->getMinAtomLen());
 }
 
-void FilteredRE2::RegexpsGivenStrings(const std::vector<int>& matched_atoms,
-                                      std::vector<int>* passed_regexps) {
-  AtomsToRegexps(re2_vec_, matched_atoms, passed_regexps, prefilter_tree_->getMinAtomLen());
-}
 
 
 }  // namespace re2
