@@ -1300,6 +1300,8 @@ TEST(RE2, CL8622304) {
 // In particular, make sure it returns whole runes
 // and that it always reports invalid UTF-8.
 // Also check that Perl error flag piece is big enough.
+
+/*由于RE2的错误码与regex无法一一对应，这里注释掉对错误码的测试，错误信息可以查看相对应的日志文件
 static struct ErrorTest {
   const char *regexp;
   RE2::ErrorCode error_code;
@@ -1328,7 +1330,6 @@ static struct ErrorTest {
   { "zz(?P<name\377>abc)", RE2::ErrorBadUTF8, "" },
 };
 
-/*由于RE2的错误码与regex无法一一对应，这里注释掉对错误码的测试，错误信息可以查看相对应的日志文件
 TEST(RE2, ErrorCodeAndArg) {
   for (size_t i = 0; i < arraysize(error_tests); i++) {
     RE2 re(error_tests[i].regexp, RE2::Quiet);
