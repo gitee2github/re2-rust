@@ -75,10 +75,10 @@ namespace re2
     if (re == NULL)
     {
       const char *msg = rure_error_message(err);
-      if(error)
+      if(error != NULL)
       {
         error->assign(msg);
-        LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
+        LOG(ERROR) << "Regexp Error '" << pattern.data() << "':" << msg << "'";
       }
       // rure_free(re);
       // rure_error_free(err);
@@ -95,7 +95,7 @@ namespace re2
   bool RE2::Set::Compile()
   {
     if (compiled_) {
-      LOG(DFATAL) << "RE2::Set::Compile() called more than once";
+      LOG(ERROR) << "RE2::Set::Compile() called more than once";
       return false;
     }
     compiled_ = true;
@@ -113,13 +113,10 @@ namespace re2
                                       patterns_lengths, PAT_COUNT, 0, NULL, err);
     
     if(re == NULL){
-      const char *msg = rure_error_message(err);
-      std::cout << msg << std::endl;
       compiled_ = false;
       return false;
     } 
     prog_.reset((Prog *)re);
-    // rure_set_free(re);
     compiled_ = true;
     return true;
   }
@@ -140,7 +137,7 @@ namespace re2
     // 2. v != NULL
 
     if (!compiled_) {
-      LOG(DFATAL) << "RE2::Set::Match() called before compiling";
+      LOG(ERROR) << "RE2::Set::Match() called before compiling";
       if (error_info != NULL)
         error_info->kind = kNotCompiled;
       return false;
