@@ -44,7 +44,7 @@ namespace re2
     
   }
 
-  RE2::Set::Set(Set &&other)
+  RE2::Set::Set(Set && other)
       : options_(other.options_),
         anchor_(other.anchor_),
         compiled_(other.compiled_),
