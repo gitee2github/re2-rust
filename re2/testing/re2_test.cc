@@ -552,6 +552,17 @@ TEST(EmptyCharset, BitstateAssumptions) {
     ASSERT_TRUE(RE2(nop_empties[i]).Match("", 0, 0, RE2::UNANCHORED, group, 6));
 }
 
+TEST(EmptyCharset, StartLessEnd) {
+  static const char *empties[] = {
+    "[^\\S\\s]",
+    "[^\\S[:space:]]",
+    "[^\\D\\d]",
+    "[^\\D[:digit:]]"
+  };
+  for (size_t i = 0; i < arraysize(empties); i++)
+    ASSERT_FALSE(RE2(empties[i]).Match("abc", 3, 0, RE2::UNANCHORED, NULL, 0));
+}
+
 // Test that named groups work correctly.
 TEST(Capture, NamedGroups) {
   {
