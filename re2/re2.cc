@@ -249,11 +249,13 @@ namespace re2
       FullMatch_rure_str.insert(0, "^(");
       FullMatch_rure_str.append(")$");
       entire_regexp_ = (re2::Regexp *)rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
+      /*
       if(entire_regexp_ == NULL)
       {
         const char *msg = rure_error_message(err);
         LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
       }
+      */
     }
     else
     {
@@ -956,9 +958,7 @@ namespace re2
     // If we got here, we must have matched the whole pattern.
     for (int i = 0; i < n; i++)
     {
-      // cout << vec[i].data() << endl;
       const StringPiece &s = vec[i + 1];
-      // std::cout << s.data() << "-" << s.size() <<std::endl;
 
       if (!args[i]->Parse(s.data(), s.size()))
       {
@@ -967,9 +967,7 @@ namespace re2
         return false;
       }
     }
-
     delete[] heapvec;
-
     return true;
   }
 
