@@ -23,27 +23,18 @@ cd re2-rust
 make
 make install
 make test
-g++ ../testinstall.cc -o testinstall -lre2
+g++ testinstall.cc -o testinstall -lre2
 ./testinstall
 ```
 
 Ubuntu 20.04
 
 ``` Shell
-$ mkdir build && cd build
-$ cmake ..
 $ make
 $ sudo make install
-$ g++ ../testinstall.cc -o testinstall -lre2
+$ make test
+$ g++ testinstall.cc -o testinstall -lre2
 $ ./testinstall
-```
-
-or
-
-
-``` Shell
-$ make
-$ sudo make install
 ```
 使用rure库:
 
