@@ -721,3 +721,29 @@ ffi_fn! {
     }
 
 }
+
+ffi_fn! {
+    fn rure_max_submatch(rewrite: *const c_char) -> i32 {
+        let mut max: i32 = 0;
+        let mut flag = 0;
+        let zero_number = '0' as i32;
+        let len = unsafe { CStr::from_ptr(rewrite).to_bytes().len() };
+        let pat = rewrite as *const u8;
+        let text = unsafe { slice::from_raw_parts(pat, len) };
+        let rewrite = std::str::from_utf8(text).unwrap();
+        for s in rewrite.chars() {
+            if s == '\\' {
+                flag = 1;
+                continue;
+            }
+            if s.is_ascii_digit() && flag == 1 {
+                let max_ = s as i32 - zero_number;
+                if max_ > max {
+                    max = max_;
+                }
+                flag = 0;
+            }
+        }
+        max
+    }
+}
