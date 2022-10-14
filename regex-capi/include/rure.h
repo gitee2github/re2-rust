@@ -610,6 +610,7 @@ const char *rure_replace_all(rure *re, const uint8_t *haystack, size_t len_h,
 
 rure *rure_new(const uint8_t *pattern, size_t length);
 bool rure_consume(rure *re, const uint8_t *haystack, size_t length, rure_match *match);
+int rure_max_submatch(const char *rewrite);
 
 #ifdef __cplusplus
 }
