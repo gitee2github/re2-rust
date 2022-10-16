@@ -760,6 +760,7 @@ namespace re2
     {
       std::string strs = haystack + '\n';
       size_t pos = strs.find('\n');
+      bool flag = false;
       while(pos != strs.npos)
       {
         std::string temp = strs.substr(0, pos);
@@ -770,12 +771,13 @@ namespace re2
         if(matched && nsubmatch){
           haystack = temp;
           length = strlen(haystack.c_str());
-          goto L1;
+          flag = true;
+          break;
         }
         strs = strs.substr(pos + 1, length + 1);
         pos = strs.find('\n');
       }
-      return false;
+      if(!flag){return false;}
     }
     // bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
     // 这里没有 if(re_anchor == ANCHOR_START)原因是因为：
@@ -819,7 +821,6 @@ namespace re2
     }
     
     // Demo  获取捕获组内容，存储到submatch数组中
-    L1:
     rure_captures *caps = rure_captures_new(re);
     rure_find_captures(re, (const uint8_t *)haystack.c_str(),
                        length, 0, caps);
