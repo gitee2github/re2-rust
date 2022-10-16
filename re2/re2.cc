@@ -976,47 +976,14 @@ namespace re2
   bool RE2::CheckRewriteString(const StringPiece &rewrite,
                                std::string *error) const
   {
-    int max_token = -1;
-    for (const char *s = rewrite.data(), *end = s + rewrite.size();
-         s < end; s++)
-    {
-      int c = *s;
-      if (c != '\\')
-      {
-        continue;
-      }
-      if (++s == end)
-      {
-        *error = "Rewrite schema error: '\\' not allowed at end.";
-        return false;
-      }
-      c = *s;
-      if (c == '\\')
-      {
-        continue;
-      }
-      if (!isdigit(c))
-      {
-        *error = "Rewrite schema error: "
-                 "'\\' must be followed by a digit or '\\'.";
-        return false;
-      }
-      int n = (c - '0');
-      if (max_token < n)
-      {
-        max_token = n;
-      }
-    }
-
-    if (max_token > NumberOfCapturingGroups())
-    {
-      // *error = StringPrintf(
-      //     "Rewrite schema requests %d matches, but the regexp only has %d "
-      //     "parenthesized subexpressions.",
-      //     max_token, NumberOfCapturingGroups());
+    int num_caps = NumberOfCapturingGroups();
+    bool result = rure_check_rewrite_string(rewrite.data(), num_caps);
+    if(!result){
+      *error = "Rewrite schema error";
       return false;
     }
-    return true;
+    return true; 
+
   }
 
   // Returns the maximum submatch needed for the rewrite to be done by Replace().

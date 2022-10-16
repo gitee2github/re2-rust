@@ -747,3 +747,49 @@ ffi_fn! {
         max
     }
 }
+
+ffi_fn! {
+    fn rure_check_rewrite_string(rewrite: *const c_char, cap_num: i32) -> bool {
+        let len = unsafe { CStr::from_ptr(rewrite).to_bytes().len() };
+        let pat = rewrite as *const u8;
+        let text = unsafe { slice::from_raw_parts(pat, len) };
+        let s = std::str::from_utf8(text).unwrap();
+        let mut max_token = -1;
+        let chars = s.chars().collect::<Vec<char>>();
+        let mut i = 0;
+        while i < chars.len() {
+            if chars[i] != '\\' {
+                i += 1;
+                continue;
+            }
+            i += 1;
+            
+            if i == chars.len() {
+                println!("Rewrite schema error: '\\' not allowed at end.");
+                return false;
+            }
+            // i += 1;
+            if chars[i] == '\\' {
+                i += 1;
+                continue;
+            }
+            if !chars[i].is_ascii_digit() {
+                println!("'\\' must be followed by a digit or '\\'.");
+                return false;
+            }
+            
+            let n = chars[i] as i32 - '0' as i32;
+            println!("n = {}", n);
+            i += 1;
+    
+            if n > max_token {
+                max_token = n;
+            }
+        }
+
+        if max_token > cap_num {
+            return false;
+        }
+        return true;
+    }
+}
