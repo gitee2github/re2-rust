@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_STRUTIL_H_
-#define UTIL_STRUTIL_H_
+#pragma once
 
 #include <string>
 
@@ -17,5 +16,3 @@ void PrefixSuccessor(std::string* prefix);
 std::string StringPrintf(const char* format, ...);
 
 }  // namespace re2
-
-#endif  // UTIL_STRUTIL_H_

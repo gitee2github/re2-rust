@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_LOGGING_H_
-#define UTIL_LOGGING_H_
+#pragma once
 
 // Simplified version of Google's logging.
 
@@ -105,5 +104,3 @@ class LogMessageFatal : public LogMessage {
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-
-#endif  // UTIL_LOGGING_H_

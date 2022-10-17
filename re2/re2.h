@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_RE2_H_
-#define RE2_RE2_H_
+#pragma once
 
 // C++ interface to the re2 regular-expression library.
 // RE2 supports Perl-style regular expressions (with extensions like
@@ -1013,5 +1012,3 @@ DECLARE_HOOK(DFASearchFailure)
 
 using re2::RE2;
 using re2::LazyRE2;
-
-#endif  // RE2_RE2_H_

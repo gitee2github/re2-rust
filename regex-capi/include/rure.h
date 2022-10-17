@@ -1,5 +1,4 @@
-#ifndef _RURE_H
-#define _RURE_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -616,6 +615,4 @@ bool rure_check_rewrite_string(const char *rewrite, int max_token);
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

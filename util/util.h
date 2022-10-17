@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_UTIL_H_
-#define UTIL_UTIL_H_
+#pragma once
 
 #define arraysize(array) (sizeof(array)/sizeof((array)[0]))
 
@@ -38,5 +37,3 @@
 #ifndef NO_THREAD_SAFETY_ANALYSIS
 #define NO_THREAD_SAFETY_ANALYSIS
 #endif
-
-#endif  // UTIL_UTIL_H_

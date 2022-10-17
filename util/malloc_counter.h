@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_MALLOC_COUNTER_H_
-#define UTIL_MALLOC_COUNTER_H_
+#pragma once
 
 namespace testing {
 class MallocCounter {
@@ -15,5 +14,3 @@ class MallocCounter {
   void Reset() {}
 };
 }  // namespace testing
-
-#endif  // UTIL_MALLOC_COUNTER_H_

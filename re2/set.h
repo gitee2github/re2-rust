@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_SET_H_
-#define RE2_SET_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -81,5 +80,3 @@ class RE2::Set {
 };
 
 }  // namespace re2
-
-#endif  // RE2_SET_H_
