@@ -51,21 +51,16 @@ TEST(Set, AnchorStart) {
 
   ASSERT_EQ(s.Match("foobar", NULL), true);
   ASSERT_EQ(s.Match("fooba", NULL), true);
-  ASSERT_EQ(s.Match("oobar", NULL), true);
+  ASSERT_EQ(s.Match("oobar", NULL), false);
 
   std::vector<int> v;
   ASSERT_EQ(s.Match("foobar", &v), true);
-  ASSERT_EQ(v.size(), 2);
-  ASSERT_EQ(v[0], 0);
-  ASSERT_EQ(v[1], 1);
-
-  ASSERT_EQ(s.Match("fooba", &v), true);
   ASSERT_EQ(v.size(), 1);
   ASSERT_EQ(v[0], 0);
 
-  ASSERT_EQ(s.Match("oobar", &v), true);
-  ASSERT_EQ(v.size(), 1);
-  ASSERT_EQ(v[0], 1);
+  ASSERT_EQ(s.Match("oobar", &v), false);
+  ASSERT_EQ(v.size(), 0);
+
 }
 
 TEST(Set, UnanchoredFactored) {
