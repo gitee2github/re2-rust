@@ -24,9 +24,6 @@ using namespace std;
 
 namespace re2
 {
-  static int regex_counter = 0;
-  static std::map<int, const char *> regex_map;
-
   RE2::Set::Set(const RE2::Options &options, RE2::Anchor anchor)
       : options_(options),
         anchor_(anchor),
@@ -38,10 +35,8 @@ namespace re2
 
   RE2::Set::~Set()
   {
-    // std::cout << "析构函数调用\n";
-    regex_counter = 0;
-    if(regex_map.size() != 0) regex_map.clear();
-    
+    size_ = 0;
+    elem_.clear();
   }
 
   RE2::Set::Set(Set && other)
@@ -50,11 +45,11 @@ namespace re2
         compiled_(other.compiled_),
         prog_(std::move(other.prog_))
   {
-    other.compiled_ = false;
-    other.prog_.reset();
-    regex_map.clear();
-    regex_counter = 0;
-
+  other.elem_.clear();
+  other.elem_.shrink_to_fit();
+  other.compiled_ = false;
+  other.size_ = 0;
+  other.prog_.reset();
   }
 
   RE2::Set &RE2::Set::operator=(Set &&other)
@@ -67,7 +62,7 @@ namespace re2
   
   int RE2::Set::Add(const StringPiece &pattern, std::string *error)
   {
-    int place_num = regex_counter;
+    int place_num = size_;
     const char *rure_str = pattern.data();
     rure_error *err = rure_error_new();
     rure *re = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, err);
@@ -80,13 +75,12 @@ namespace re2
         error->assign(msg);
         LOG(ERROR) << "Regexp Error '" << pattern.data() << "':" << msg << "'";
       }
-      // rure_free(re);
-      // rure_error_free(err);
       return -1;
     }
     else
     {
-      regex_map.insert(pair<int, const char *>(regex_counter++, rure_str));
+      elem_.push_back(pair<std::string, re2::Regexp*>(pattern.as_string(), nullptr));
+      size_++;
       // rure_free(re);
       return place_num;
     }
@@ -99,14 +93,14 @@ namespace re2
       return false;
     }
     compiled_ = true;
-    const size_t PAT_COUNT = regex_map.size();
+    const size_t PAT_COUNT = elem_.size();
     const char *patterns[PAT_COUNT];
     size_t patterns_lengths[PAT_COUNT];
-    int i = 0;
-    for (auto it : regex_map) {
-      patterns[i] = it.second;
-      patterns_lengths[i++] = strlen(it.second);
+    for (size_t i = 0; i < elem_.size(); i++) {
+      patterns[i] = elem_[i].first.c_str();
+      patterns_lengths[i] = elem_[i].first.length();
     }
+    
 
     rure_error *err = rure_error_new();
     rure_set *re = rure_compile_set((const uint8_t **) patterns, 
@@ -159,11 +153,11 @@ namespace re2
         else
         { 
           v->clear();
-          bool matches[regex_map.size()];
+          bool matches[elem_.size()];
           bool result = rure_set_matches((rure_set *)prog_.get(), 
                                             (const uint8_t *)pat_str, length, 0, matches);
           if(!result) return false;
-          for(size_t i = 0; i < regex_map.size(); i++)
+          for(size_t i = 0; i < elem_.size(); i++)
           {
             if(matches[i]) v->push_back(i);
           }
@@ -176,15 +170,15 @@ namespace re2
       {
         if(v == NULL)
         {
-          bool matches[regex_map.size()];
+          bool matches[elem_.size()];
           bool result = rure_set_matches((rure_set *)prog_.get(), 
                                             (const uint8_t *)pat_str, length, 0, matches);
           if(!result) return false;
-          for(size_t i = 0; i < regex_map.size(); i++)
+          for(size_t i = 0; i < elem_.size(); i++)
           {
             if(matches[i])
             {
-              const char *pattern = regex_map[i];
+              const char *pattern = elem_[i].first.c_str();
               rure *re = rure_compile_must(pattern);
               rure_match match = {0};
               rure_find(re, (const uint8_t *)pat_str, strlen(pat_str),
@@ -198,15 +192,15 @@ namespace re2
         else
         { 
           v->clear();
-          bool matches[regex_map.size()];
+          bool matches[elem_.size()];
           bool result = rure_set_matches((rure_set *)prog_.get(), 
                                             (const uint8_t *)pat_str, length, 0, matches);
           if(!result) return false;
-          for(size_t i = 0; i < regex_map.size(); i++)
+          for(size_t i = 0; i < elem_.size(); i++)
           {
             if(matches[i])
             {
-              const char *pattern = regex_map[i];
+              const char *pattern = elem_[i].first.c_str();
               rure *re = rure_compile_must(pattern);
               rure_match match = {0};
               rure_find(re, (const uint8_t *)pat_str, strlen(pat_str),
@@ -231,11 +225,11 @@ namespace re2
         else
         { 
           v->clear();
-          bool matches[regex_map.size()];
+          bool matches[elem_.size()];
           bool result = rure_set_matches((rure_set *)prog_.get(), 
                                             (const uint8_t *)pat_str, length, 0, matches);
           if(!result) return false;
-          for(size_t i = 0; i < regex_map.size(); i++)
+          for(size_t i = 0; i < elem_.size(); i++)
           {
             if(matches[i]) v->push_back(i);
           }
