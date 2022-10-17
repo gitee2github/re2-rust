@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_STRINGPIECE_H_
-#define RE2_STRINGPIECE_H_
+#pragma once
 
 // A string-like object that points to a sized piece of memory.
 //
@@ -206,5 +205,3 @@ inline bool operator>=(const StringPiece& x, const StringPiece& y) {
 std::ostream& operator<<(std::ostream& o, const StringPiece& p);
 
 }  // namespace re2
-
-#endif  // RE2_STRINGPIECE_H_

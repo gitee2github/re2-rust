@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_FLAGS_H_
-#define UTIL_FLAGS_H_
+#pragma once
 
 // Simplified version of Google's command line flags.
 // Does not support parsing the command line.
@@ -22,5 +21,3 @@ T GetFlag(const T& flag) {
   return flag;
 }
 }  // namespace re2
-
-#endif  // UTIL_FLAGS_H_

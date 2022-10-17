@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_MIX_H_
-#define UTIL_MIX_H_
+#pragma once
 
 #include <stddef.h>
 #include <limits>
@@ -37,5 +36,3 @@ class HashMix {
 #endif
 
 }  // namespace re2
-
-#endif  // UTIL_MIX_H_

@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef RE2_FILTERED_RE2_H_
-#define RE2_FILTERED_RE2_H_
+#pragma once
 
 // The class FilteredRE2 is used as a wrapper to multiple RE2 regexps.
 // It provides a prefilter mechanism that helps in cutting down the
@@ -110,5 +109,3 @@ class FilteredRE2 {
 };
 
 }  // namespace re2
-
-#endif  // RE2_FILTERED_RE2_H_

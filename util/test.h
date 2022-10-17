@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_TEST_H_
-#define UTIL_TEST_H_
+#pragma once
 
 #include "util/util.h"
 #include "util/logging.h"
@@ -46,5 +45,3 @@ class TestRegisterer {
 #define EXPECT_LE CHECK_LE
 #define EXPECT_GT CHECK_GT
 #define EXPECT_GE CHECK_GE
-
-#endif  // UTIL_TEST_H_

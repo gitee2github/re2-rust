@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_MUTEX_H_
-#define UTIL_MUTEX_H_
+#pragma once
 
 /*
  * A simple mutex wrapper, supporting locks and read-write locks.
@@ -144,5 +143,3 @@ class WriterMutexLock {
 #define WriterMutexLock(x) static_assert(false, "WriterMutexLock declaration missing variable name")
 
 }  // namespace re2
-
-#endif  // UTIL_MUTEX_H_

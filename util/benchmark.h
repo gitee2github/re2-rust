@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef UTIL_BENCHMARK_H_
-#define UTIL_BENCHMARK_H_
+#pragma once
 
 #include <stdint.h>
 #include <functional>
@@ -152,5 +151,3 @@ class Benchmark {
 #define BENCHMARK_RANGE(f, lo, hi)       \
   ::testing::Benchmark* _benchmark_##f = \
       (new ::testing::Benchmark(#f, f, lo, hi))
-
-#endif  // UTIL_BENCHMARK_H_
