@@ -196,27 +196,54 @@ namespace re2
       }
       case RE2::ANCHOR_START:
       {
-        if(v == NULL)
+        bool matches[elem_.size()];
+        bool result = rure_set_matches((rure_set *)prog_.get(), 
+                                          (const uint8_t *)pat_str, length, 0, matches);
+        if(!result) return false;
+        if(v != NULL) v->clear();
+        for(size_t i = 0; i < elem_.size(); i++)
         {
-          
-          bool result = rure_set_is_match((rure_set *)prog_.get(), 
-                                            (const uint8_t *)pat_str, length, 0);
-          return result;
-        }
-        else
-        { 
-          v->clear();
-          bool matches[elem_.size()];
-          bool result = rure_set_matches((rure_set *)prog_.get(), 
-                                            (const uint8_t *)pat_str, length, 0, matches);
-          if(!result) return false;
-          for(size_t i = 0; i < elem_.size(); i++)
+          if(matches[i])
           {
-            if(matches[i]) v->push_back(i);
+            rure *re = (rure*)elem_[i].second;
+            rure_match match = {0};
+            rure_find(re, (const uint8_t *)pat_str, strlen(pat_str),
+                           0, &match);
+            if(match.start == 0)
+            {
+              if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
+              else return true;  // v为NULL, 直接返回匹配成功的情形
+            } 
           }
-          return true;
+        }
+        if(v == NULL) return false; // v为空的情况
+        else // v不为空的情况，若经过处理后v中存储了相关索引，则返回true，否则false
+        {
+          if(v->size()) return true;
+          else return false;
         }
         break;
+        // if(v == NULL)
+        // {
+          
+        //   bool result = rure_set_is_match((rure_set *)prog_.get(), 
+        //                                     (const uint8_t *)pat_str, length, 0);
+        //   return result;
+        // }
+        // else
+        // { 
+        //   v->clear();
+        //   bool matches[elem_.size()];
+        //   bool result = rure_set_matches((rure_set *)prog_.get(), 
+        //                                     (const uint8_t *)pat_str, length, 0, matches);
+        //   if(!result) return false;
+        //   for(size_t i = 0; i < elem_.size(); i++)
+        //   {
+        //     if(matches[i]) v->push_back(i);
+        //   }
+        //   return true;
+        // }
+        // break;
       }
     }
     return true;
