@@ -30,9 +30,6 @@
 #include "util/logging.h"
 #include "util/strutil.h"
 #include "util/utf.h"
-// #include "re2/sparse_array.h"
-// #include "re2/prog.h"
-// #include "re2/regexp.h"
 #include "regex_internal.h"
 
 using namespace std;
@@ -92,53 +89,6 @@ namespace re2
   {
     Init(pattern, options);
   }
-  /*
-  int RE2::Options::ParseFlags() const
-  {
-    int flags = Regexp::ClassNL;
-    switch (encoding())
-    {
-    default:
-      if (log_errors())
-        LOG(ERROR) << "Unknown encoding " << encoding();
-      break;
-    case RE2::Options::EncodingUTF8:
-      break;
-    case RE2::Options::EncodingLatin1:
-      flags |= Regexp::Latin1;
-      break;
-    }
-
-    if (!posix_syntax())
-      flags |= Regexp::LikePerl;
-
-    if (literal())
-      flags |= Regexp::Literal;
-
-    if (never_nl())
-      flags |= Regexp::NeverNL;
-
-    if (dot_nl())
-      flags |= Regexp::DotNL;
-
-    if (never_capture())
-      flags |= Regexp::NeverCapture;
-
-    if (!case_sensitive())
-      flags |= Regexp::FoldCase;
-
-    if (perl_classes())
-      flags |= Regexp::PerlClasses;
-
-    if (word_boundary())
-      flags |= Regexp::PerlB;
-
-    if (one_line())
-      flags |= Regexp::OneLine;
-
-    return flags;
-  }
-  */
 
   std::string encodingLatin1ToUTF8(std::string str)
   {
@@ -207,12 +157,6 @@ namespace re2
 
     // for All
     rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
-    //这里应该被注释，如果rure_str为空，re会为空，会去执行if(re == NULL)判断，从而对空的正则表达式进行处理
-    // if(rure_str == "")
-    // {
-    //   const char *empty_char = "";
-    //   re = rure_compile((const uint8_t *)empty_char, strlen(empty_char), RURE_DEFAULT_FLAGS, NULL, err);
-    // }
     //如果编译失败，打印错误信息
     if (re == NULL)
     {
@@ -249,13 +193,6 @@ namespace re2
       FullMatch_rure_str.insert(0, "^(");
       FullMatch_rure_str.append(")$");
       entire_regexp_ = (re2::Regexp *)rure_compile((const uint8_t *)FullMatch_rure_str.c_str(), strlen(FullMatch_rure_str.c_str()), flags, NULL, err);
-      /*
-      if(entire_regexp_ == NULL)
-      {
-        const char *msg = rure_error_message(err);
-        LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
-      }
-      */
     }
     else
     {
@@ -279,36 +216,9 @@ namespace re2
     error_ = empty_string;
     error_code_ = RE2::NoError;   
   }
-  /*
-  // Returns rprog_, computing it if needed.
-  re2::Prog *RE2::ReverseProg() const
-  {
-    std::call_once(rprog_once_, [](const RE2* re) {
-      re->rprog_ =
-          re->suffix_regexp_->CompileToReverseProg(re->options_.max_mem() / 3);
-      if (re->rprog_ == NULL) {
-        if (re->options_.log_errors())
-          LOG(ERROR) << "Error reverse compiling '" << trunc(re->pattern_) << "'";
-        // We no longer touch error_ and error_code_ because failing to compile
-        // the reverse Prog is not a showstopper: falling back to NFA execution
-        // is fine. More importantly, an RE2 object is supposed to be logically
-        // immutable: whatever ok() would have returned after Init() completed,
-        // it should continue to return that no matter what ReverseProg() does.
-      }
-    }, this);
-    return rprog_;
-  }
-  */
 
   RE2::~RE2()
   {
-    // if (suffix_regexp_)
-    //   rure_free((rure *)suffix_regexp_);
-    // if (entire_regexp_)
-    //   rure_free((rure *)entire_regexp_);
-    // if(prog_)
-    //   rure_free((rure *)prog_);
-    //     // delete rprog_;
     if (error_ != empty_string)
       delete error_;
     if (named_groups_ != NULL && named_groups_ != empty_named_groups)
@@ -316,86 +226,6 @@ namespace re2
     if (group_names_ != NULL && group_names_ != empty_group_names)
       delete group_names_;
   }
-  /*
-  int RE2::ProgramSize() const
-  {
-    if (prog_ == NULL)
-      return -1;
-    return prog_->size();
-    return 0;
-  }
-
-  int RE2::ReverseProgramSize() const
-  {
-    if (prog_ == NULL)
-      return -1;
-    Prog* prog = ReverseProg();
-    if (prog == NULL)
-      return -1;
-    return prog->size();
-    return 0;
-  }
-
-  // Finds the most significant non-zero bit in n.
-  static int FindMSBSet(uint32_t n) {
-    DCHECK_NE(n, 0);
-  #if defined(__GNUC__)
-    return 31 ^ __builtin_clz(n);
-  #elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
-    unsigned long c;
-    _BitScanReverse(&c, n);
-    return static_cast<int>(c);
-  #else
-    int c = 0;
-    for (int shift = 1 << 4; shift != 0; shift >>= 1) {
-      uint32_t word = n >> shift;
-      if (word != 0) {
-        n = word;
-        c += shift;
-      }
-    }
-    return c;
-  #endif
-  }
-
-  static int Fanout(Prog* prog, std::vector<int>* histogram) {
-    SparseArray<int> fanout(prog->size());
-    prog->Fanout(&fanout);
-    int data[32] = {};
-    int size = 0;
-    for (SparseArray<int>::iterator i = fanout.begin(); i != fanout.end(); ++i) {
-      if (i->value() == 0)
-        continue;
-      uint32_t value = i->value();
-      int bucket = FindMSBSet(value);
-      bucket += value & (value-1) ? 1 : 0;
-      ++data[bucket];
-      size = std::max(size, bucket+1);
-    }
-    if (histogram != NULL)
-      histogram->assign(data, data+size);
-    return size-1;
-  }
-
-  int RE2::ProgramFanout(std::vector<int> *histogram) const
-  {
-    // if (prog_ == NULL)
-    //   return -1;
-    // return Fanout(prog_, histogram);
-    return 0;
-  }
-
-  int RE2::ReverseProgramFanout(std::vector<int> *histogram) const
-  {
-    // if (prog_ == NULL)
-    //   return -1;
-    // Prog* prog = ReverseProg();
-    // if (prog == NULL)
-    //   return -1;
-    // return Fanout(prog, histogram);
-    return 0;
-  }
-  */
 
   // Returns named_groups_, computing it if needed.
   const std::map<std::string, int> &RE2::NamedCapturingGroups() const
@@ -636,68 +466,6 @@ namespace re2
     return result;
   }
 
-  /*
-  bool RE2::PossibleMatchRange(std::string *min, std::string *max,
-                               int maxlen) const
-  {
-    if (prog_ == NULL)
-      return false;
-
-    int n = static_cast<int>(prefix_.size());
-    if (n > maxlen)
-      n = maxlen;
-
-    // Determine initial min max from prefix_ literal.
-    *min = prefix_.substr(0, n);
-    *max = prefix_.substr(0, n);
-    if (prefix_foldcase_) {
-      // prefix is ASCII lowercase; change *min to uppercase.
-      for (int i = 0; i < n; i++) {
-        char& c = (*min)[i];
-        if ('a' <= c && c <= 'z')
-          c += 'A' - 'a';
-      }
-    }
-
-    // Add to prefix min max using PossibleMatchRange on regexp.
-    std::string dmin, dmax;
-    maxlen -= n;
-    if (maxlen > 0 && prog_->PossibleMatchRange(&dmin, &dmax, maxlen)) {
-      min->append(dmin);
-      max->append(dmax);
-    } else if (!max->empty()) {
-      // prog_->PossibleMatchRange has failed us,
-      // but we still have useful information from prefix_.
-      // Round up *max to allow any possible suffix.
-      PrefixSuccessor(max);
-    } else {
-      // Nothing useful.
-      *min = "";
-      *max = "";
-      return false;
-    }
-
-    return true;
-  }
-  
-
-  // Avoid possible locale nonsense in standard strcasecmp.
-  // The string a is known to be all lowercase.
-  static int ascii_strcasecmp(const char* a, const char* b, size_t len) {
-    const char* ae = a + len;
-
-    for (; a < ae; a++, b++) {
-      uint8_t x = *a;
-      uint8_t y = *b;
-      if ('A' <= y && y <= 'Z')
-        y += 'a' - 'A';
-      if (x != y)
-        return x - y;
-    }
-    return 0;
-  }
-  */
-
   /***** Actual matching and rewriting code *****/
 
   bool RE2::Match(const StringPiece &text,
@@ -804,20 +572,6 @@ namespace re2
       else if(!nsubmatch){
         return true;
       }
-      // bool matched;
-      // if(options_.encoding() == RE2::Options::EncodingUTF8){
-      //   matched = rure_is_match((rure *)entire_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), 0);
-      // }
-      // else{
-      //   matched = rure_is_match(re, (const uint8_t *)haystack.c_str(), length, 0);
-      // }
-      
-      // if(!matched){
-      //   return false;
-      // }
-      // else if(!nsubmatch){
-      //   return true;
-      // }
     }
     
     // Demo  获取捕获组内容，存储到submatch数组中
@@ -1368,46 +1122,4 @@ namespace re2
     }
 
   } // namespace re2_internal
-
-/*
-  namespace hooks
-  {
-
-#ifdef RE2_HAVE_THREAD_LOCAL
-    thread_local const RE2 *context = NULL;
-#endif
-
-    template <typename T>
-    union Hook
-    {
-      void Store(T *cb) { cb_.store(cb, std::memory_order_release); }
-      T *Load() const { return cb_.load(std::memory_order_acquire); }
-
-#if !defined(__clang__) && defined(_MSC_VER)
-      // Citing https://github.com/protocolbuffers/protobuf/pull/4777 as precedent,
-      // this is a gross hack to make std::atomic<T*> constant-initialized on MSVC.
-      static_assert(ATOMIC_POINTER_LOCK_FREE == 2,
-                    "std::atomic<T*> must be always lock-free");
-      T *cb_for_constinit_;
-#endif
-
-      std::atomic<T *> cb_;
-    };
-
-    template <typename T>
-    static void DoNothing(const T &) {}
-
-#define DEFINE_HOOK(type, name)                                       \
-  static Hook<type##Callback> name##_hook = {{&DoNothing<type>}};     \
-  void Set##type##Hook(type##Callback *cb) { name##_hook.Store(cb); } \
-  type##Callback *Get##type##Hook() { return name##_hook.Load(); }
-
-    DEFINE_HOOK(DFAStateCacheReset, dfa_state_cache_reset)
-    DEFINE_HOOK(DFASearchFailure, dfa_search_failure)
-
-#undef DEFINE_HOOK
-
-  } // namespace hooks
-  */
-
 } // namespace re2
