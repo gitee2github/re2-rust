@@ -613,6 +613,11 @@ int rure_max_submatch(const char *rewrite);
 bool rure_check_rewrite_string(const char *rewrite, int max_token);
 
 
+/*
+ * Convert RE2 style rewrite string to a string that Rust can accept
+*/
+const char *rure_rewrite_str_convert(const uint8_t *rewrite, size_t len);
+
 #ifdef __cplusplus
 }
 #endif
