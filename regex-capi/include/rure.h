@@ -618,6 +618,12 @@ bool rure_check_rewrite_string(const char *rewrite, int max_token);
 */
 const char *rure_rewrite_str_convert(const uint8_t *rewrite, size_t len);
 
+/*
+ * Similar to Rewrite function in RE2.
+*/
+const char *rure_rewrite(const uint8_t *rewrite, size_t len, const uint8_t **vecs,
+                const size_t *vecs_lengths, size_t vecs_count);
+
 #ifdef __cplusplus
 }
 #endif
