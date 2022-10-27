@@ -312,29 +312,6 @@ namespace re2
     }
   }
 
-  // 处理Rewrite 将所有的 //number 转换为 ${number}
-  std::string rewrite_re2_to_rure(re2::StringPiece rewrite)
-  {
-    std::string rure_rewrite;
-    for (const char *s = rewrite.data(), *end = s + rewrite.size();
-         s < end; s++)
-    {
-      if (*s != '\\')
-      {
-        rure_rewrite.push_back(*s);
-        continue;
-      }
-      s++;
-      int c = (s < end) ? *s : -1;
-      if (isdigit(c))
-      {
-        rure_rewrite.append("${");
-        rure_rewrite.push_back(c);
-        rure_rewrite.push_back('}');
-      }
-    }
-    return rure_rewrite;
-  }
 
   bool RE2::Replace(std::string *str,
                     const RE2 &re,
@@ -351,7 +328,8 @@ namespace re2
     // 利用rure进行replace
     const char *rure_str = re.pattern_.c_str();
     // 对rewrite进行处理
-    const char *rure_rewrite = rewrite_re2_to_rure(rewrite).c_str();
+    const char *rure_rewrite = rure_rewrite_str_convert((const uint8_t*)rewrite.data(), rewrite.size());
+
     rure *re_rure = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, NULL);
     const char *str_rure = rure_replace(re_rure, (const uint8_t *)str->c_str(), strlen(str->c_str()),
                                         (const uint8_t *)rure_rewrite, strlen(rure_rewrite));
@@ -397,7 +375,7 @@ namespace re2
     if (count != 0)
     {
       // 对rewrite进行处理
-      const char *rure_rewrite = rewrite_re2_to_rure(rewrite).c_str();
+      const char *rure_rewrite = rure_rewrite_str_convert((const uint8_t*)rewrite.data(), rewrite.size());
       const char *str_rure = rure_replace_all(re_rure, (const uint8_t *)str->c_str(), strlen(str->c_str()),
                                               (const uint8_t *)rure_rewrite, strlen(rure_rewrite));
       *str = str_rure;

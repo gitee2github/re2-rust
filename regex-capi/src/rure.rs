@@ -793,3 +793,44 @@ ffi_fn! {
         return true;
     }
 }
+
+ffi_fn! {
+    fn rure_rewrite_str_convert(rewrite: *const u8, length: size_t) -> *const c_char {
+        let rewrite = unsafe { slice::from_raw_parts(rewrite, length) };
+        let rewrite_str = std::str::from_utf8(rewrite).unwrap();
+        let rewrite_chars = rewrite_str.chars().collect::<Vec<char>>();
+        let mut i = 0;
+        let mut rewrite_rure_str = String::new();
+        while i < rewrite_chars.len() {
+            if rewrite_chars[i] != '\\' {
+                rewrite_rure_str.push(rewrite_chars[i]);
+                i += 1;
+                continue;
+            }
+            {
+                i += 1;
+                let c = {
+                    if i < rewrite_chars.len() {
+                        rewrite_chars[i]
+                    } else {
+                        '#'
+                    }
+                };
+                if c.is_ascii_digit() {
+                    rewrite_rure_str.push_str("${");
+                    rewrite_rure_str.push(c);
+                    rewrite_rure_str.push('}');
+                }
+            }
+            i += 1;
+        }
+        let rure_str = match CString::new(rewrite_rure_str) {
+            Ok(val) => val,
+            Err(err) => {
+                println!("{}", err);
+                return ptr::null();
+            },
+        };
+        rure_str.into_raw() as *const c_char
+    }
+}
