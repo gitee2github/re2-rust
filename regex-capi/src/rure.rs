@@ -859,17 +859,10 @@ ffi_fn! {
         for (&raw_vec, &raw_vecl) in raw_vecs.iter().zip(raw_vecsl) {
             let rure_vec = unsafe { slice::from_raw_parts(raw_vec, raw_vecl) };
             rure_vecs.push(str::from_utf8(rure_vec).unwrap());
-            // let elem = String::from_utf8(rure_vec).unwrap();;
-        }
-        for i in 0..rure_vecs.len() {
-            println!("{}, ", rure_vecs[i]);
         }
 
         let rewrite_chars = rewrite_str.chars().collect::<Vec<char>>();
         let mut i = 0;
-        // let outl = unsafe { slice::from_raw_parts(rure_out, rure_out_len) };
-        // let mut out = std::str::from_utf8(outl).unwrap().to_string();
-
         let mut out = String::new();
         while i < rewrite_chars.len() {
             if rewrite_chars[i] != '\\' {
@@ -903,8 +896,6 @@ ffi_fn! {
                 return ptr::null();
             }
         }
-        println!("{}", out);
-        // out.as_p
         let out = match CString::new(out) {
             Ok(val) => val,
             Err(err) => {
