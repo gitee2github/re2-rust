@@ -734,44 +734,20 @@ namespace re2
                     const StringPiece *vec,
                     int veclen) const
   {
-    for (const char *s = rewrite.data(), *end = s + rewrite.size();
-         s < end; s++)
-    {
-      if (*s != '\\')
-      {
-        out->push_back(*s);
-        continue;
-      }
-      s++;
-      int c = (s < end) ? *s : -1;
-      if (isdigit(c))
-      {
-        int n = (c - '0');
-        if (n >= veclen)
-        {
-          if (options_.log_errors())
-          {
-            LOG(ERROR) << "invalid substitution \\" << n
-                       << " from " << veclen << " groups";
-          }
-          return false;
-        }
-        StringPiece snip = vec[n];
-        if (!snip.empty())
-          out->append(snip.data(), snip.size());
-      }
-      else if (c == '\\')
-      {
-        out->push_back('\\');
-      }
-      else
-      {
-        if (options_.log_errors())
-          LOG(ERROR) << "invalid rewrite pattern: " << rewrite.data();
-        return false;
-      }
+    size_t len = rewrite.length();
+    const char *rewrites[veclen];
+    size_t rewrites_lengths[veclen];
+    for(int i = 0; i < veclen; i++) {
+      rewrites[i] = vec[i].data();
+      rewrites_lengths[i] = vec[i].size();
     }
-    return true;
+    const char *result = rure_rewrite((const uint8_t *)rewrite.data(), len, (const uint8_t **)rewrites, 
+                                    rewrites_lengths, (size_t)veclen);
+    if(result != NULL) {
+      out->assign(result);
+      return true;
+    }
+    return false;
   }
 
   /***** Parsers for various types *****/

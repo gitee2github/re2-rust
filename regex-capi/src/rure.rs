@@ -834,3 +834,84 @@ ffi_fn! {
         rure_str.into_raw() as *const c_char
     }
 }
+
+ffi_fn! {
+    fn rure_rewrite(
+        rewrite: *const u8, 
+        length: size_t, 
+        vecs: *const *const u8, 
+        vecs_lengths: *const size_t, 
+        vecs_count: size_t
+    ) -> *const c_char {
+        // 获取rewrite
+        let rewrite = unsafe { slice::from_raw_parts(rewrite, length) };
+        let rewrite_str = std::str::from_utf8(rewrite).unwrap();
+        
+        //获取vecs中的内容
+        let (raw_vecs, raw_vecsl) = unsafe {
+            (
+                slice::from_raw_parts(vecs, vecs_count),
+                slice::from_raw_parts(vecs_lengths, vecs_count)
+            )
+        };
+
+        let mut rure_vecs = Vec::with_capacity(vecs_count);
+        for (&raw_vec, &raw_vecl) in raw_vecs.iter().zip(raw_vecsl) {
+            let rure_vec = unsafe { slice::from_raw_parts(raw_vec, raw_vecl) };
+            rure_vecs.push(str::from_utf8(rure_vec).unwrap());
+            // let elem = String::from_utf8(rure_vec).unwrap();;
+        }
+        for i in 0..rure_vecs.len() {
+            println!("{}, ", rure_vecs[i]);
+        }
+
+        let rewrite_chars = rewrite_str.chars().collect::<Vec<char>>();
+        let mut i = 0;
+        // let outl = unsafe { slice::from_raw_parts(rure_out, rure_out_len) };
+        // let mut out = std::str::from_utf8(outl).unwrap().to_string();
+
+        let mut out = String::new();
+        while i < rewrite_chars.len() {
+            if rewrite_chars[i] != '\\' {
+                out.push(rewrite_chars[i]);
+                i += 1;
+                continue;
+            }
+            i += 1;
+            let c = {
+                if i < rewrite_chars.len() {
+                    rewrite_chars[i]
+                } else {
+                    '~'
+                }
+            };
+            // let n
+            if c.is_ascii_digit() {
+                let n = c as usize - '0' as usize;
+                if n >= vecs_count {
+                    return ptr::null();
+                }
+                let elem = rure_vecs[n];
+                if !elem.is_empty() {
+                    out.push_str(elem);
+                }
+                i += 1; 
+            } else if rewrite_chars[i] == '\\' {
+                out.push('\\');
+                i += 1;
+            } else {
+                return ptr::null();
+            }
+        }
+        println!("{}", out);
+        // out.as_p
+        let out = match CString::new(out) {
+            Ok(val) => val,
+            Err(err) => {
+                println!("{}", err);
+                return ptr::null();
+            },
+        };
+        out.into_raw() as *const c_char
+    }
+}
