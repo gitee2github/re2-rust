@@ -63,10 +63,15 @@ namespace re2
   int RE2::Set::Add(const StringPiece &pattern, std::string *error)
   {
     int place_num = size_;
-    const char *rure_str = pattern.data();
+    std::string rure_pattern = pattern.as_string();
+    if(anchor_ == RE2::ANCHOR_START){   // 处理RE2::ANCHOR_START的情况
+      rure_pattern.insert(0, "^");
+    } else if(anchor_ == RE2::ANCHOR_BOTH)  {   // 处理RE2::ANCHOR_BOTH的情况
+      rure_pattern.insert(0, "^");
+      rure_pattern.append("$");
+    }
     rure_error *err = rure_error_new();
-    rure *re = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, err);
-    
+    rure *re = rure_compile((const uint8_t *)rure_pattern.c_str(), strlen(rure_pattern.c_str()), RURE_DEFAULT_FLAGS, NULL, err);
     if (re == NULL)
     {
       const char *msg = rure_error_message(err);
@@ -167,14 +172,7 @@ namespace re2
         if(matches[i])
         {
           std::string rure_pattern = elem_[i].first;
-          // 处理RE2::ANCHOR_START的情况
-          if(anchor_ == RE2::ANCHOR_START){
-            rure_pattern.insert(0, "^");
-          } else {   // 处理RE2::ANCHOR_BOTH的情况
-            rure_pattern.insert(0, "^");
-            rure_pattern.append("$");
-          }
-          rure *re = rure_compile_must(rure_pattern.c_str());
+          rure *re = (rure *)elem_[i].second;
           bool result = rure_is_match(re, (const uint8_t *)pat_str, strlen(pat_str), 0);
           if(result)
           {
