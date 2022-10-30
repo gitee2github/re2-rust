@@ -24,6 +24,7 @@
 #include "util/strutil.h"
 // #include "re2/prog.h"
 #include "re2/re2.h"
+#include "re2/set.h"
 // #include "re2/regexp.h"
 #include "util/mutex.h"
 #include "util/pcre.h"
@@ -635,6 +636,76 @@ void FullMatchRE2_text_dotnl_90(benchmark::State& state, const char *regexp) {
   }
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
+
+void Set_Match_UNANCHORED_NULL_RE2(benchmark::State& state)
+{
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string str = buffer.str().substr(0, state.range(0));
+  RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+  s.Add("hwx", NULL);
+  s.Add("ldi", NULL);
+  s.Compile();
+  for (auto _ : state) {
+    s.Match(str, NULL);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK_RANGE(Set_Match_UNANCHORED_NULL_RE2, 2 << 6, 2 << 9);
+
+void Set_Match_UNANCHORED_RE2(benchmark::State& state)
+{
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string str = buffer.str().substr(0, state.range(0));
+  RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+  s.Add("hwx", NULL);
+  s.Add("ldi", NULL);
+  s.Compile();
+  std::vector<int> v;
+  for (auto _ : state) {
+    s.Match(str, &v);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK_RANGE(Set_Match_UNANCHORED_RE2, 2 << 6, 2 << 9);
+
+void Set_Match_ANCHOR_BOTH_NULL_RE2(benchmark::State& state)
+{
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string str = buffer.str().substr(0, state.range(0));
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_BOTH);
+  s.Add(".*", NULL);
+  s.Add("ldi", NULL);
+  s.Compile();
+  for (auto _ : state) {
+    s.Match(str, NULL);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK_RANGE(Set_Match_ANCHOR_BOTH_NULL_RE2, 2 << 6, 2 << 9);
+
+void Set_Match_ANCHOR_BOTH_RE2(benchmark::State& state)
+{
+  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string str = buffer.str().substr(0, state.range(0));
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_BOTH);
+  s.Add(".*", NULL);
+  s.Add("ldi", NULL);
+  s.Compile();
+  std::vector<int> v;
+  for (auto _ : state) {
+    s.Match(str, &v);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK_RANGE(Set_Match_ANCHOR_BOTH_RE2, 2 << 6, 2 << 9);
 
 void Rure_Find_RE2(benchmark::State& state, const char *regexp)
 {
