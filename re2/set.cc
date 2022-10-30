@@ -123,13 +123,6 @@ namespace re2
   bool RE2::Set::Match(const StringPiece &text, std::vector<int> *v,
                        ErrorInfo *error_info) const
   {
-    // RE2::UNANCHORED     可以直接处理
-    // RE2::ANCHOR_BOTH   思路：可以使用上种处理方式进行处理，之后判断是否是完全匹配！
-
-    // 处理完成上面之后，再对vector进行赋值
-    // 1. v == NULL
-    // 2. v != NULL
-
     if (!compiled_) {
       LOG(ERROR) << "RE2::Set::Match() called before compiling";
       if (error_info != NULL)
@@ -139,114 +132,64 @@ namespace re2
     
     const char *pat_str = text.data();
     size_t length = strlen(pat_str);
-    switch (anchor_)
+
+    if(anchor_ == RE2::UNANCHORED) 
     {
-      case RE2::UNANCHORED:
+      if(v == NULL)
       {
-        if(v == NULL)
-        {
-          bool result = rure_set_is_match((rure_set *)prog_.get(), 
-                                            (const uint8_t *)pat_str, length, 0);
-          return result;
-        }
-        else
-        { 
-          v->clear();
-          bool matches[elem_.size()];
-          bool result = rure_set_matches((rure_set *)prog_.get(), 
-                                            (const uint8_t *)pat_str, length, 0, matches);
-          if(!result) return false;
-          for(size_t i = 0; i < elem_.size(); i++)
-          {
-            if(matches[i]) v->push_back(i);
-          }
-          return true;
-        }
-        break;
+        bool result = rure_set_is_match((rure_set *)prog_.get(), 
+                                          (const uint8_t *)pat_str, length, 0);
+        return result;
       }
-      case RE2::ANCHOR_BOTH:
-      {
+      else
+      { 
+        v->clear();
         bool matches[elem_.size()];
         bool result = rure_set_matches((rure_set *)prog_.get(), 
                                           (const uint8_t *)pat_str, length, 0, matches);
         if(!result) return false;
-        if(v != NULL) v->clear();
         for(size_t i = 0; i < elem_.size(); i++)
         {
-          if(matches[i])
-          {
-            rure *re = (rure*)elem_[i].second;
-            rure_match match = {0};
-            rure_find(re, (const uint8_t *)pat_str, strlen(pat_str),
-                           0, &match);
-            if(match.start == 0 && match.end == strlen(pat_str))
-            {
-              if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
-              else return true;  // v为NULL, 直接返回匹配成功的情形
-            } 
-          }
+          if(matches[i]) v->push_back(i);
         }
-        if(v == NULL) return false; // v为空的情况
-        else // v不为空的情况，若经过处理后v中存储了相关索引，则返回true，否则false
-        {
-          if(v->size()) return true;
-          else return false;
-        }
-        break;
+        return true;
       }
-      case RE2::ANCHOR_START:
+    } 
+    else 
+    {
+      bool matches[elem_.size()];
+      bool result = rure_set_matches((rure_set *)prog_.get(), 
+                                        (const uint8_t *)pat_str, length, 0, matches);
+      if(!result) return false;
+      if(v != NULL) v->clear();
+      for(size_t i = 0; i < elem_.size(); i++)
       {
-        bool matches[elem_.size()];
-        bool result = rure_set_matches((rure_set *)prog_.get(), 
-                                          (const uint8_t *)pat_str, length, 0, matches);
-        if(!result) return false;
-        if(v != NULL) v->clear();
-        for(size_t i = 0; i < elem_.size(); i++)
+        if(matches[i])
         {
-          if(matches[i])
+          std::string rure_pattern = elem_[i].first;
+          // 处理RE2::ANCHOR_START的情况
+          if(anchor_ == RE2::ANCHOR_START){
+            rure_pattern.insert(0, "^");
+          } else {   // 处理RE2::ANCHOR_BOTH的情况
+            rure_pattern.insert(0, "^");
+            rure_pattern.append("$");
+          }
+          rure *re = rure_compile_must(rure_pattern.c_str());
+          bool result = rure_is_match(re, (const uint8_t *)pat_str, strlen(pat_str), 0);
+          if(result)
           {
-            rure *re = (rure*)elem_[i].second;
-            rure_match match = {0};
-            rure_find(re, (const uint8_t *)pat_str, strlen(pat_str),
-                           0, &match);
-            if(match.start == 0)
-            {
-              if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
-              else return true;  // v为NULL, 直接返回匹配成功的情形
-            } 
+            if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
+            else return true;  // v为NULL, 直接返回匹配成功的情形
           }
         }
-        if(v == NULL) return false; // v为空的情况
-        else // v不为空的情况，若经过处理后v中存储了相关索引，则返回true，否则false
-        {
-          if(v->size()) return true;
-          else return false;
-        }
-        break;
-        // if(v == NULL)
-        // {
-          
-        //   bool result = rure_set_is_match((rure_set *)prog_.get(), 
-        //                                     (const uint8_t *)pat_str, length, 0);
-        //   return result;
-        // }
-        // else
-        // { 
-        //   v->clear();
-        //   bool matches[elem_.size()];
-        //   bool result = rure_set_matches((rure_set *)prog_.get(), 
-        //                                     (const uint8_t *)pat_str, length, 0, matches);
-        //   if(!result) return false;
-        //   for(size_t i = 0; i < elem_.size(); i++)
-        //   {
-        //     if(matches[i]) v->push_back(i);
-        //   }
-        //   return true;
-        // }
-        // break;
+      }
+      if(v == NULL) return false; // v为空的情况
+      else // v不为空的情况，若经过处理后v中存储了相关索引，则返回true，否则false
+      {
+        if(v->size()) return true;
+        else return false;
       }
     }
     return true;
   }
-
 } // namespace re2
