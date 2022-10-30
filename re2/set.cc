@@ -137,7 +137,6 @@ namespace re2
     
     const char *pat_str = text.data();
     size_t length = strlen(pat_str);
-
     if(anchor_ == RE2::UNANCHORED) 
     {
       if(v == NULL)
@@ -162,23 +161,16 @@ namespace re2
     } 
     else 
     {
-      bool matches[elem_.size()];
-      bool result = rure_set_matches((rure_set *)prog_.get(), 
-                                        (const uint8_t *)pat_str, length, 0, matches);
-      if(!result) return false;
       if(v != NULL) v->clear();
       for(size_t i = 0; i < elem_.size(); i++)
       {
-        if(matches[i])
+        std::string rure_pattern = elem_[i].first;
+        rure *re = (rure *)elem_[i].second;
+        bool result = rure_is_match(re, (const uint8_t *)pat_str, strlen(pat_str), 0);
+        if(result)
         {
-          std::string rure_pattern = elem_[i].first;
-          rure *re = (rure *)elem_[i].second;
-          bool result = rure_is_match(re, (const uint8_t *)pat_str, strlen(pat_str), 0);
-          if(result)
-          {
-            if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
-            else return true;  // v为NULL, 直接返回匹配成功的情形
-          }
+          if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
+          else return true;  // v为NULL, 直接返回匹配成功的情形
         }
       }
       if(v == NULL) return false; // v为空的情况
