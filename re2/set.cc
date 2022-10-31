@@ -63,10 +63,15 @@ namespace re2
   int RE2::Set::Add(const StringPiece &pattern, std::string *error)
   {
     int place_num = size_;
-    const char *rure_str = pattern.data();
+    std::string rure_pattern = pattern.as_string();
+    if(anchor_ == RE2::ANCHOR_START){   // 处理RE2::ANCHOR_START的情况
+      rure_pattern.insert(0, "^");
+    } else if(anchor_ == RE2::ANCHOR_BOTH)  {   // 处理RE2::ANCHOR_BOTH的情况
+      rure_pattern.insert(0, "^");
+      rure_pattern.append("$");
+    }
     rure_error *err = rure_error_new();
-    rure *re = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, err);
-    
+    rure *re = rure_compile((const uint8_t *)rure_pattern.c_str(), strlen(rure_pattern.c_str()), RURE_DEFAULT_FLAGS, NULL, err);
     if (re == NULL)
     {
       const char *msg = rure_error_message(err);
@@ -132,7 +137,6 @@ namespace re2
     
     const char *pat_str = text.data();
     size_t length = strlen(pat_str);
-
     if(anchor_ == RE2::UNANCHORED) 
     {
       if(v == NULL)
@@ -157,30 +161,16 @@ namespace re2
     } 
     else 
     {
-      bool matches[elem_.size()];
-      bool result = rure_set_matches((rure_set *)prog_.get(), 
-                                        (const uint8_t *)pat_str, length, 0, matches);
-      if(!result) return false;
       if(v != NULL) v->clear();
       for(size_t i = 0; i < elem_.size(); i++)
       {
-        if(matches[i])
+        std::string rure_pattern = elem_[i].first;
+        rure *re = (rure *)elem_[i].second;
+        bool result = rure_is_match(re, (const uint8_t *)pat_str, strlen(pat_str), 0);
+        if(result)
         {
-          std::string rure_pattern = elem_[i].first;
-          // 处理RE2::ANCHOR_START的情况
-          if(anchor_ == RE2::ANCHOR_START){
-            rure_pattern.insert(0, "^");
-          } else {   // 处理RE2::ANCHOR_BOTH的情况
-            rure_pattern.insert(0, "^");
-            rure_pattern.append("$");
-          }
-          rure *re = rure_compile_must(rure_pattern.c_str());
-          bool result = rure_is_match(re, (const uint8_t *)pat_str, strlen(pat_str), 0);
-          if(result)
-          {
-            if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
-            else return true;  // v为NULL, 直接返回匹配成功的情形
-          }
+          if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
+          else return true;  // v为NULL, 直接返回匹配成功的情形
         }
       }
       if(v == NULL) return false; // v为空的情况
