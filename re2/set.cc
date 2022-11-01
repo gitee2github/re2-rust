@@ -16,10 +16,8 @@
 #include "re2/re2.h"
 #include "regex_internal.h"
 #include "re2/stringpiece.h"
-extern "C"
-{
-  #include "regex-capi/include/rure.h"
-}
+#include "regex-capi/include/rure.h"
+
 using namespace std;
 
 namespace re2
@@ -80,12 +78,14 @@ namespace re2
         error->assign(msg);
         LOG(ERROR) << "Regexp Error '" << pattern.data() << "':" << msg << "'";
       }
+      rure_free(re);
       return -1;
     }
     else
     {
       elem_.push_back(pair<std::string, re2::Regexp*>(rure_pattern, (re2::Regexp*)nullptr));
       size_++;
+      rure_free(re);
       return place_num;
     }
   }
@@ -113,6 +113,7 @@ namespace re2
       return false;
     } 
     prog_.reset((Prog *)re);
+    rure_set_free(re);
     compiled_ = true;
     return true;
   }
