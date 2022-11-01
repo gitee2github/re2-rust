@@ -425,7 +425,7 @@ void EmptyPartialMatchRE2(benchmark::State& state) {
 }
 
 void EmptyPartialMatchRE2_text_re2_1KB(benchmark::State& state) {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str();
@@ -547,7 +547,7 @@ void ASCIIMatchRE2(benchmark::State& state) {
 }
 
 void ASCIIMatchRE2_text_re2_1KB(benchmark::State& state) {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str();
@@ -587,7 +587,7 @@ void FullMatchRE2(benchmark::State& state, const char *regexp) {
 
 void FullMatchRE2_text_re2_1KB(benchmark::State& state, const char *regexp) {
 
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str();
@@ -639,11 +639,14 @@ void FullMatchRE2_text_dotnl_90(benchmark::State& state, const char *regexp) {
 
 void Set_Match_UNANCHORED_NULL_RE2(benchmark::State& state)
 {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string str = buffer.str().substr(0, state.range(0));
   RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+  s.Add("(?s).*", NULL);
+  s.Add("(?s).*$", NULL);
+  s.Add("(?s)((.*)()()($))", NULL);
   s.Add("hwx", NULL);
   s.Add("ldi", NULL);
   s.Compile();
@@ -656,11 +659,14 @@ BENCHMARK_RANGE(Set_Match_UNANCHORED_NULL_RE2, 2 << 6, 2 << 9);
 
 void Set_Match_UNANCHORED_RE2(benchmark::State& state)
 {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string str = buffer.str().substr(0, state.range(0));
   RE2::Set s(RE2::DefaultOptions, RE2::UNANCHORED);
+  s.Add("(?s).*", NULL);
+  s.Add("(?s).*$", NULL);
+  s.Add("(?s)((.*)()()($))", NULL);
   s.Add("hwx", NULL);
   s.Add("ldi", NULL);
   s.Compile();
@@ -674,12 +680,15 @@ BENCHMARK_RANGE(Set_Match_UNANCHORED_RE2, 2 << 6, 2 << 9);
 
 void Set_Match_ANCHOR_BOTH_NULL_RE2(benchmark::State& state)
 {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string str = buffer.str().substr(0, state.range(0));
   RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_BOTH);
-  s.Add(".*", NULL);
+  s.Add("(?s).*", NULL);
+  s.Add("(?s).*$", NULL);
+  s.Add("(?s)((.*)()()($))", NULL);
+  s.Add("hwx", NULL);
   s.Add("ldi", NULL);
   s.Compile();
   for (auto _ : state) {
@@ -691,12 +700,15 @@ BENCHMARK_RANGE(Set_Match_ANCHOR_BOTH_NULL_RE2, 2 << 6, 2 << 9);
 
 void Set_Match_ANCHOR_BOTH_RE2(benchmark::State& state)
 {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string str = buffer.str().substr(0, state.range(0));
   RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_BOTH);
-  s.Add(".*", NULL);
+  s.Add("(?s).*", NULL);
+  s.Add("(?s).*$", NULL);
+  s.Add("(?s)((.*)()()($))", NULL);
+  s.Add("hwx", NULL);
   s.Add("ldi", NULL);
   s.Compile();
   std::vector<int> v;
@@ -707,9 +719,50 @@ void Set_Match_ANCHOR_BOTH_RE2(benchmark::State& state)
 }
 BENCHMARK_RANGE(Set_Match_ANCHOR_BOTH_RE2, 2 << 6, 2 << 9);
 
+void Set_Match_ANCHOR_START_NULL_RE2(benchmark::State& state)
+{
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string str = buffer.str().substr(0, state.range(0));
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_START);
+  s.Add("(?s).*", NULL);
+  s.Add("(?s).*$", NULL);
+  s.Add("(?s)((.*)()()($))", NULL);
+  s.Add("hwx", NULL);
+  s.Add("ldi", NULL);
+  s.Compile();
+  for (auto _ : state) {
+    s.Match(str, NULL);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK_RANGE(Set_Match_ANCHOR_START_NULL_RE2, 2 << 6, 2 << 9);
+
+void Set_Match_ANCHOR_START_RE2(benchmark::State& state)
+{
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
+  std::stringstream buffer;
+  buffer << in.rdbuf();
+  std::string str = buffer.str().substr(0, state.range(0));
+  RE2::Set s(RE2::DefaultOptions, RE2::ANCHOR_START);
+  s.Add("(?s).*", NULL);
+  s.Add("(?s).*$", NULL);
+  s.Add("(?s)((.*)()()($))", NULL);
+  s.Add("hwx", NULL);
+  s.Add("ldi", NULL);
+  s.Compile();
+  std::vector<int> v;
+  for (auto _ : state) {
+    s.Match(str, &v);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+BENCHMARK_RANGE(Set_Match_ANCHOR_START_RE2, 2 << 6, 2 << 9);
+
 void Rure_Find_RE2(benchmark::State& state, const char *regexp)
 {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str().substr(0, state.range(0));
@@ -725,7 +778,7 @@ void Rure_Find_RE2(benchmark::State& state, const char *regexp)
 
 void Rure_is_Match_RE2(benchmark::State& state, const char *regexp)
 {
-  std::ifstream in("re2/testing/text_re2_1KB.txt");
+  std::ifstream in("../../re2/testing/text_re2_1KB.txt");
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string s = buffer.str().substr(0, state.range(0));
