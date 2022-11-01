@@ -84,9 +84,8 @@ namespace re2
     }
     else
     {
-      elem_.push_back(pair<std::string, re2::Regexp*>(pattern.as_string(), (re2::Regexp*)re));
+      elem_.push_back(pair<std::string, re2::Regexp*>(rure_pattern, (re2::Regexp*)nullptr));
       size_++;
-      // rure_free(re);
       return place_num;
     }
   }
@@ -106,11 +105,9 @@ namespace re2
       patterns_lengths[i] = elem_[i].first.length();
     }
     
-
     rure_error *err = rure_error_new();
     rure_set *re = rure_compile_set((const uint8_t **) patterns, 
                                       patterns_lengths, PAT_COUNT, 0, NULL, err);
-    
     if(re == NULL){
       compiled_ = false;
       return false;
@@ -137,48 +134,24 @@ namespace re2
     
     const char *pat_str = text.data();
     size_t length = strlen(pat_str);
-    if(anchor_ == RE2::UNANCHORED) 
+    if(v == NULL)
     {
-      if(v == NULL)
-      {
-        bool result = rure_set_is_match((rure_set *)prog_.get(), 
-                                          (const uint8_t *)pat_str, length, 0);
-        return result;
-      }
-      else
-      { 
-        v->clear();
-        bool matches[elem_.size()];
-        bool result = rure_set_matches((rure_set *)prog_.get(), 
-                                          (const uint8_t *)pat_str, length, 0, matches);
-        if(!result) return false;
-        for(size_t i = 0; i < elem_.size(); i++)
-        {
-          if(matches[i]) v->push_back(i);
-        }
-        return true;
-      }
-    } 
-    else 
-    {
-      if(v != NULL) v->clear();
+      bool result = rure_set_is_match((rure_set *)prog_.get(), 
+                                        (const uint8_t *)pat_str, length, 0);
+      return result;
+    }
+    else
+    { 
+      v->clear();
+      bool matches[elem_.size()];
+      bool result = rure_set_matches((rure_set *)prog_.get(), 
+                                        (const uint8_t *)pat_str, length, 0, matches);
+      if(!result) return false;
       for(size_t i = 0; i < elem_.size(); i++)
       {
-        std::string rure_pattern = elem_[i].first;
-        rure *re = (rure *)elem_[i].second;
-        bool result = rure_is_match(re, (const uint8_t *)pat_str, strlen(pat_str), 0);
-        if(result)
-        {
-          if(v) v->push_back(i);  // v不空的情形，把索引加入到v中
-          else return true;  // v为NULL, 直接返回匹配成功的情形
-        }
+        if(matches[i]) v->push_back(i);
       }
-      if(v == NULL) return false; // v为空的情况
-      else // v不为空的情况，若经过处理后v中存储了相关索引，则返回true，否则false
-      {
-        if(v->size()) return true;
-        else return false;
-      }
+      return true;
     }
     return true;
   }
