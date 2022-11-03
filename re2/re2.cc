@@ -342,18 +342,6 @@ namespace re2
                          const RE2 &re,
                          const StringPiece &rewrite)
   {
-    // 特殊处理
-    if (strcmp(str->c_str(), "ąć") == 0)
-    {
-      *str = "ĈąĈćĈ";
-      return 3;
-    }
-    if (strcmp(str->c_str(), "人类") == 0)
-    {
-      *str = "小人小类小";
-      return 3;
-    }
-
     StringPiece vec[kVecSize];
     int count = 0;
     int nvec = 1 + MaxSubmatch(rewrite);
@@ -365,18 +353,13 @@ namespace re2
 
     // 利用rure进行replace_all
     const char *rure_str = re.pattern_.c_str();
-    rure_match match = {0};
-    rure *re_rure = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, NULL);
-    rure_iter *it = rure_iter_new(re_rure);
-    while (rure_iter_next(it, (const uint8_t *)str->c_str(), strlen(str->c_str()), &match))
-    {
-      count++;
-    }
+    rure *rure_re = rure_compile_must(rure_str);
+    count = rure_replace_count(rure_re, str->c_str());
     if (count != 0)
     {
       // 对rewrite进行处理
       const char *rure_rewrite = rure_rewrite_str_convert((const uint8_t*)rewrite.data(), rewrite.size());
-      const char *str_rure = rure_replace_all(re_rure, (const uint8_t *)str->c_str(), strlen(str->c_str()),
+      const char *str_rure = rure_replace_all(rure_re, (const uint8_t *)str->c_str(), strlen(str->c_str()),
                                               (const uint8_t *)rure_rewrite, strlen(rure_rewrite));
       *str = str_rure;
       return count;

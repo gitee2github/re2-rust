@@ -6,7 +6,7 @@ use std::slice;
 use std::str;
 
 use libc::{c_char, size_t};
-use regex::bytes;
+use regex::{bytes, Regex};
 
 use crate::error::{Error, ErrorKind};
 
@@ -18,9 +18,13 @@ const RURE_FLAG_SPACE: u32 = 1 << 4;
 const RURE_FLAG_UNICODE: u32 = 1 << 5;
 const RURE_DEFAULT_FLAGS: u32 = RURE_FLAG_UNICODE;
 
-pub struct Regex {
+pub struct RegexBytes {
     re: bytes::Regex,
     capture_names: HashMap<String, i32>,
+}
+
+pub struct RegexUnicode {
+    re: Regex,
 }
 
 pub struct Options {
@@ -44,7 +48,7 @@ pub struct rure_match {
 pub struct Captures(bytes::Locations);
 
 pub struct Iter {
-    re: *const Regex,
+    re: *const RegexBytes,
     last_end: usize,
     last_match: Option<usize>,
 }
@@ -54,9 +58,16 @@ pub struct IterCaptureNames {
     name_ptrs: Vec<*mut c_char>,
 }
 
-impl Deref for Regex {
+impl Deref for RegexBytes {
     type Target = bytes::Regex;
     fn deref(&self) -> &bytes::Regex {
+        &self.re
+    }
+}
+
+impl Deref for RegexUnicode {
+    type Target = Regex;
+    fn deref(&self) -> &Regex {
         &self.re
     }
 }
@@ -78,7 +89,7 @@ impl Default for Options {
 }
 
 ffi_fn! {
-    fn rure_compile_must(pattern: *const c_char) -> *const Regex {
+    fn rure_compile_must(pattern: *const c_char) -> *const RegexBytes {
         let len = unsafe { CStr::from_ptr(pattern).to_bytes().len() };
         let pat = pattern as *const u8;
         let mut err = Error::new(ErrorKind::None);
@@ -101,7 +112,7 @@ ffi_fn! {
         flags: u32,
         options: *const Options,
         error: *mut Error,
-    ) -> *const Regex {
+    ) -> *const RegexBytes {
         let pat = unsafe { slice::from_raw_parts(pattern, length) };
         let pat = match str::from_utf8(pat) {
             Ok(pat) => pat,
@@ -134,7 +145,7 @@ ffi_fn! {
                         capture_names.insert(name.to_owned(), i as i32);
                     }
                 }
-                let re = Regex {
+                let re = RegexBytes {
                     re,
                     capture_names,
                 };
@@ -153,14 +164,14 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_free(_re: *const Regex) {
+    fn rure_free(_re: *const RegexBytes) {
         // unsafe { Box::from_raw(re as *mut Regex); }
     }
 }
 
 ffi_fn! {
     fn rure_is_match(
-        re: *const Regex,
+        re: *const RegexBytes,
         haystack: *const u8,
         len: size_t,
         _start: size_t,
@@ -173,7 +184,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn rure_find(
-        re: *const Regex,
+        re: *const RegexBytes,
         haystack: *const u8,
         len: size_t,
         start: size_t,
@@ -192,7 +203,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn rure_find_captures(
-        re: *const Regex,
+        re: *const RegexBytes,
         haystack: *const u8,
         len: size_t,
         start: size_t,
@@ -207,7 +218,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn rure_shortest_match(
-        re: *const Regex,
+        re: *const RegexBytes,
         haystack: *const u8,
         len: size_t,
         start: size_t,
@@ -231,7 +242,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn rure_capture_name_index(
-        re: *const Regex,
+        re: *const RegexBytes,
         name: *const c_char,
     ) -> i32 {
         let re = unsafe { &*re };
@@ -246,7 +257,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn rure_iter_capture_names_new(
-        re: *const Regex,
+        re: *const RegexBytes,
     ) -> *mut IterCaptureNames {
         let re = unsafe { &*re };
         Box::into_raw(Box::new(IterCaptureNames {
@@ -308,7 +319,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn rure_iter_new(
-        re: *const Regex,
+        re: *const RegexBytes,
     ) -> *mut Iter {
         Box::into_raw(Box::new(Iter {
             re,
@@ -402,7 +413,7 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn rure_captures_new(re: *const Regex) -> *mut Captures {
+    fn rure_captures_new(re: *const RegexBytes) -> *mut Captures {
         let re = unsafe { &*re };
         let captures = Captures(re.locations());
         Box::into_raw(Box::new(captures))
@@ -630,52 +641,64 @@ ffi_fn! {
 
 ffi_fn! {
     fn rure_replace(
-        re: *const Regex,
+        re: *const RegexUnicode,
         haystack: *const u8,
         len_h: size_t,
         rewrite: *const u8,
         len_r: size_t
-    ) ->  *const c_char{
+    ) ->  *const u8{
         let re = unsafe { &*re };
         let haystack = unsafe { slice::from_raw_parts(haystack, len_h) };
         let rewrite = unsafe { slice::from_raw_parts(rewrite, len_r) };
+        let haystack = match str::from_utf8(haystack) {
+            Ok(haystack) => haystack,
+            Err(_err) => {return ptr::null();}
+        };
+        let rewrite = match str::from_utf8(rewrite) {
+            Ok(rewrite) => rewrite,
+            Err(_err) => {return ptr::null();}
+        };
         let result = re.replace(haystack, rewrite).into_owned();
-        let tep = String::from_utf8(result).unwrap();
-        let c_esc_pat = match CString::new(tep) {
+        let c_esc_pat = match CString::new(result) {
             Ok(val) => val,
             Err(err) => {
                 println!("{}", err);
                 return ptr::null();
             },
         };
-        c_esc_pat.into_raw() as *const c_char
+        c_esc_pat.into_raw() as *const u8
 
     }
 }
 
 ffi_fn! {
-
     fn rure_replace_all(
-        re: *const Regex,
+        re: *const RegexUnicode,
         haystack: *const u8,
         len_h: size_t,
         rewrite: *const u8,
         len_r: size_t
-    ) ->  *const c_char{
+    ) ->  *const u8{
         let re = unsafe { &*re };
         let haystack = unsafe { slice::from_raw_parts(haystack, len_h) };
         let rewrite = unsafe { slice::from_raw_parts(rewrite, len_r) };
+        let haystack = match str::from_utf8(haystack) {
+            Ok(haystack) => haystack,
+            Err(_err) => {return ptr::null();}
+        };
+        let rewrite = match str::from_utf8(rewrite) {
+            Ok(rewrite) => rewrite,
+            Err(_err) => {return ptr::null();}
+        };
         let result = re.replace_all(haystack, rewrite).into_owned();
-        let tep = String::from_utf8(result).unwrap();
-        let c_esc_pat = match CString::new(tep) {
+        let c_esc_pat = match CString::new(result) {
             Ok(val) => val,
             Err(err) => {
                 println!("{}", err);
                 return ptr::null();
             },
         };
-        c_esc_pat.into_raw() as *const c_char
-
+        c_esc_pat.into_raw() as *const u8
     }
 }
 
@@ -687,7 +710,7 @@ ffi_fn! {
     fn rure_new(
         pattern: *const u8,
         length: size_t,
-    ) -> *const Regex {
+    ) -> *const RegexBytes {
         let pat = unsafe { slice::from_raw_parts(pattern, length) };
         let pat = match str::from_utf8(pat) {
             Ok(pat) => pat,
@@ -699,13 +722,13 @@ ffi_fn! {
            Ok(val) => Box::into_raw(Box::new(val)),
            Err(_) => ptr::null()
         };
-        exp as *const Regex
+        exp as *const RegexBytes
     }
 }
 
 ffi_fn! {
     fn rure_consume(
-        re: *const Regex,
+        re: *const RegexBytes,
         haystack: *const u8,
         len: size_t,
         match_info: *mut rure_match,
@@ -906,3 +929,22 @@ ffi_fn! {
         out.into_raw() as *const c_char
     }
 }
+
+ffi_fn! {
+    fn rure_replace_count(
+        re: *const RegexUnicode,
+        haystack: *const c_char
+    ) -> size_t {
+        let len = unsafe { CStr::from_ptr(haystack).to_bytes().len() };
+        let hay = haystack as *const u8;
+        let mut count = 0;
+        let re = unsafe { &*re };
+        let haystack = unsafe { slice::from_raw_parts(hay, len) };
+        let haystack = str::from_utf8(haystack).unwrap();
+        for _mat in re.find_iter(haystack){
+            count += 1;
+        }
+        return count;
+    }
+}
+
