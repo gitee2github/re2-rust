@@ -624,6 +624,11 @@ const char *rure_rewrite_str_convert(const uint8_t *rewrite, size_t len);
 const char *rure_rewrite(const uint8_t *rewrite, size_t len, const uint8_t **vecs,
                 const size_t *vecs_lengths, size_t vecs_count);
 
+/*
+ * Calculate the number of replacements.
+*/
+size_t rure_replace_count(rure *re, const char *haystack);
+
 #ifdef __cplusplus
 }
 #endif
