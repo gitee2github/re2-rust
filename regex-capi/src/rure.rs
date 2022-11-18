@@ -816,7 +816,6 @@ ffi_fn! {
         return true;
     }
 }
-
 ffi_fn! {
     fn rure_rewrite_str_convert(rewrite: *const u8, length: size_t) -> *const c_char {
         let rewrite = unsafe { slice::from_raw_parts(rewrite, length) };
@@ -948,3 +947,284 @@ ffi_fn! {
     }
 }
 
+/**
+ * 负责对字符集进行连接操作
+ *
+ */
+fn connection(str: &str, vec1: Vec<String>, vec2: Vec<char>) -> Vec<String> {
+    let mut vec_tmp = Vec::new();
+    if str.len() > 0 {
+        for chars in vec2 {
+            let s = format!("{}{}", str, chars);
+            vec_tmp.push(s); 
+        }
+    } else if vec1.len() == 0 {
+        for elem in vec2 {
+            vec_tmp.push(elem.to_string())
+        }
+    } else {
+        for chars_i in vec1 {
+            for chars_j in vec2.clone() {
+                let s = format!("{}{}", chars_i, chars_j);
+                vec_tmp.push(s);
+            }
+        }
+    }
+    vec_tmp
+}
+
+
+/**
+ *  (abc123|abc|ghi789|abc1234)
+    3-abc
+    6-abc123
+    6-ghi789
+    7-abc1234
+ * abc  abc123  ghi789  abc1234
+ */
+fn group_multiple_selection(str: &str, min_atoms_len: i32) -> Vec<String> {
+    let mut str_tmp = String::new();  // 暂存atoms
+    let mut atoms_tmp = Vec::new();  // 最终的atoms
+    for elem in str.chars() {
+        if elem == '(' {
+            continue;
+        }
+        if elem == '|' || elem == ')' {
+            if str_tmp.len() as i32 >= min_atoms_len {
+                atoms_tmp.push(str_tmp.clone());
+            }
+            str_tmp.clear();
+            continue;
+        }else {
+            str_tmp.push(elem);
+        }
+    }
+    atoms_tmp.sort_by(|a, b| a.len().cmp(&b.len()));
+
+   for i in 0..atoms_tmp.len() {
+    let mut j = i + 1;
+    while j < atoms_tmp.len() {
+        if atoms_tmp[j].contains(atoms_tmp[i].as_str()) && !atoms_tmp[i].is_empty() {
+            atoms_tmp.remove(j);
+        } else {
+            j += 1;
+        }
+    }
+   } 
+   atoms_tmp
+}
+
+/**
+ * 处理
+ * a[a-c]a[zv]
+ * [abc]
+ * [a-c]+
+ */
+
+fn char_class_expansion(str: &str) -> Vec<char>{
+    let mut flag_connect = 0;
+    let mut atoms_chars = Vec::new();
+    let mut vec_char = Vec::new();
+    for elem in str.chars() {
+        if elem == '[' || elem == ']' {
+            continue;
+        } else if elem.is_ascii_alphabetic() || elem.is_ascii_digit() {
+            vec_char.push(elem);
+        } else if elem == '-' {
+            flag_connect = 1;
+        }
+    }
+    if flag_connect == 1 {
+        let x = vec_char[0];
+        let y = vec_char[1];
+        for elem in x..=y {
+            atoms_chars.push(elem);
+        }
+
+    } else {
+        atoms_chars = vec_char;
+    }
+
+    atoms_chars
+}
+
+fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
+    let mut my_atoms = Vec::new();        // 所有的的原子
+
+    let mut total_atoms_str = String::new();   // 所有原子组成的字符串，利用|作为分隔符
+    let mut atoms_tmp = Vec::new();
+
+
+    let mut atoms_tmp_string = String::new();  // 暂时存储的字符串
+    let mut vec_chars_con: Vec<String> = Vec::new();
+    // 将所有的大写字符转换为小写
+    let str = str.to_lowercase();
+    // let str = str.as_str();
+    let chars = str.chars().collect::<Vec<char>>();
+    let mut i = 0;
+    while i < chars.len() {
+        // 处理分组括号
+        if chars[i] == '(' {
+            let group_start_post = i;
+            while chars[i] != ')' {
+                i += 1;
+            }
+            let group_end_post = i;
+            let str_group = &str[group_start_post..group_end_post + 1];
+            let vec = group_multiple_selection(str_group, min_atoms_len);
+            
+            let mut tmp_post_group = i;
+            tmp_post_group += 1;
+            if tmp_post_group >= chars.len(){ 
+                if vec.len() != 0 {  // 右括号为自后一个字符的情况 
+                    for elem in vec {
+                        my_atoms.push(elem);
+                        // total_atoms_str.push_str(format!("{}|", elem).as_str());
+                    }
+                }
+                i += 1;
+                continue;
+            }
+            if chars[tmp_post_group] == '.' && vec.len() != 0 {
+                i += 1;
+                for elem in vec {
+                    my_atoms.push(elem);
+                    // total_atoms_str.push_str(format!("{}|", elem).as_str());
+                }
+            } else if chars[tmp_post_group] == '{' && vec.len() != 0 {
+                for elem in vec {
+                    my_atoms.push(elem);
+                    // total_atoms_str.push_str(format!("{}|", elem).as_str());
+
+                }
+            }
+            i += 1;
+            continue;
+        }
+        if chars[i] == '.' {
+            if atoms_tmp_string.len() as i32 >= min_atoms_len && vec_chars_con.len() == 0 {
+                my_atoms.push(atoms_tmp_string.clone());
+                // total_atoms_str.push_str(format!("{}|", atoms_tmp_string).as_str());
+            }
+            if vec_chars_con.len() > 0 && atoms_tmp_string.len() > 0 {
+                for elems in vec_chars_con.clone() {
+                    my_atoms.push(format!("{}{}", elems.clone(), atoms_tmp_string));
+                // total_atoms_str.push_str(format!("{}{}|", elems, atoms_tmp_string).as_str());
+                }
+                vec_chars_con.clear();
+            } 
+            atoms_tmp_string.clear();
+            i += 1;
+            continue;
+        }
+
+        if chars[i] == '*' || chars[i] == '+' {
+            i += 1;
+            continue;
+        }
+        
+        // 处理多个字符集
+        if chars[i] == '[' {
+            let start_post = i;
+            while chars[i] != ']' {
+                i += 1; 
+            }
+            let mut plus_tmp = i;
+            plus_tmp += 1;
+            if plus_tmp < chars.len() && chars[plus_tmp] == '+' {
+                if atoms_tmp_string.len() as i32 >= min_atoms_len {
+                    my_atoms.push(atoms_tmp_string.clone());
+                    // total_atoms_str.push_str(format!("{}|", atoms_tmp_string).as_str());
+
+                    atoms_tmp_string.clear();
+                    i += 2;
+                    continue;
+                }
+            }
+            let str_char_set = &str[start_post..plus_tmp];
+            if atoms_tmp_string.len() > 0 && vec_chars_con.len() > 0 {
+                for elem in vec_chars_con.clone() {
+                    vec_chars_con.push(format!("{}{}", elem, atoms_tmp_string));
+                }
+                // vec_chars_con.clear();
+                atoms_tmp_string.clear();
+                // vec_chars_con.clear();
+
+            }
+            // atoms_tmp.clear();
+            atoms_tmp = char_class_expansion(str_char_set);
+            vec_chars_con = connection(atoms_tmp_string.as_str(), vec_chars_con, atoms_tmp);
+            atoms_tmp_string.clear();
+
+            if i == chars.len() - 1 && vec_chars_con.len() > 0 {
+                for elem in vec_chars_con.clone() {
+                    if elem.len() as i32 >= min_atoms_len {
+                        my_atoms.push(elem.clone());
+                    // total_atoms_str.push_str(format!("{}|", elem).as_str());
+
+                    }
+                }
+            }
+
+            i += 1;
+            continue;
+        }
+
+        if chars[i] == '{' {
+            while chars[i] != '}' {
+                i += 1;
+            }
+            i += 1;
+            continue;
+        }
+
+        if chars[i] == '\\' {
+            if atoms_tmp_string.len() as i32 >= min_atoms_len {
+                my_atoms.push(atoms_tmp_string.clone());
+                atoms_tmp_string.clear();
+            }
+            i += 2;
+            continue;
+        }
+        
+        if chars[i] != '+' {
+            atoms_tmp_string.push(chars[i]);
+        }
+        
+        if i == chars.len() - 1 && atoms_tmp_string.len() as i32 >= min_atoms_len {
+            my_atoms.push(atoms_tmp_string.clone());
+            // total_atoms_str.push_str(format!("{}|", atoms_tmp_string).as_str());
+            atoms_tmp_string.clear();
+        }
+
+
+        i += 1;
+    }
+    for i in 0..my_atoms.len() {
+        if i == my_atoms.len() - 1 {
+            total_atoms_str.push_str(my_atoms[i].as_str());
+        } else {
+            total_atoms_str.push_str(format!("{}|", my_atoms[i]).as_str());
+        }
+    }
+
+    let result = CString::new(total_atoms_str).unwrap();
+    result.into_raw() as *const u8
+}
+
+
+ffi_fn! {
+    fn rure_filter_compile(regex_str: *const u8, regex_len: size_t, min_atoms_len: size_t) -> *const u8{
+        let r = unsafe { slice::from_raw_parts(regex_str, regex_len) };
+        let regex_str = match str::from_utf8(r) {
+            Ok(val) => val,
+            Err(_err) => {
+                println!("error string");
+                return ptr::null();
+            }
+        };
+        // let regex_string = regex_str.to_string();
+        let atoms = my_compile(regex_str, min_atoms_len as i32);
+        atoms
+    }
+}

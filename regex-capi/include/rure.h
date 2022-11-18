@@ -629,6 +629,8 @@ const char *rure_rewrite(const uint8_t *rewrite, size_t len, const uint8_t **vec
 */
 size_t rure_replace_count(rure *re, const char *haystack);
 
+const char *rure_filter_compile(const uint8_t *regex_str, size_t regex_len, size_t min_atoms_len);
+
 #ifdef __cplusplus
 }
 #endif
