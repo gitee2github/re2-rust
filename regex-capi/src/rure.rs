@@ -58,6 +58,17 @@ pub struct IterCaptureNames {
     name_ptrs: Vec<*mut c_char>,
 }
 
+#[repr(C)]
+pub struct Atoms {
+    atom: *mut c_char,
+}
+
+#[repr(C)]
+pub struct MyVec {
+    data: *mut Atoms,
+    len: i32,
+}
+
 impl Deref for RegexBytes {
     type Target = bytes::Regex;
     fn deref(&self) -> &bytes::Regex {
@@ -1048,18 +1059,12 @@ fn char_class_expansion(str: &str) -> Vec<char>{
     atoms_chars
 }
 
-fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
+fn my_compile(str: &str, min_atoms_len: i32) -> MyVec {
     let mut my_atoms = Vec::new();        // 所有的的原子
-
-    let mut total_atoms_str = String::new();   // 所有原子组成的字符串，利用|作为分隔符
-    let mut atoms_tmp = Vec::new();
-
-
     let mut atoms_tmp_string = String::new();  // 暂时存储的字符串
     let mut vec_chars_con: Vec<String> = Vec::new();
     // 将所有的大写字符转换为小写
     let str = str.to_lowercase();
-    // let str = str.as_str();
     let chars = str.chars().collect::<Vec<char>>();
     let mut i = 0;
     while i < chars.len() {
@@ -1078,8 +1083,7 @@ fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
             if tmp_post_group >= chars.len(){ 
                 if vec.len() != 0 {  // 右括号为自后一个字符的情况 
                     for elem in vec {
-                        my_atoms.push(elem);
-                        // total_atoms_str.push_str(format!("{}|", elem).as_str());
+                        my_atoms.push(Atoms{atom: CString::new(elem).unwrap().into_raw()});
                     }
                 }
                 i += 1;
@@ -1088,14 +1092,11 @@ fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
             if chars[tmp_post_group] == '.' && vec.len() != 0 {
                 i += 1;
                 for elem in vec {
-                    my_atoms.push(elem);
-                    // total_atoms_str.push_str(format!("{}|", elem).as_str());
+                    my_atoms.push(Atoms{atom: CString::new(elem).unwrap().into_raw()});
                 }
             } else if chars[tmp_post_group] == '{' && vec.len() != 0 {
                 for elem in vec {
-                    my_atoms.push(elem);
-                    // total_atoms_str.push_str(format!("{}|", elem).as_str());
-
+                    my_atoms.push(Atoms{atom: CString::new(elem).unwrap().into_raw()});
                 }
             }
             i += 1;
@@ -1103,13 +1104,11 @@ fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
         }
         if chars[i] == '.' {
             if atoms_tmp_string.len() as i32 >= min_atoms_len && vec_chars_con.len() == 0 {
-                my_atoms.push(atoms_tmp_string.clone());
-                // total_atoms_str.push_str(format!("{}|", atoms_tmp_string).as_str());
+                my_atoms.push(Atoms{atom: CString::new(atoms_tmp_string.clone()).unwrap().into_raw()});
             }
             if vec_chars_con.len() > 0 && atoms_tmp_string.len() > 0 {
                 for elems in vec_chars_con.clone() {
-                    my_atoms.push(format!("{}{}", elems.clone(), atoms_tmp_string));
-                // total_atoms_str.push_str(format!("{}{}|", elems, atoms_tmp_string).as_str());
+                    my_atoms.push(Atoms{atom: CString::new(format!("{}{}", elems.clone(), atoms_tmp_string)).unwrap().into_raw()});
                 }
                 vec_chars_con.clear();
             } 
@@ -1133,9 +1132,7 @@ fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
             plus_tmp += 1;
             if plus_tmp < chars.len() && chars[plus_tmp] == '+' {
                 if atoms_tmp_string.len() as i32 >= min_atoms_len {
-                    my_atoms.push(atoms_tmp_string.clone());
-                    // total_atoms_str.push_str(format!("{}|", atoms_tmp_string).as_str());
-
+                    my_atoms.push(Atoms{atom: CString::new(atoms_tmp_string.clone()).unwrap().into_raw()});
                     atoms_tmp_string.clear();
                     i += 2;
                     continue;
@@ -1146,26 +1143,19 @@ fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
                 for elem in vec_chars_con.clone() {
                     vec_chars_con.push(format!("{}{}", elem, atoms_tmp_string));
                 }
-                // vec_chars_con.clear();
                 atoms_tmp_string.clear();
-                // vec_chars_con.clear();
-
             }
-            // atoms_tmp.clear();
-            atoms_tmp = char_class_expansion(str_char_set);
+            let atoms_tmp = char_class_expansion(str_char_set);
             vec_chars_con = connection(atoms_tmp_string.as_str(), vec_chars_con, atoms_tmp);
             atoms_tmp_string.clear();
 
             if i == chars.len() - 1 && vec_chars_con.len() > 0 {
                 for elem in vec_chars_con.clone() {
                     if elem.len() as i32 >= min_atoms_len {
-                        my_atoms.push(elem.clone());
-                    // total_atoms_str.push_str(format!("{}|", elem).as_str());
-
+                        my_atoms.push(Atoms{atom: CString::new(elem).unwrap().into_raw()});
                     }
                 }
             }
-
             i += 1;
             continue;
         }
@@ -1180,7 +1170,7 @@ fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
 
         if chars[i] == '\\' {
             if atoms_tmp_string.len() as i32 >= min_atoms_len {
-                my_atoms.push(atoms_tmp_string.clone());
+                my_atoms.push(Atoms{atom: CString::new(atoms_tmp_string.clone()).unwrap().into_raw()});
                 atoms_tmp_string.clear();
             }
             i += 2;
@@ -1192,38 +1182,22 @@ fn my_compile(str: &str, min_atoms_len: i32) -> *const u8 {
         }
         
         if i == chars.len() - 1 && atoms_tmp_string.len() as i32 >= min_atoms_len {
-            my_atoms.push(atoms_tmp_string.clone());
-            // total_atoms_str.push_str(format!("{}|", atoms_tmp_string).as_str());
+            my_atoms.push(Atoms{atom: CString::new(atoms_tmp_string.clone()).unwrap().into_raw()});
             atoms_tmp_string.clear();
         }
-
-
         i += 1;
     }
-    for i in 0..my_atoms.len() {
-        if i == my_atoms.len() - 1 {
-            total_atoms_str.push_str(my_atoms[i].as_str());
-        } else {
-            total_atoms_str.push_str(format!("{}|", my_atoms[i]).as_str());
-        }
-    }
-
-    let result = CString::new(total_atoms_str).unwrap();
-    result.into_raw() as *const u8
+    let mut a = my_atoms.into_boxed_slice();
+    let data = a.as_mut_ptr();
+    let len = a.len() as i32;
+    std::mem::forget(a);
+    MyVec { data, len }
 }
 
-
 ffi_fn! {
-    fn rure_filter_compile(regex_str: *const u8, regex_len: size_t, min_atoms_len: size_t) -> *const u8{
+    fn rure_filter_compile(regex_str: *const u8, regex_len: size_t, min_atoms_len: size_t) -> MyVec{
         let r = unsafe { slice::from_raw_parts(regex_str, regex_len) };
-        let regex_str = match str::from_utf8(r) {
-            Ok(val) => val,
-            Err(_err) => {
-                println!("error string");
-                return ptr::null();
-            }
-        };
-        // let regex_string = regex_str.to_string();
+        let regex_str = str::from_utf8(r).unwrap();
         let atoms = my_compile(regex_str, min_atoms_len as i32);
         atoms
     }

@@ -105,46 +105,6 @@ RE2::ErrorCode FilteredRE2::Add(const StringPiece& pattern,
   return code;
 }
 
-int my_split(const std::string& src, const char& delim,
-		std::vector<std::string>& vec)
-{
-	int src_len = src.length();
-	int find_cursor = 0;
-	int read_cursor = 0;
-	if (src_len <= 0) return -1;
-	vec.clear();
-	while (read_cursor < src_len){
-		find_cursor = src.find(delim, find_cursor);
-		//1.找不到分隔符
-		if (-1 == find_cursor){
-			if (read_cursor <= 0) return -1;
-
-			//最后一个子串, src结尾没有分隔符
-			if (read_cursor < src_len){
-				vec.push_back(src.substr(read_cursor, src_len - read_cursor));
-				return 0;
-			}
-		}
-		//2.有连续分隔符的情况
-		else if (find_cursor == read_cursor){
-			//字符串开头为分隔符, 也按空子串处理, 如不需要可加上判断&&(read_cursor!=0)
-			vec.push_back(std::string(""));
-		}
-		//3.找到分隔符
-		else
-			vec.push_back(src.substr(read_cursor, find_cursor - read_cursor));
-
-		read_cursor = ++find_cursor;
-		if (read_cursor == src_len){
-			//字符串以分隔符结尾, 如不需要末尾空子串, 直接return
-			vec.push_back(std::string(""));
-			return 0;
-		} 
-	}//end while()
-  return 0;
-}
-
-
 void FilteredRE2::Compile(std::vector<std::string>* atoms) {
   map_atoms.clear();
   if (compiled_) {
@@ -172,30 +132,18 @@ void FilteredRE2::Compile(std::vector<std::string>* atoms) {
     return;
   }
   
-  for(size_t i = 0; i < re2_vec_.size(); i++)
-  {
+  for(size_t i = 0; i < re2_vec_.size(); i++) {
     // std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern(), prefilter_tree_->getMinAtomLen());
     const char *regex = re2_vec_[i]->pattern().c_str();
     std::string regex_str = regex;
-    const char *result = rure_filter_compile((const uint8_t *)regex, strlen(regex), prefilter_tree_->getMinAtomLen());
-    std::string atoms_str = result;
-    std::vector<std::string> vec;
-    int iRet = my_split(atoms_str, '|', vec);
-    if(iRet == 0) {
-      map_atoms.insert(map<std::string, std::vector<std::string>>::value_type(regex_str, vec));
-      for(auto it : vec) {
-        atoms->push_back(it);
-      }
-    } else {
-      if(atoms_str.size() != 0) {
-        std::vector<std::string> v;
-        v.push_back(atoms_str);
-        map_atoms.insert(map<std::string, std::vector<std::string>>::value_type(regex_str, v));
-        atoms->push_back(atoms_str);
-
-      }
+    MyVec vec = rure_filter_compile((const uint8_t *)regex, strlen(regex), prefilter_tree_->getMinAtomLen());
+    int32_t len = vec.len;
+    std::vector<std::string> v;
+    for(int32_t i = 0; i < len; i++) {
+      atoms->push_back(vec.data[i].atom);
+      v.push_back(vec.data[i].atom);
     }
-    
+    map_atoms.insert(map<std::string, std::vector<std::string>>::value_type(regex_str, v));   
   }
   map_atoms.insert(map<std::string, std::vector<std::string>>::value_type("total", *atoms));
   compiled_ = true;
@@ -221,20 +169,6 @@ void AtomsToRegexps(std::vector<RE2*> re2_vec_, std::vector<int> atoms, std::vec
   
   std::vector<std::string> atoms_total = map_atoms["total"];
   std::vector<std::string> atoms_tmp;
-  // 获取所有的atoms
-  // for(size_t i = 0; i < re2_vec_.size(); i++)
-  // {
-  //   std::vector<std::string> my_atoms = MyCompile(re2_vec_[i]->pattern(), min_atom_len);
-
-  //   if(my_atoms.size() != 0)
-  //   {
-  //     for(auto x : my_atoms)
-  //       atoms_total.push_back(x);
-  //   }
-
-  // }
-  // map_atoms["total"].;
-  // atoms_total.assign(map_atoms["total"].)
   for(size_t i = 0; i < atoms.size(); i++)
   {
     atoms_tmp.push_back(atoms_total[atoms[i]]);
@@ -303,7 +237,5 @@ void FilteredRE2::AllPotentials(
     std::vector<int>* potential_regexps) const {
   AtomsToRegexps(re2_vec_, atoms, potential_regexps, prefilter_tree_->getMinAtomLen());
 }
-
-
 
 }  // namespace re2
