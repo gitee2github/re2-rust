@@ -46,34 +46,31 @@ impl fmt::Display for Error {
     }
 }
 
-ffi_fn! {
-    fn rure_error_new() -> *mut Error {
-        Box::into_raw(Box::new(Error::new(ErrorKind::None)))
-    }
+#[no_mangle]
+extern "C" fn rure_error_new() -> *mut Error {
+    Box::into_raw(Box::new(Error::new(ErrorKind::None)))
 }
 
-ffi_fn! {
-    fn rure_error_free(_err: *mut Error) {
-        // unsafe { Box::from_raw(err); }
-    }
+#[no_mangle]
+extern "C" fn rure_error_free(err: *mut Error) {
+    unsafe { drop(Box::from_raw(err)); }
 }
 
-ffi_fn! {
-    fn rure_error_message(err: *mut Error) -> *const c_char {
-        let err = unsafe { &mut *err };
-        let cmsg = match CString::new(format!("{}", err)) {
-            Ok(msg) => msg,
-            Err(err) => {
-                // I guess this can probably happen if the regex itself has a
-                // NUL, and that NUL re-occurs in the context presented by the
-                // error message. In this case, just show as much as we can.
-                let nul = err.nul_position();
-                let msg = err.into_vec();
-                CString::new(msg[0..nul].to_owned()).unwrap()
-            }
-        };
-        let p = cmsg.as_ptr();
-        err.message = Some(cmsg);
-        p
-    }
+#[no_mangle]
+extern "C" fn rure_error_message(err: *mut Error) -> *const c_char {
+    let err = unsafe { &mut *err };
+    let cmsg = match CString::new(format!("{}", err)) {
+        Ok(msg) => msg,
+        Err(err) => {
+            // I guess this can probably happen if the regex itself has a
+            // NUL, and that NUL re-occurs in the context presented by the
+            // error message. In this case, just show as much as we can.
+            let nul = err.nul_position();
+            let msg = err.into_vec();
+            CString::new(msg[0..nul].to_owned()).unwrap()
+        }
+    };
+    let p = cmsg.as_ptr();
+    err.message = Some(cmsg);
+    p
 }

@@ -78,14 +78,14 @@ namespace re2
         error->assign(msg);
         LOG(ERROR) << "Regexp Error '" << pattern.data() << "':" << msg << "'";
       }
-      rure_free(re);
+      // rure_free(re);
       return -1;
     }
     else
     {
       elem_.push_back(pair<std::string, re2::Regexp*>(rure_pattern, (re2::Regexp*)nullptr));
       size_++;
-      rure_free(re);
+      // rure_free(re);
       return place_num;
     }
   }
@@ -110,10 +110,10 @@ namespace re2
                                       patterns_lengths, PAT_COUNT, 0, NULL, err);
     if(re == NULL){
       compiled_ = false;
+      rure_set_free(re);
       return false;
     } 
     prog_.reset((Prog *)re);
-    rure_set_free(re);
     compiled_ = true;
     return true;
   }
