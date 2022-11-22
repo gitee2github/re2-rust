@@ -116,6 +116,18 @@ typedef struct rure_iter_capture_names rure_iter_capture_names;
  */
 typedef struct rure_error rure_error;
 
+typedef struct 
+{
+    char *atom;
+} Atoms;
+
+
+typedef struct 
+{
+    Atoms *data;
+    int32_t len;
+} MyVec;
+
 /*
  * rure_compile_must compiles the given pattern into a regular expression. If
  * compilation fails for any reason, an error message is printed to stderr and
@@ -628,6 +640,8 @@ const char *rure_rewrite(const uint8_t *rewrite, size_t len, const uint8_t **vec
  * Calculate the number of replacements.
 */
 size_t rure_replace_count(rure *re, const char *haystack);
+
+MyVec rure_filter_compile(const uint8_t *regex_str, size_t regex_len, size_t min_atoms_len);
 
 #ifdef __cplusplus
 }

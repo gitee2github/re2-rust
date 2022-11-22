@@ -63,6 +63,7 @@ TEST(FilteredRE2Test, SmallLatinTest) {
   v.f.Compile(&v.atoms);
   EXPECT_EQ(1, v.atoms.size());
   EXPECT_EQ(v.atoms[0], "\xde\xadq\xbe\xef");
+
   v.atom_indices.push_back(0);
   v.f.AllMatches("foo\xde\xadQ\xbe\xeflemur", v.atom_indices, &v.matches);
   EXPECT_EQ(1, v.matches.size());
@@ -136,7 +137,7 @@ AtomTest atom_tests[] = {
       "ΛΜΝΟΠ",
       "ψρστυ",
     }, {
-      "δδπππσσσ",
+      "δδπϖπσςσ",
       "λμνοπ",
       "ψρστυ",
     },
