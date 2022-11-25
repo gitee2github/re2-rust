@@ -28,34 +28,6 @@ bool test_is_match() {
     return passed;
 }
 
-bool test_shortest_match() {
-    bool passed = true;
-    const char *haystack = "aaaaa";
-
-    rure *re = rure_compile_must("a+");
-    size_t end = 0;
-    bool matched = rure_shortest_match(re, (const uint8_t *)haystack,
-                                       strlen(haystack), 0, &end);
-    if (!matched) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_shortest_match] expected match, "
-                    "but got no match\n");
-        }
-        passed = false;
-    }
-    size_t expect_end = 1;
-    if (end != expect_end) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_shortest_match] expected match end location %zu "
-                    "but got %zu\n", expect_end, end);
-        }
-        passed = false;
-    }
-    rure_free(re);
-    return passed;
-}
 
 bool test_find() {
     bool passed = true;
@@ -115,19 +87,6 @@ bool test_captures() {
         passed = false;
         goto done;
     }
-    int32_t expect_capture_index = 2;
-    int32_t capture_index = rure_capture_name_index(re, "snowman");
-    if (capture_index != expect_capture_index) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_captures] "
-                    "expected capture index %d for name 'snowman', but "
-                    "got %d\n",
-                    expect_capture_index, capture_index);
-        }
-        passed = false;
-        goto done;
-    }
     size_t expect_start = 9;
     size_t expect_end = 12;
     rure_captures_at(caps, 2, &match);
@@ -142,67 +101,6 @@ bool test_captures() {
         passed = false;
     }
 done:
-    rure_captures_free(caps);
-    rure_free(re);
-    return passed;
-}
-
-bool test_iter() {
-    bool passed = true;
-    const uint8_t *haystack = (const uint8_t *)"abc xyz";
-    size_t haystack_len = strlen((const char *)haystack);
-
-    rure *re = rure_compile_must("\\w+(\\w)");
-    rure_match match = {0};
-    rure_captures *caps = rure_captures_new(re);
-    rure_iter *it = rure_iter_new(re);
-
-    bool matched = rure_iter_next(it, haystack, haystack_len, &match);
-    if (!matched) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_iter] expected first match, but got no match\n");
-        }
-        passed = false;
-        goto done;
-    }
-    size_t expect_start = 0;
-    size_t expect_end = 3;
-    if (match.start != expect_start || match.end != expect_end) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_iter] expected first match at (%zu, %zu), but "
-                    "got match at (%zu, %zu)\n",
-                    expect_start, expect_end, match.start, match.end);
-        }
-        passed = false;
-        goto done;
-    }
-
-    matched = rure_iter_next_captures(it, haystack, haystack_len, caps);
-    if (!matched) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_iter] expected second match, but got no match\n");
-        }
-        passed = false;
-        goto done;
-    }
-    rure_captures_at(caps, 1, &match);
-    expect_start = 6;
-    expect_end = 7;
-    if (match.start != expect_start || match.end != expect_end) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_iter] expected second match at (%zu, %zu), but "
-                    "got match at (%zu, %zu)\n",
-                    expect_start, expect_end, match.start, match.end);
-        }
-        passed = false;
-        goto done;
-    }
-done:
-    rure_iter_free(it);
     rure_captures_free(caps);
     rure_free(re);
     return passed;
@@ -316,35 +214,6 @@ bool test_compile_error() {
     return passed;
 }
 
-bool test_compile_error_size_limit() {
-    bool passed = true;
-    rure_options *opts = rure_options_new();
-    rure_options_size_limit(opts, 0);
-    rure_error *err = rure_error_new();
-    rure *re = rure_compile((const uint8_t *)"\\w{100}", 8, 0, opts, err);
-    if (re != NULL) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_compile_error_size_limit] "
-                    "expected NULL regex pointer, but got non-NULL pointer\n");
-        }
-        passed = false;
-        rure_free(re);
-    }
-    const char *msg = rure_error_message(err);
-    if (NULL == strstr(msg, "exceeds size")) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_compile_error] "
-                    "expected an 'exceeds size' error message, but "
-                    "got this instead: '%s'\n", msg);
-        }
-        passed = false;
-    }
-    rure_options_free(opts);
-    rure_error_free(err);
-    return passed;
-}
 
 bool test_regex_set_matches() {
 
@@ -495,41 +364,6 @@ done2:
 #undef PAT_COUNT
 }
 
-bool test_regex_set_options() {
-
-    bool passed = true;
-    rure_options *opts = rure_options_new();
-    rure_options_size_limit(opts, 0);
-    rure_error *err = rure_error_new();
-
-    const char *patterns[] = { "\\w{100}" };
-    const size_t patterns_lengths[] = { 8 };
-
-    rure_set *re = rure_compile_set(
-        (const uint8_t **) patterns, patterns_lengths, 1, 0, opts, err);
-    if (re != NULL) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_compile_error_size_limit] "
-                    "expected NULL regex pointer, but got non-NULL pointer\n");
-        }
-        passed = false;
-        rure_set_free(re);
-    }
-    const char *msg = rure_error_message(err);
-    if (NULL == strstr(msg, "exceeds size")) {
-        if (DEBUG) {
-            fprintf(stderr,
-                    "[test_compile_error] "
-                    "expected an 'exceeds size' error message, but "
-                    "got this instead: '%s'\n", msg);
-        }
-        passed = false;
-    }
-    rure_options_free(opts);
-    rure_error_free(err);
-    return passed;
-}
 
 bool test_escape() {
     bool passed = true;
@@ -673,17 +507,12 @@ int main() {
     bool passed = true;
 
     run_test(test_is_match, "test_is_match", &passed);
-    run_test(test_shortest_match, "test_shortest_match", &passed);
     run_test(test_find, "test_find", &passed);
     run_test(test_captures, "test_captures", &passed);
-    run_test(test_iter, "test_iter", &passed);
     run_test(test_iter_capture_names, "test_iter_capture_names", &passed);
     run_test(test_flags, "test_flags", &passed);
     run_test(test_compile_error, "test_compile_error", &passed);
-    run_test(test_compile_error_size_limit, "test_compile_error_size_limit",
-             &passed);
     run_test(test_regex_set_matches, "test_regex_set_match", &passed);
-    run_test(test_regex_set_options, "test_regex_set_options", &passed);
     run_test(test_regex_set_match_start, "test_regex_set_match_start",
              &passed);
     run_test(test_escape, "test_escape", &passed);
