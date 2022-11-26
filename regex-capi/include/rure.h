@@ -262,41 +262,7 @@ bool rure_find(rure *re, const uint8_t *haystack, size_t length,
 bool rure_find_captures(rure *re, const uint8_t *haystack, size_t length,
                         size_t start, rure_captures *captures);
 
-/*
- * rure_shortest_match returns true if and only if re matches anywhere in
- * haystack. If a match is found, then its end location is stored in the
- * pointer given. The end location is the place at which the regex engine
- * determined that a match exists, but may occur before the end of the proper
- * leftmost-first match.
- *
- * haystack may contain arbitrary bytes, but ASCII compatible text is more
- * useful. UTF-8 is even more useful. Other text encodings aren't supported.
- * length should be the number of bytes in haystack.
- *
- * start is the position at which to start searching. Note that setting the
- * start position is distinct from incrementing the pointer, since the regex
- * engine may look at bytes before the start position to determine match
- * information. For example, if the start position is greater than 0, then the
- * \A ("begin text") anchor can never match.
- *
- * rure_shortest_match should be preferred to rure_find since it may be faster.
- *
- * N.B. The performance of this search is not impacted by the presence of
- * capturing groups in your regular expression.
- */
-bool rure_shortest_match(rure *re, const uint8_t *haystack, size_t length,
-                         size_t start, size_t *end);
 
-/*
- * rure_capture_name_index returns the capture index for the name given. If
- * no such named capturing group exists in re, then -1 is returned.
- *
- * The capture index may be used with rure_captures_at.
- *
- * This function never returns 0 since the first capture group always
- * corresponds to the entire match and is always unnamed.
- */
-int32_t rure_capture_name_index(rure *re, const char *name);
 
 /*
  * rure_iter_capture_names_new creates a new capture_names iterator.
@@ -320,15 +286,6 @@ void rure_iter_capture_names_free(rure_iter_capture_names *it);
  */
 bool rure_iter_capture_names_next(rure_iter_capture_names *it, char **name);
 
-/*
- * rure_iter_new creates a new iterator.
- *
- * An iterator will report all successive non-overlapping matches of re.
- * When calling iterator functions, the same haystack and length must be
- * supplied to all invocations. (Strict pointer equality is, however, not
- * required.)
- */
-rure_iter *rure_iter_new(rure *re);
 
 /*
  * rure_iter_free frees the iterator given.
@@ -337,52 +294,7 @@ rure_iter *rure_iter_new(rure *re);
  */
 void rure_iter_free(rure_iter *it);
 
-/*
- * rure_iter_next advances the iterator and returns true if and only if a
- * match was found. If a match is found, then the match pointer is set with the
- * start and end location of the match, in bytes.
- *
- * If no match is found, then subsequent calls will return false indefinitely.
- *
- * haystack may contain arbitrary bytes, but ASCII compatible text is more
- * useful. UTF-8 is even more useful. Other text encodings aren't supported.
- * length should be the number of bytes in haystack. The given haystack must
- * be logically equivalent to all other haystacks given to this iterator.
- *
- * rure_iter_next should be preferred to rure_iter_next_captures since it may
- * be faster.
- *
- * N.B. The performance of this search is not impacted by the presence of
- * capturing groups in your regular expression.
- */
-bool rure_iter_next(rure_iter *it, const uint8_t *haystack, size_t length,
-                    rure_match *match);
 
-/*
- * rure_iter_next_captures advances the iterator and returns true if and only if a
- * match was found. If a match is found, then all of its capture locations are
- * stored in the captures pointer given.
- *
- * If no match is found, then subsequent calls will return false indefinitely.
- *
- * haystack may contain arbitrary bytes, but ASCII compatible text is more
- * useful. UTF-8 is even more useful. Other text encodings aren't supported.
- * length should be the number of bytes in haystack. The given haystack must
- * be logically equivalent to all other haystacks given to this iterator.
- *
- * Only use this function if you specifically need access to capture locations.
- * It is not necessary to use this function just because your regular
- * expression contains capturing groups.
- *
- * Capture locations can be accessed using the rure_captures_* functions.
- *
- * N.B. The performance of this search can be impacted by the number of
- * capturing groups. If you're using this function, it may be beneficial to
- * use non-capturing groups (e.g., `(?:re)`) where possible.
- */
-bool rure_iter_next_captures(rure_iter *it,
-                             const uint8_t *haystack, size_t length,
-                             rure_captures *captures);
 
 /*
  * rure_captures_new allocates storage for all capturing groups in re.
@@ -424,48 +336,7 @@ bool rure_captures_at(rure_captures *captures, size_t i, rure_match *match);
  */
 size_t rure_captures_len(rure_captures *captures);
 
-/*
- * rure_options_new allocates space for options.
- *
- * Options may be freed immediately after a call to rure_compile, but otherwise
- * may be freely used in multiple calls to rure_compile.
- *
- * It is not safe to set options from multiple threads simultaneously. It is
- * safe to call rure_compile from multiple threads simultaneously using the
- * same options pointer.
- */
-rure_options *rure_options_new();
 
-/*
- * rure_options_free frees the given options.
- *
- * This must be called at most once.
- */
-void rure_options_free(rure_options *options);
-
-/*
- * rure_options_size_limit sets the appoximate size limit of the compiled
- * regular expression.
- *
- * This size limit roughly corresponds to the number of bytes occupied by a
- * single compiled program. If the program would exceed this number, then a
- * compilation error will be returned from rure_compile.
- */
-void rure_options_size_limit(rure_options *options, size_t limit);
-
-/*
- * rure_options_dfa_size_limit sets the approximate size of the cache used by
- * the DFA during search.
- *
- * This roughly corresponds to the number of bytes that the DFA will use while
- * searching.
- *
- * Note that this is a *per thread* limit. There is no way to set a global
- * limit. In particular, if a regular expression is used from multiple threads
- * simultaneously, then each thread may use up to the number of bytes
- * specified here.
- */
-void rure_options_dfa_size_limit(rure_options *options, size_t limit);
 
 /*
  * rure_compile_set compiles the given list of patterns into a single regular
