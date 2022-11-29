@@ -27,7 +27,7 @@
 #include "re2/set.h"
 // #include "re2/regexp.h"
 #include "util/mutex.h"
-#include "util/pcre.h"
+// #include "util/pcre.h"
 
 extern "C"
 {
@@ -87,13 +87,6 @@ void FindAndConsume(benchmark::State& state) {
 
 // BENCHMARK_RANGE(FindAndConsume, 8, 16)->ThreadRange(1, NumCPUs());
 
-void EmptyPartialMatchPCRE(benchmark::State& state) {
-  PCRE re("");
-  for (auto _ : state) {
-    PCRE::PartialMatch("", re);
-  }
-}
-
 void EmptyPartialMatchRE2(benchmark::State& state) {
   RE2 re("");
   for (auto _ : state) {
@@ -113,18 +106,8 @@ void EmptyPartialMatchRE2_text_re2_1KB(benchmark::State& state) {
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-#ifdef USEPCRE
-BENCHMARK(EmptyPartialMatchPCRE)->ThreadRange(1, NumCPUs());
-#endif
 BENCHMARK(EmptyPartialMatchRE2)->ThreadRange(1, NumCPUs());
 BENCHMARK_RANGE(EmptyPartialMatchRE2_text_re2_1KB, 2 << 6, 2 << 9);
-
-void SimplePartialMatchPCRE(benchmark::State& state) {
-  PCRE re("abcdefg");
-  for (auto _ : state) {
-    PCRE::PartialMatch("abcdefg", re);
-  }
-}
 
 void SimplePartialMatchRE2(benchmark::State& state) {
   RE2 re("abcdefg");
@@ -132,22 +115,11 @@ void SimplePartialMatchRE2(benchmark::State& state) {
     RE2::PartialMatch("abcdefg", re);
   }
 }
-#ifdef USEPCRE
-BENCHMARK(SimplePartialMatchPCRE)->ThreadRange(1, NumCPUs());
-#endif
 BENCHMARK(SimplePartialMatchRE2)->ThreadRange(1, NumCPUs());
 
 static std::string http_text =
   "GET /asdfhjasdhfasdlfhasdflkjasdfkljasdhflaskdjhf"
   "alksdjfhasdlkfhasdlkjfhasdljkfhadsjklf HTTP/1.1";
-
-void HTTPPartialMatchPCRE(benchmark::State& state) {
-  StringPiece a;
-  PCRE re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
-  for (auto _ : state) {
-    PCRE::PartialMatch(http_text, re, &a);
-  }
-}
 
 void HTTPPartialMatchRE2(benchmark::State& state) {
   StringPiece a;
@@ -157,21 +129,10 @@ void HTTPPartialMatchRE2(benchmark::State& state) {
   }
 }
 
-#ifdef USEPCRE
-BENCHMARK(HTTPPartialMatchPCRE)->ThreadRange(1, NumCPUs());
-#endif
 BENCHMARK(HTTPPartialMatchRE2)->ThreadRange(1, NumCPUs());
 
 static std::string smallhttp_text =
   "GET /abc HTTP/1.1";
-
-void SmallHTTPPartialMatchPCRE(benchmark::State& state) {
-  StringPiece a;
-  PCRE re("(?-s)^(?:GET|POST) +([^ ]+) HTTP");
-  for (auto _ : state) {
-    PCRE::PartialMatch(smallhttp_text, re, &a);
-  }
-}
 
 void SmallHTTPPartialMatchRE2(benchmark::State& state) {
   StringPiece a;
@@ -181,18 +142,7 @@ void SmallHTTPPartialMatchRE2(benchmark::State& state) {
   }
 }
 
-#ifdef USEPCRE
-BENCHMARK(SmallHTTPPartialMatchPCRE)->ThreadRange(1, NumCPUs());
-#endif
 BENCHMARK(SmallHTTPPartialMatchRE2)->ThreadRange(1, NumCPUs());
-
-void DotMatchPCRE(benchmark::State& state) {
-  StringPiece a;
-  PCRE re("(?-s)^(.+)");
-  for (auto _ : state) {
-    PCRE::PartialMatch(http_text, re, &a);
-  }
-}
 
 void DotMatchRE2(benchmark::State& state) {
   StringPiece a;
@@ -202,18 +152,7 @@ void DotMatchRE2(benchmark::State& state) {
   }
 }
 
-#ifdef USEPCRE
-BENCHMARK(DotMatchPCRE)->ThreadRange(1, NumCPUs());
-#endif
 BENCHMARK(DotMatchRE2)->ThreadRange(1, NumCPUs());
-
-void ASCIIMatchPCRE(benchmark::State& state) {
-  StringPiece a;
-  PCRE re("(?-s)^([ -~]+)");
-  for (auto _ : state) {
-    PCRE::PartialMatch(http_text, re, &a);
-  }
-}
 
 void ASCIIMatchRE2(benchmark::State& state) {
   StringPiece a;
@@ -235,21 +174,9 @@ void ASCIIMatchRE2_text_re2_1KB(benchmark::State& state) {
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 
-#ifdef USEPCRE
-BENCHMARK(ASCIIMatchPCRE)->ThreadRange(1, NumCPUs());
-#endif
 BENCHMARK(ASCIIMatchRE2)->ThreadRange(1, NumCPUs());
 BENCHMARK_RANGE(ASCIIMatchRE2_text_re2_1KB, 2 << 6, 2 << 9);
 
-void FullMatchPCRE(benchmark::State& state, const char *regexp) {
-  std::string s = RandomText(state.range(0));
-  s += "ABCDEFGHIJ";
-  PCRE re(regexp);
-  for (auto _ : state) {
-    CHECK(PCRE::FullMatch(s, re));
-  }
-  state.SetBytesProcessed(state.iterations() * state.range(0));
-}
 
 void FullMatchRE2(benchmark::State& state, const char *regexp) {
   std::string s = RandomText(state.range(0));
@@ -512,28 +439,15 @@ BENCHMARK_RANGE(FullMatch_RE2_DotStar_text_re2_1KB, 2 << 6, 2 << 9);
 BENCHMARK_RANGE(FullMatch_RE2_DotStarDollar_text_re2_1KB, 2 << 6, 2 << 9);
 BENCHMARK_RANGE(FullMatch_RE2_DotStarCapture_text_re2_1KB, 2 << 6, 2 << 9);
 
-void FullMatch_DotStar_CachedPCRE(benchmark::State& state) { FullMatchPCRE(state, "(?s).*"); }
 void FullMatch_DotStar_CachedRE2(benchmark::State& state)  { FullMatchRE2(state, "(?s).*"); }
 
-void FullMatch_DotStarDollar_CachedPCRE(benchmark::State& state) { FullMatchPCRE(state, "(?s).*$"); }
 void FullMatch_DotStarDollar_CachedRE2(benchmark::State& state)  { FullMatchRE2(state, "(?s).*$"); }
 
-void FullMatch_DotStarCapture_CachedPCRE(benchmark::State& state) { FullMatchPCRE(state, "(?s)((.*)()()($))"); }
 void FullMatch_DotStarCapture_CachedRE2(benchmark::State& state)  { FullMatchRE2(state, "(?s)((.*)()()($))"); }
 
-#ifdef USEPCRE
-BENCHMARK_RANGE(FullMatch_DotStar_CachedPCRE, 8, 2 << 20);
-#endif
 BENCHMARK_RANGE(FullMatch_DotStar_CachedRE2,  2 << 19, 2 << 19);
 
-#ifdef USEPCRE
-BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedPCRE, 8, 2 << 20);
-#endif
 BENCHMARK_RANGE(FullMatch_DotStarDollar_CachedRE2,  2 << 6, 2 << 9);
-
-#ifdef USEPCRE
-BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedPCRE, 8, 2 << 20);
-#endif
 
 BENCHMARK_RANGE(FullMatch_DotStarCapture_CachedRE2,  2 << 6, 2 << 9);
 

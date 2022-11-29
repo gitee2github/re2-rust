@@ -84,7 +84,6 @@ HFILES=\
 	util/malloc_counter.h\
 	util/mix.h\
 	util/mutex.h\
-	util/pcre.h\
 	util/strutil.h\
 	util/test.h\
 	util/utf.h\
@@ -98,6 +97,7 @@ HFILES=\
 	# re2/testing/regexp_generator.h\
 	# re2/testing/string_generator.h\
 	# re2/testing/tester.h\
+	# util/pcre.h\
 
 # 仅保留接口stub
 OFILES=obj/re2/re2.o\
@@ -130,16 +130,16 @@ OFILES=obj/re2/re2.o\
 	# obj/re2/unicode_groups.o\
 
 TESTOFILES=\
-	obj/util/pcre.o\
 	obj/util/strutil.o\
 
-	#obj/re2/testing/string_generator.o\
+	# obj/re2/testing/string_generator.o\
 	# obj/re2/testing/backtrack.o\
 	# obj/re2/testing/dump.o\
 	# obj/re2/testing/exhaustive_tester.o\
 	# obj/re2/testing/null_walker.o\
 	# obj/re2/testing/regexp_generator.o\
 	# obj/re2/testing/tester.o\
+	# obj/util/pcre.o\
 
 TESTS=\
 	obj/test/set_test\
