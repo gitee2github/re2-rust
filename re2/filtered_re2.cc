@@ -20,8 +20,8 @@
 #include <string>
 #include <utility>
 
-#include "util/util.h"
-#include "util/logging.h"
+#include "re2/testing/util/util.h"
+#include "re2/testing/util/logging.h"
 // #include "re2/prefilter.h"
 extern "C"
 {

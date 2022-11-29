@@ -10,8 +10,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "util/test.h"
-#include "util/logging.h"
+#include "re2/testing/util/test.h"
+#include "re2/testing/util/logging.h"
 #include "re2/re2.h"
 
 namespace re2 {

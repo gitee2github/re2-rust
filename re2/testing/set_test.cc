@@ -7,8 +7,8 @@
 #include <vector>
 #include <utility>
 
-#include "util/test.h"
-#include "util/logging.h"
+#include "re2/testing/util/test.h"
+#include "re2/testing/util/logging.h"
 #include "re2/re2.h"
 #include "re2/set.h"
 

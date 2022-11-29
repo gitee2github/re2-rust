@@ -7,8 +7,8 @@
 #include <stdint.h>
 #include <functional>
 
-#include "util/logging.h"
-#include "util/util.h"
+#include "re2/testing/util/logging.h"
+#include "re2/testing/util/util.h"
 
 // Globals for the old benchmark API.
 void StartBenchmarkTiming();

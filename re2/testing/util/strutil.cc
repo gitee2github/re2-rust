@@ -5,7 +5,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "util/strutil.h"
+#include "re2/testing/util/strutil.h"
 
 #ifdef _WIN32
 #define snprintf _snprintf
