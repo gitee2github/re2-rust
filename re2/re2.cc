@@ -32,8 +32,8 @@
 #include <utility>
 #include <vector>
 
-#include "util/util.h"
-#include "util/logging.h"
+#include "re2/testing/util/util.h"
+#include "re2/testing/util/logging.h"
 // #include "util/strutil.h"
 // #include "util/utf.h"
 #include "regex_internal.h"

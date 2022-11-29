@@ -6,7 +6,7 @@
 
 #include <ostream>
 
-#include "util/util.h"
+#include "re2/testing/util/util.h"
 
 namespace re2 {
 

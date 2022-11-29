@@ -22,8 +22,8 @@
 #include <utility>
 #include <map>
 
-#include "util/util.h"
-#include "util/logging.h"
+#include "re2/testing/util/util.h"
+#include "re2/testing/util/logging.h"
 #include "re2/re2.h"
 #include "regex_internal.h"
 #include "re2/stringpiece.h"

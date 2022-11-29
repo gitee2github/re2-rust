@@ -78,11 +78,11 @@ INSTALL_HFILES=\
 	re2/stringpiece.h\
 
 HFILES=\
-	util/benchmark.h\
-	util/logging.h\
-	util/test.h\
-	util/strutil.h\
-	util/util.h\
+	re2/testing/util/benchmark.h\
+	re2/testing/util/logging.h\
+	re2/testing/util/test.h\
+	re2/testing/util/strutil.h\
+	re2/testing/util/util.h\
 	re2/filtered_re2.h\
 	re2/re2.h\
 	re2/set.h\
@@ -130,7 +130,7 @@ OFILES=obj/re2/re2.o\
 	# obj/re2/unicode_groups.o\
 
 TESTOFILES=\
-	obj/util/strutil.o\
+	obj/re2/testing/util/strutil.o\
 
 	# obj/re2/testing/string_generator.o\
 	# obj/re2/testing/backtrack.o\
@@ -212,25 +212,25 @@ obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	ln -sf libre2.$(SOEXTVER) $@
 
 .PRECIOUS: obj/dbg/test/%
-obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/util/test.o
+obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o
 	@mkdir -p obj/dbg/test
-	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/util/test.o obj/dbg/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o obj/dbg/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 .PRECIOUS: obj/test/%
-obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
+obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/re2/testing/util/test.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/re2/testing/util/test.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 # Test the shared lib, falling back to the static lib for private symbols
 .PRECIOUS: obj/so/test/%
-obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/util/test.o
+obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/re2/testing/util/test.o
 	@mkdir -p obj/so/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/util/test.o -Lobj/so -lre2 obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/re2/testing/util/test.o -Lobj/so -lre2 obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 # Filter out dump.o because testing::TempDir() isn't available for it.
-obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/util/benchmark.o
+obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/re2/testing/util/benchmark.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(filter-out obj/re2/testing/dump.o, $(TESTOFILES)) obj/util/benchmark.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(filter-out obj/re2/testing/dump.o, $(TESTOFILES)) obj/re2/testing/util/benchmark.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 # re2_fuzzer is a target for fuzzers like libFuzzer and AFL. This fake fuzzing
 # is simply a way to check that the target builds and then to run it against a

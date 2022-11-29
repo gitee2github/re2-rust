@@ -16,10 +16,10 @@
 #include <fstream>
 #include <sstream>
 
-#include "util/benchmark.h"
-#include "util/test.h"
+#include "re2/testing/util/benchmark.h"
+#include "re2/testing/util/test.h"
 // #include "util/flags.h"
-#include "util/logging.h"
+#include "re2/testing/util/logging.h"
 // #include "util/malloc_counter.h"
 // #include "util/strutil.h"
 // #include "re2/prog.h"

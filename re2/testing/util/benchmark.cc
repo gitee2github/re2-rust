@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <chrono>
 
-#include "util/benchmark.h"
+#include "re2/testing/util/benchmark.h"
 // #include "util/flags.h"
 #include "re2/re2.h"
 
