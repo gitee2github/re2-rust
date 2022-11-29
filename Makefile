@@ -80,9 +80,6 @@ INSTALL_HFILES=\
 HFILES=\
 	util/benchmark.h\
 	util/logging.h\
-	util/malloc_counter.h\
-	util/mix.h\
-	util/mutex.h\
 	util/strutil.h\
 	util/test.h\
 	util/utf.h\
@@ -98,6 +95,9 @@ HFILES=\
 	# re2/testing/tester.h\
 	# util/pcre.h\
 	# util/flags.h\
+	# util/malloc_counter.h\
+	# util/mix.h\
+	# util/mutex.h\
 
 # 仅保留接口stub
 OFILES=obj/re2/re2.o\
