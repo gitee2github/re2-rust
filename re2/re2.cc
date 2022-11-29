@@ -35,7 +35,7 @@
 #include "util/util.h"
 #include "util/logging.h"
 // #include "util/strutil.h"
-#include "util/utf.h"
+// #include "util/utf.h"
 #include "regex_internal.h"
 
 using namespace std;

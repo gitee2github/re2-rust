@@ -82,7 +82,6 @@ HFILES=\
 	util/logging.h\
 	util/test.h\
 	util/strutil.h\
-	util/utf.h\
 	util/util.h\
 	re2/filtered_re2.h\
 	re2/re2.h\
@@ -98,6 +97,7 @@ HFILES=\
 	# util/malloc_counter.h\
 	# util/mix.h\
 	# util/mutex.h\
+	# util/utf.h\
 
 # 仅保留接口stub
 OFILES=obj/re2/re2.o\
