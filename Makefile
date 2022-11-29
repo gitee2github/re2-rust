@@ -79,7 +79,6 @@ INSTALL_HFILES=\
 
 HFILES=\
 	util/benchmark.h\
-	util/flags.h\
 	util/logging.h\
 	util/malloc_counter.h\
 	util/mix.h\
@@ -98,6 +97,7 @@ HFILES=\
 	# re2/testing/string_generator.h\
 	# re2/testing/tester.h\
 	# util/pcre.h\
+	# util/flags.h\
 
 # 仅保留接口stub
 OFILES=obj/re2/re2.o\
