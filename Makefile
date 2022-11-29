@@ -236,10 +236,11 @@ obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TES
 # is simply a way to check that the target builds and then to run it against a
 # fixed set of inputs. To perform real fuzzing, refer to the documentation for
 # libFuzzer (llvm.org/docs/LibFuzzer.html) and AFL (lcamtuf.coredump.cx/afl/).
-obj/test/re2_fuzzer: CXXFLAGS:=-I./re2/fuzzing/compiler-rt/include $(CXXFLAGS)
-obj/test/re2_fuzzer: obj/libre2.a obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o
-	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+
+# obj/test/re2_fuzzer: CXXFLAGS:=-I./re2/fuzzing/compiler-rt/include $(CXXFLAGS)
+# obj/test/re2_fuzzer: obj/libre2.a obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o
+# 	@mkdir -p obj/test
+# 	$(CXX) -o $@ obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 ifdef REBUILD_TABLES
 .PRECIOUS: re2/perl_groups.cc
@@ -293,8 +294,8 @@ shared-bigtest: $(STESTS) $(SBIGTESTS)
 .PHONY: benchmark
 benchmark: obj/test/regexp_benchmark
 
-.PHONY: fuzz
-fuzz: obj/test/re2_fuzzer
+# .PHONY: fuzz
+# fuzz: obj/test/re2_fuzzer
 
 .PHONY: install
 install: static-install shared-install
