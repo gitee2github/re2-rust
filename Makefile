@@ -80,8 +80,8 @@ INSTALL_HFILES=\
 HFILES=\
 	util/benchmark.h\
 	util/logging.h\
-	util/strutil.h\
 	util/test.h\
+	util/strutil.h\
 	util/utf.h\
 	util/util.h\
 	re2/filtered_re2.h\
