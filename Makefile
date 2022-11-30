@@ -157,7 +157,7 @@ obj/dbg/libre2.a: $(DOFILES)
 .PRECIOUS: obj/so/libre2.$(SOEXT)
 obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	@mkdir -p obj/so
-	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES) -L./target/release
+	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES) target/release/libcapi.a $(LDFLAGS)
 	ln -sf libre2.$(SOEXTVER) $@
 
 .PRECIOUS: obj/dbg/test/%
@@ -198,7 +198,7 @@ distclean: clean
 .PHONY: clean
 clean:
 	rm -rf obj target
-	rm -f re2/*.pyc
+	rm -f re2/*.pyc testinstall
 
 .PHONY: testofiles
 testofiles: $(TESTOFILES)
