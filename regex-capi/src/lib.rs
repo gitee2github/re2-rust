@@ -23,7 +23,7 @@
  use std::str;
  
  use libc::{c_char, size_t};
- use regex::bytes::CaptureLocations;
+
  use regex::{bytes, Regex};
  
  use crate::error::{Error, ErrorKind};
@@ -148,7 +148,26 @@
              return ptr::null();
          },
      };
-     rure_compile_internal(pat, flags, options, error)
+    let mut builder = rure_compile_internal(pat, flags);
+
+    if !options.is_null() {
+        let options = unsafe { &*options };
+        builder.size_limit(options.size_limit);
+        builder.dfa_size_limit(options.dfa_size_limit);
+    }
+
+    match builder.build() {
+        Ok(re) => {
+            let re = RegexBytes { re };
+            Box::into_raw(Box::new(re))
+        },
+        Err(err) => unsafe {
+            if !error.is_null() {
+                *error = Error::new(ErrorKind::Regex(err));
+            }
+            ptr::null()
+        },
+    }
  }
  
  #[no_mangle]
@@ -180,7 +199,14 @@
  ) -> bool {
      let re = unsafe { &*re };
      let haystack = unsafe { slice::from_raw_parts(haystack, len) };
-     rure_find_internal(re, haystack, start, match_info)
+     re.find_at(haystack, start)
+     .map(|m| unsafe {
+         if !match_info.is_null() {
+             (*match_info).start = m.start();
+             (*match_info).end = m.end();
+         }
+     })
+     .is_some()
  }
  
  #[no_mangle]
@@ -270,7 +296,18 @@
      match_info: *mut rure_match,
  ) -> bool {
      let locs = unsafe { &(*captures).0 };
-     rure_captures_at_internal(locs, i, match_info)
+     match locs.pos(i) {
+        Some((start, end)) => {
+            if !match_info.is_null() {
+                unsafe {
+                    (*match_info).start = start;
+                    (*match_info).end = end;
+                }
+            }
+            true
+        }
+        _ => false,
+    }
  }
  
  #[no_mangle]
@@ -293,7 +330,35 @@
              slice::from_raw_parts(patterns_lengths, patterns_count),
          )
      };
-     rure_compile_set_internal(raw_pats, raw_patsl, patterns_count, flags, options, error)
+     let mut pats = Vec::with_capacity(patterns_count);
+     for (&raw_pat, &raw_patl) in raw_pats.iter().zip(raw_patsl) {
+         let pat = unsafe { slice::from_raw_parts(raw_pat, raw_patl) };
+         pats.push(match str::from_utf8(pat) {
+             Ok(pat) => pat,
+             Err(err) => unsafe {
+                 if !error.is_null() {
+                     *error = Error::new(ErrorKind::Str(err));
+                 }
+                 return ptr::null();
+             },
+         });
+     }
+
+    let mut builder = rure_compile_set_internal(pats, flags);
+    if !options.is_null() {
+        let options = unsafe { &*options };
+        builder.size_limit(options.size_limit);
+        builder.dfa_size_limit(options.dfa_size_limit);
+    }
+    match builder.build() {
+        Ok(re) => Box::into_raw(Box::new(RegexSet { re })),
+        Err(err) => unsafe {
+            if !error.is_null() {
+                *error = Error::new(ErrorKind::Regex(err))
+            }
+            ptr::null()
+        },
+    }
  }
  
  #[no_mangle]
@@ -434,7 +499,14 @@
  ) -> bool {
      let exp = unsafe { &*re };
      let haystack = unsafe { slice::from_raw_parts(haystack, len) };
-     rure_consume_internal(exp, haystack, match_info)
+     exp.find(haystack)
+     .map(|m| unsafe {
+         if !match_info.is_null() {
+             (*match_info).start = m.start();
+             (*match_info).end = m.end();
+         }
+     })
+     .is_some()
  }
  
  #[no_mangle]
