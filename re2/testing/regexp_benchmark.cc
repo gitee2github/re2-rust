@@ -31,7 +31,7 @@
 
 extern "C"
 {
-#include <rure.h>
+#include <regex_capi.h>
 }
 
 namespace re2 {

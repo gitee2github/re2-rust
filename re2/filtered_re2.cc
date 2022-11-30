@@ -25,7 +25,7 @@
 // #include "re2/prefilter.h"
 extern "C"
 {
-#include "regex-capi/include/rure.h"
+#include "regex-capi/include/regex_capi.h"
 }
 using namespace std;
 namespace re2 {
