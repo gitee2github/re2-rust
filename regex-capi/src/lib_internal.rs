@@ -12,124 +12,35 @@
  * Create: 2022-11-25
  * Description: The business logic implementation layer uses pure rust.
  ******************************************************************************/
-fn rure_compile_internal(
+use regex::bytes::RegexBuilder;
+use regex::bytes::RegexSetBuilder;
+ fn rure_compile_internal(
     pat: &str,
     flags: u32,
-    options: *const Options,
-    error: *mut Error,
-) -> *const RegexBytes {
+) -> RegexBuilder {
     let mut builder = bytes::RegexBuilder::new(pat);
-    if !options.is_null() {
-        let options = unsafe { &*options };
-        builder.size_limit(options.size_limit);
-        builder.dfa_size_limit(options.dfa_size_limit);
-    }
     builder.case_insensitive(flags & RURE_FLAG_CASEI > 0);
     builder.multi_line(flags & RURE_FLAG_MULTI > 0);
     builder.dot_matches_new_line(flags & RURE_FLAG_DOTNL > 0);
     builder.swap_greed(flags & RURE_FLAG_SWAP_GREED > 0);
     builder.ignore_whitespace(flags & RURE_FLAG_SPACE > 0);
     builder.unicode(flags & RURE_FLAG_UNICODE > 0);
-    match builder.build() {
-        Ok(re) => {
-            // let mut capture_names = HashMap::new();
-            // for (i, name) in re.capture_names().enumerate() {
-            //     if let Some(name) = name {
-            //         capture_names.insert(name.to_owned(), i as i32);
-            //     }
-            // }
-            // let re = RegexBytes { re, capture_names };
-            let re = RegexBytes { re };
-
-            Box::into_raw(Box::new(re))
-        }
-        Err(err) => unsafe {
-            if !error.is_null() {
-                *error = Error::new(ErrorKind::Regex(err));
-            }
-            ptr::null()
-        },
-    }
-}
-
-fn rure_find_internal(
-    re: &RegexBytes,
-    haystack: &[u8],
-    start: size_t,
-    match_info: *mut rure_match,
-) -> bool {
-    re.find_at(haystack, start)
-        .map(|m| unsafe {
-            if !match_info.is_null() {
-                (*match_info).start = m.start();
-                (*match_info).end = m.end();
-            }
-        })
-        .is_some()
-}
-
-fn rure_captures_at_internal(
-    locs: &CaptureLocations,
-    i: size_t,
-    match_info: *mut rure_match,
-) -> bool {
-    match locs.pos(i) {
-        Some((start, end)) => {
-            if !match_info.is_null() {
-                unsafe {
-                    (*match_info).start = start;
-                    (*match_info).end = end;
-                }
-            }
-            true
-        }
-        _ => false,
-    }
+    builder
 }
 
 fn rure_compile_set_internal(
-    raw_pats: &[*const u8],
-    raw_patsl: &[usize],
-    patterns_count: size_t,
+    pats: Vec<&str>,
     flags: u32,
-    options: *const Options,
-    error: *mut Error,
-) -> *const RegexSet {
-    let mut pats = Vec::with_capacity(patterns_count);
-    for (&raw_pat, &raw_patl) in raw_pats.iter().zip(raw_patsl) {
-        let pat = unsafe { slice::from_raw_parts(raw_pat, raw_patl) };
-        pats.push(match str::from_utf8(pat) {
-            Ok(pat) => pat,
-            Err(err) => unsafe {
-                if !error.is_null() {
-                    *error = Error::new(ErrorKind::Str(err));
-                }
-                return ptr::null();
-            },
-        });
-    }
-
+) -> RegexSetBuilder {
     let mut builder = bytes::RegexSetBuilder::new(pats);
-    if !options.is_null() {
-        let options = unsafe { &*options };
-        builder.size_limit(options.size_limit);
-        builder.dfa_size_limit(options.dfa_size_limit);
-    }
+
     builder.case_insensitive(flags & RURE_FLAG_CASEI > 0);
     builder.multi_line(flags & RURE_FLAG_MULTI > 0);
     builder.dot_matches_new_line(flags & RURE_FLAG_DOTNL > 0);
     builder.swap_greed(flags & RURE_FLAG_SWAP_GREED > 0);
     builder.ignore_whitespace(flags & RURE_FLAG_SPACE > 0);
     builder.unicode(flags & RURE_FLAG_UNICODE > 0);
-    match builder.build() {
-        Ok(re) => Box::into_raw(Box::new(RegexSet { re })),
-        Err(err) => unsafe {
-            if !error.is_null() {
-                *error = Error::new(ErrorKind::Regex(err))
-            }
-            ptr::null()
-        },
-    }
+    builder
 }
 
 fn rure_set_matches_internal(
@@ -205,17 +116,6 @@ fn rure_new_internal(pat: &[u8]) -> *const RegexBytes {
         Err(_) => ptr::null(),
     };
     exp as *const RegexBytes
-}
-
-fn rure_consume_internal(exp: &RegexBytes, haystack: &[u8], match_info: *mut rure_match) -> bool {
-    exp.find(haystack)
-        .map(|m| unsafe {
-            if !match_info.is_null() {
-                (*match_info).start = m.start();
-                (*match_info).end = m.end();
-            }
-        })
-        .is_some()
 }
 
 fn rure_max_submatch_internal(text: &[u8]) -> i32 {
