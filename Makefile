@@ -91,7 +91,6 @@ HFILES=\
 	re2/stringpiece.h\
 	regex-capi/include/regex_capi.h\
 
-
 # 仅保留接口stub
 OFILES=obj/re2/re2.o\
 	obj/re2/stringpiece.o\
@@ -241,8 +240,8 @@ static: obj/libre2.a
 
 .PHONY: static-install
 static-install: obj/libre2.a common-install 
-	$(INSTALL) target/release/libcapi.a /usr/lib/libcapi.a
-	$(INSTALL) obj/libre2.a /usr/lib/libre2.a
+	$(INSTALL) target/release/libcapi.a $(DESTDIR)$(libdir)/libcapi.a
+	$(INSTALL) obj/libre2.a $(DESTDIR)$(libdir)/libre2.a
 	
 
 .PHONY: shared
@@ -250,9 +249,9 @@ shared: obj/so/libre2.$(SOEXT)
 
 .PHONY: shared-install
 shared-install: obj/so/libre2.$(SOEXT) common-install
-	$(INSTALL) obj/so/libre2.$(SOEXT) /usr/lib/libre2.$(SOEXTVER00)
-	ln -sf libre2.$(SOEXTVER00) /usr/lib/libre2.$(SOEXTVER)
-	ln -sf libre2.$(SOEXTVER00) /usr/lib/libre2.$(SOEXT)
+	$(INSTALL) obj/so/libre2.$(SOEXT) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER00)
+	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXTVER)
+	ln -sf libre2.$(SOEXTVER00) $(DESTDIR)$(libdir)/libre2.$(SOEXT)
 	@ldconfig
 
 .PHONY: common-install
