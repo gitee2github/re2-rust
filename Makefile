@@ -1,21 +1,22 @@
-# Copyright 2009 The RE2 Authors.  All Rights Reserved.
-# Use of this source code is governed by a BSD-style
-# license that can be found in the LICENSE file.
-
-# To build against ICU for full Unicode properties support,
-# uncomment the next two lines:
-# CCICU=$(shell pkg-config icu-uc --cflags) -DRE2_USE_ICU
-# LDICU=$(shell pkg-config icu-uc --libs)
-
-# To build against PCRE for testing or benchmarking,
-# uncomment the next two lines:
-# CCPCRE=-I/usr/local/include -DUSEPCRE
-# LDPCRE=-L/usr/local/lib -lpcre   
+# /******************************************************************************
+#  * Copyright (c) USTC(Suzhou) & Huawei Technologies Co., Ltd. 2022. All rights reserved.
+#  * re2-rust licensed under the Mulan PSL v2.
+#  * You can use this software according to the terms and conditions of the Mulan PSL v2.
+#  * You may obtain a copy of Mulan PSL v2 at:
+#  *     http://license.coscl.org.cn/MulanPSL2
+#  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+#  * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+#  * PURPOSE.
+#  * See the Mulan PSL v2 for more details.
+#  * Author: mengning<mengning@ustc.edu.cn>, liuzhitao<freekeeper@mail.ustc.edu.cn>, yangwentong<ywt0821@163.com>
+#  * Create: 2022-06-21
+#  * Description: Makefile of RE2-Rust.
+#  ******************************************************************************/
 
 CXX?=g++
 # can override
 CXXFLAGS?=-O3 -g
-LDFLAGS?=-lrure -ldl
+LDFLAGS?=-ldl
 # required
 RE2_CXXFLAGS?=-std=c++11 -pthread -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I. $(CCICU) $(CCPCRE)
 RE2_LDFLAGS?=-pthread $(LDICU) $(LDPCRE)
@@ -69,13 +70,14 @@ MAKE_SHARED_LIBRARY=$(CXX) -shared -Wl,-soname,libre2.$(SOEXTVER),--version-scri
 endif
 
 .PHONY: all
-all: librure.a obj/libre2.a obj/so/libre2.$(SOEXT)
+all: libcapi.a obj/libre2.a obj/so/libre2.$(SOEXT)
 
 INSTALL_HFILES=\
 	re2/filtered_re2.h\
 	re2/re2.h\
 	re2/set.h\
 	re2/stringpiece.h\
+	regex-capi/include/regex_capi.h\
 
 HFILES=\
 	re2/testing/util/benchmark.h\
@@ -87,76 +89,23 @@ HFILES=\
 	re2/re2.h\
 	re2/set.h\
 	re2/stringpiece.h\
-	regex-capi/include/rure.h\
-	# re2/testing/exhaustive_tester.h\
-	# re2/testing/regexp_generator.h\
-	# re2/testing/string_generator.h\
-	# re2/testing/tester.h\
-	# util/pcre.h\
-	# util/flags.h\
-	# util/malloc_counter.h\
-	# util/mix.h\
-	# util/mutex.h\
-	# util/utf.h\
+	regex-capi/include/regex_capi.h\
+
 
 # 仅保留接口stub
 OFILES=obj/re2/re2.o\
 	obj/re2/stringpiece.o\
 	obj/re2/set.o\
 	obj/re2/filtered_re2.o\
-	
-
-	# obj/util/rune.o\
-	# obj/util/strutil.o\
-	# obj/re2/bitstate.o\
-	# obj/re2/compile.o\
-	# obj/re2/dfa.o\
-	# obj/re2/filtered_re2.o\
-	# obj/re2/mimics_pcre.o\
-	# obj/re2/nfa.o\
-	# obj/re2/onepass.o\
-	# obj/re2/parse.o\
-	# obj/re2/perl_groups.o\
-	# obj/re2/prefilter.o\
-	# obj/re2/prefilter_tree.o\
-	# obj/re2/prog.o\
-	# obj/re2/re2.o\
-	# obj/re2/regexp.o\
-	# obj/re2/set.o\
-	# obj/re2/simplify.o\
-	# obj/re2/stringpiece.o\
-	# obj/re2/tostring.o\
-	# obj/re2/unicode_casefold.o\
-	# obj/re2/unicode_groups.o\
 
 TESTOFILES=\
 	obj/re2/testing/util/strutil.o\
-
-	# obj/re2/testing/string_generator.o\
-	# obj/re2/testing/backtrack.o\
-	# obj/re2/testing/dump.o\
-	# obj/re2/testing/exhaustive_tester.o\
-	# obj/re2/testing/null_walker.o\
-	# obj/re2/testing/regexp_generator.o\
-	# obj/re2/testing/tester.o\
-	# obj/util/pcre.o\
 
 TESTS=\
 	obj/test/set_test\
 	obj/test/re2_test\
 	obj/test/re2_arg_test\
 	obj/test/filtered_re2_test\
-
-	# obj/test/charclass_test\
-	# obj/test/compile_test\
-	# obj/test/mimics_pcre_test\
-	# obj/test/parse_test\
-	# obj/test/possible_match_test\
-	# obj/test/regexp_test\
-	# obj/test/required_prefix_test\
-	# obj/test/search_test\
-	# obj/test/simplify_test\
-	# obj/test/string_generator_test\
 
 BIGTESTS=\
 	obj/test/dfa_test\
@@ -191,8 +140,8 @@ obj/so/%.o: %.cc $(HFILES)
 	@mkdir -p $$(dirname $@)
 	$(CXX) -c -o $@ -fPIC $(CPPFLAGS) $(RE2_CXXFLAGS) $(CXXFLAGS) -DNDEBUG $*.cc
 
-.PRECIOUS: librure.a
-librure.a: 
+.PRECIOUS: libcapi.a
+libcapi.a: 
 	cargo build --release
 
 .PRECIOUS: obj/libre2.a
@@ -208,39 +157,29 @@ obj/dbg/libre2.a: $(DOFILES)
 .PRECIOUS: obj/so/libre2.$(SOEXT)
 obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	@mkdir -p obj/so
-	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES) -L./target/release -lrure
+	$(MAKE_SHARED_LIBRARY) -o obj/so/libre2.$(SOEXTVER) $(SOFILES) -L./target/release
 	ln -sf libre2.$(SOEXTVER) $@
 
 .PRECIOUS: obj/dbg/test/%
 obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o
 	@mkdir -p obj/dbg/test
-	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o obj/dbg/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o obj/dbg/libre2.a target/release/libcapi.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 .PRECIOUS: obj/test/%
 obj/test/%: obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/re2/testing/util/test.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/re2/testing/util/test.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/re2/testing/util/test.o obj/libre2.a target/release/libcapi.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 # Test the shared lib, falling back to the static lib for private symbols
 .PRECIOUS: obj/so/test/%
 obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFILES) obj/re2/testing/util/test.o
 	@mkdir -p obj/so/test
-	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/re2/testing/util/test.o -Lobj/so -lre2 obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/$*.o $(TESTOFILES) obj/re2/testing/util/test.o -Lobj/so -lre2 obj/libre2.a target/release/libcapi.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 # Filter out dump.o because testing::TempDir() isn't available for it.
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/re2/testing/util/benchmark.o
 	@mkdir -p obj/test
 	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(filter-out obj/re2/testing/dump.o, $(TESTOFILES)) obj/re2/testing/util/benchmark.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
-
-# re2_fuzzer is a target for fuzzers like libFuzzer and AFL. This fake fuzzing
-# is simply a way to check that the target builds and then to run it against a
-# fixed set of inputs. To perform real fuzzing, refer to the documentation for
-# libFuzzer (llvm.org/docs/LibFuzzer.html) and AFL (lcamtuf.coredump.cx/afl/).
-
-# obj/test/re2_fuzzer: CXXFLAGS:=-I./re2/fuzzing/compiler-rt/include $(CXXFLAGS)
-# obj/test/re2_fuzzer: obj/libre2.a obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o
-# 	@mkdir -p obj/test
-# 	$(CXX) -o $@ obj/re2/fuzzing/re2_fuzzer.o obj/util/fuzz.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 ifdef REBUILD_TABLES
 .PRECIOUS: re2/perl_groups.cc
@@ -294,9 +233,6 @@ shared-bigtest: $(STESTS) $(SBIGTESTS)
 .PHONY: benchmark
 benchmark: obj/test/regexp_benchmark
 
-# .PHONY: fuzz
-# fuzz: obj/test/re2_fuzzer
-
 .PHONY: install
 install: static-install shared-install
 
@@ -304,8 +240,8 @@ install: static-install shared-install
 static: obj/libre2.a
 
 .PHONY: static-install
-static-install: obj/libre2.a common-install
-	$(INSTALL) target/release/librure.a /usr/lib/librure.a
+static-install: obj/libre2.a common-install 
+	$(INSTALL) target/release/libcapi.a /usr/lib/libcapi.a
 	$(INSTALL) obj/libre2.a /usr/lib/libre2.a
 	
 
@@ -314,10 +250,6 @@ shared: obj/so/libre2.$(SOEXT)
 
 .PHONY: shared-install
 shared-install: obj/so/libre2.$(SOEXT) common-install
-	$(INSTALL) target/release/librure.so /usr/lib/librure.so
-	$(INSTALL) obj/so/libre2.$(SOEXT) /usr/lib/libre2rust.$(SOEXTVER00)
-	ln -sf libre2rust.$(SOEXTVER00) /usr/lib/libre2rust.$(SOEXTVER)
-	ln -sf libre2rust.$(SOEXTVER00) /usr/lib/libre2rust.$(SOEXT)
 	$(INSTALL) obj/so/libre2.$(SOEXT) /usr/lib/libre2.$(SOEXTVER00)
 	ln -sf libre2.$(SOEXTVER00) /usr/lib/libre2.$(SOEXTVER)
 	ln -sf libre2.$(SOEXTVER00) /usr/lib/libre2.$(SOEXT)
@@ -327,10 +259,6 @@ shared-install: obj/so/libre2.$(SOEXT) common-install
 common-install:
 	@mkdir -p $(DESTDIR)$(includedir)/re2 # $(DESTDIR)$(libdir)/pkgconfig
 	$(INSTALL_DATA) $(INSTALL_HFILES) $(DESTDIR)$(includedir)/re2
-	$(INSTALL) regex-capi/include/rure.h $(DESTDIR)$(includedir)/rure.h
-	# $(INSTALL_DATA) re2.pc $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	# $(SED_INPLACE) -e "s#@includedir@#$(includedir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
-	# $(SED_INPLACE) -e "s#@libdir@#$(libdir)#" $(DESTDIR)$(libdir)/pkgconfig/re2.pc
 
 .PHONY: testinstall
 testinstall: static-testinstall shared-testinstall

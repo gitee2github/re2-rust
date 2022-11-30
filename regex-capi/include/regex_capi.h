@@ -10,7 +10,7 @@
  * See the Mulan PSL v2 for more details.
  * Author: mengning<mengning@ustc.edu.cn>, liuzhitao<freekeeper@mail.ustc.edu.cn>, yangwentong<ywt0821@163.com>
  * Create: 2022-06-21
- * Description: Rure.h is a C API.
+ * Description: regex_capi.h is a C API.
  ******************************************************************************/
 
 #pragma once

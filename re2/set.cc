@@ -27,7 +27,7 @@
 #include "re2/re2.h"
 #include "regex_internal.h"
 #include "re2/stringpiece.h"
-#include "regex-capi/include/rure.h"
+#include "regex-capi/include/regex_capi.h"
 
 using namespace std;
 

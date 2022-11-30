@@ -42,7 +42,7 @@ using namespace std;
 
 extern "C"
 {
-#include "regex-capi/include/rure.h"
+#include "regex-capi/include/regex_capi.h"
 }
 
 namespace re2
