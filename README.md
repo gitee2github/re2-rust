@@ -1,7 +1,7 @@
 # re2-rust
 
 a compatible RE2 API(
-2021-11-01)  by calling Rust library [regex(rure)](https://github.com/rust-lang/regex)
+2021-11-01)  by calling Rust library [regex](https://github.com/rust-lang/regex)
 
 
 ``` Shell
@@ -36,13 +36,7 @@ $ make test
 $ g++ testinstall.cc -o testinstall -lre2
 $ ./testinstall
 ```
-使用rure库:
 
-``` Shell
-$ cd regex-capi/ctest/
-$ gcc test.c -o test -lrure
-$ ./test
-```
 ## Test Rusults
 
 ```
