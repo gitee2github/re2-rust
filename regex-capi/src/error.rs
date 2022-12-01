@@ -53,7 +53,9 @@ extern "C" fn rure_error_new() -> *mut Error {
 
 #[no_mangle]
 extern "C" fn rure_error_free(err: *mut Error) {
-    unsafe { drop(Box::from_raw(err)); }
+    unsafe {
+        drop(Box::from_raw(err));
+    }
 }
 
 #[no_mangle]
