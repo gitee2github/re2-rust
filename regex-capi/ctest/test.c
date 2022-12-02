@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "regex_capi.h"
+#include "regex-capi/include/regex_capi.h"
 
 #ifndef DEBUG
 #define DEBUG false

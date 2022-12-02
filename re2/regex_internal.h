@@ -13,16 +13,13 @@
  * Description: .
  ******************************************************************************/
 
-// #include "re2/sparse_array.h"
 #include "regex-capi/include/regex_capi.h"
 namespace re2 {
-// #include "re2/prog.h"
 // Compiled form of regexp program.
  class Prog {
    //rure 更名为 Prog
 };
  
-// #include "re2/regexp.h"
 class Regexp {
  public:
 

@@ -13,7 +13,6 @@
  * Description: Interface implementation in re2.h.
  ******************************************************************************/
 
-#include "re2/re2.h"
 #include <iostream>
 #include <assert.h>
 #include <ctype.h>
@@ -34,8 +33,7 @@
 
 #include "re2/testing/util/util.h"
 #include "re2/testing/util/logging.h"
-// #include "util/strutil.h"
-// #include "util/utf.h"
+#include "re2/re2.h"
 #include "regex_internal.h"
 
 using namespace std;
