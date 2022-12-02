@@ -15,14 +15,13 @@
 #include <iostream>
 #include <map>
 #include <string.h>
-#include "re2/filtered_re2.h"
 #include <stddef.h>
 #include <string>
 #include <utility>
 
 #include "re2/testing/util/util.h"
 #include "re2/testing/util/logging.h"
-// #include "re2/prefilter.h"
+#include "re2/filtered_re2.h"
 extern "C"
 {
 #include "regex-capi/include/regex_capi.h"
@@ -33,7 +32,6 @@ namespace re2
 
   std::map<std::string, std::vector<std::string>> map_atoms;
 
-  // #include "re2/prefilter_tree.h"
   class PrefilterTree
   {
   public:

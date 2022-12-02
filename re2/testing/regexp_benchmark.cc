@@ -18,20 +18,13 @@
 
 #include "re2/testing/util/benchmark.h"
 #include "re2/testing/util/test.h"
-// #include "util/flags.h"
 #include "re2/testing/util/logging.h"
-// #include "util/malloc_counter.h"
-// #include "util/strutil.h"
-// #include "re2/prog.h"
 #include "re2/re2.h"
 #include "re2/set.h"
-// #include "re2/regexp.h"
-// #include "util/mutex.h"
-// #include "util/pcre.h"
 
 extern "C"
 {
-#include <regex_capi.h>
+#include "regex-capi/include/regex_capi.h"
 }
 
 namespace re2 {

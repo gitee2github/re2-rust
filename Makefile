@@ -178,7 +178,7 @@ obj/so/test/%: obj/so/libre2.$(SOEXT) obj/libre2.a obj/re2/testing/%.o $(TESTOFI
 # Filter out dump.o because testing::TempDir() isn't available for it.
 obj/test/regexp_benchmark: obj/libre2.a obj/re2/testing/regexp_benchmark.o $(TESTOFILES) obj/re2/testing/util/benchmark.o
 	@mkdir -p obj/test
-	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(filter-out obj/re2/testing/dump.o, $(TESTOFILES)) obj/re2/testing/util/benchmark.o obj/libre2.a $(RE2_LDFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ obj/re2/testing/regexp_benchmark.o $(filter-out obj/re2/testing/dump.o, $(TESTOFILES)) obj/re2/testing/util/benchmark.o obj/libre2.a target/release/libcapi.a $(RE2_LDFLAGS) $(LDFLAGS)
 
 ifdef REBUILD_TABLES
 .PRECIOUS: re2/perl_groups.cc

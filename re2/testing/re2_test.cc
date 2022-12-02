@@ -22,9 +22,7 @@
 #include "re2/testing/util/logging.h"
 #include "re2/testing/util/strutil.h"
 #include "re2/re2.h"
-/*被注释掉的
-#include "re2/regexp.h"
-*/
+
 namespace re2 {
 
 TEST(RE2, HexTests) {

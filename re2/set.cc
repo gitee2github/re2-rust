@@ -13,7 +13,7 @@
  * Description: Interface implementation in set.h.
  ******************************************************************************/
 
-#include "re2/set.h"
+
 
 #include <iostream>
 #include <stddef.h>
@@ -25,8 +25,9 @@
 #include "re2/testing/util/util.h"
 #include "re2/testing/util/logging.h"
 #include "re2/re2.h"
-#include "regex_internal.h"
+#include "re2/set.h"
 #include "re2/stringpiece.h"
+#include "regex_internal.h"
 #include "regex-capi/include/regex_capi.h"
 
 using namespace std;
