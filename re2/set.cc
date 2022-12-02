@@ -48,17 +48,17 @@ namespace re2
     elem_.clear();
   }
 
-  RE2::Set::Set(Set && other)
+  RE2::Set::Set(Set &&other)
       : options_(other.options_),
         anchor_(other.anchor_),
         compiled_(other.compiled_),
         prog_(std::move(other.prog_))
   {
-  other.elem_.clear();
-  other.elem_.shrink_to_fit();
-  other.compiled_ = false;
-  other.size_ = 0;
-  other.prog_.reset();
+    other.elem_.clear();
+    other.elem_.shrink_to_fit();
+    other.compiled_ = false;
+    other.size_ = 0;
+    other.prog_.reset();
   }
 
   RE2::Set &RE2::Set::operator=(Set &&other)
@@ -68,14 +68,16 @@ namespace re2
     return *this;
   }
 
-  
   int RE2::Set::Add(const StringPiece &pattern, std::string *error)
   {
     int place_num = size_;
     std::string rure_pattern = pattern.as_string();
-    if(anchor_ == RE2::ANCHOR_START){   // 处理RE2::ANCHOR_START的情况
+    if (anchor_ == RE2::ANCHOR_START)
+    { // 处理RE2::ANCHOR_START的情况
       rure_pattern.insert(0, "^");
-    } else if(anchor_ == RE2::ANCHOR_BOTH)  {   // 处理RE2::ANCHOR_BOTH的情况
+    }
+    else if (anchor_ == RE2::ANCHOR_BOTH)
+    { // 处理RE2::ANCHOR_BOTH的情况
       rure_pattern.insert(0, "^");
       rure_pattern.append("$");
     }
@@ -84,7 +86,7 @@ namespace re2
     if (re == NULL)
     {
       const char *msg = rure_error_message(err);
-      if(error != NULL)
+      if (error != NULL)
       {
         error->assign(msg);
         LOG(ERROR) << "Regexp Error '" << pattern.data() << "':" << msg << "'";
@@ -94,7 +96,7 @@ namespace re2
     }
     else
     {
-      elem_.push_back(pair<std::string, re2::Regexp*>(rure_pattern, (re2::Regexp*)nullptr));
+      elem_.push_back(pair<std::string, re2::Regexp *>(rure_pattern, (re2::Regexp *)nullptr));
       size_++;
       // rure_free(re);
       return place_num;
@@ -103,7 +105,8 @@ namespace re2
 
   bool RE2::Set::Compile()
   {
-    if (compiled_) {
+    if (compiled_)
+    {
       LOG(ERROR) << "RE2::Set::Compile() called more than once";
       return false;
     }
@@ -111,19 +114,21 @@ namespace re2
     const size_t PAT_COUNT = elem_.size();
     const char *patterns[PAT_COUNT];
     size_t patterns_lengths[PAT_COUNT];
-    for (size_t i = 0; i < elem_.size(); i++) {
+    for (size_t i = 0; i < elem_.size(); i++)
+    {
       patterns[i] = elem_[i].first.c_str();
       patterns_lengths[i] = elem_[i].first.length();
     }
-    
+
     rure_error *err = rure_error_new();
-    rure_set *re = rure_compile_set((const uint8_t **) patterns, 
-                                      patterns_lengths, PAT_COUNT, 0, NULL, err);
-    if(re == NULL){
+    rure_set *re = rure_compile_set((const uint8_t **)patterns,
+                                    patterns_lengths, PAT_COUNT, 0, NULL, err);
+    if (re == NULL)
+    {
       compiled_ = false;
       rure_set_free(re);
       return false;
-    } 
+    }
     prog_.reset((Prog *)re);
     compiled_ = true;
     return true;
@@ -137,31 +142,34 @@ namespace re2
   bool RE2::Set::Match(const StringPiece &text, std::vector<int> *v,
                        ErrorInfo *error_info) const
   {
-    if (!compiled_) {
+    if (!compiled_)
+    {
       LOG(ERROR) << "RE2::Set::Match() called before compiling";
       if (error_info != NULL)
         error_info->kind = kNotCompiled;
       return false;
     }
-    
+
     const char *pat_str = text.data();
     size_t length = strlen(pat_str);
-    if(v == NULL)
+    if (v == NULL)
     {
-      bool result = rure_set_is_match((rure_set *)prog_.get(), 
-                                        (const uint8_t *)pat_str, length, 0);
+      bool result = rure_set_is_match((rure_set *)prog_.get(),
+                                      (const uint8_t *)pat_str, length, 0);
       return result;
     }
     else
-    { 
+    {
       v->clear();
       bool matches[elem_.size()];
-      bool result = rure_set_matches((rure_set *)prog_.get(), 
-                                        (const uint8_t *)pat_str, length, 0, matches);
-      if(!result) return false;
-      for(size_t i = 0; i < elem_.size(); i++)
+      bool result = rure_set_matches((rure_set *)prog_.get(),
+                                     (const uint8_t *)pat_str, length, 0, matches);
+      if (!result)
+        return false;
+      for (size_t i = 0; i < elem_.size(); i++)
       {
-        if(matches[i]) v->push_back(i);
+        if (matches[i])
+          v->push_back(i);
       }
       return true;
     }

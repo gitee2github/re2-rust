@@ -14,10 +14,7 @@
  ******************************************************************************/
 use regex::bytes::RegexBuilder;
 use regex::bytes::RegexSetBuilder;
- fn rure_compile_internal(
-    pat: &str,
-    flags: u32,
-) -> RegexBuilder {
+fn rure_compile_internal(pat: &str, flags: u32) -> RegexBuilder {
     let mut builder = bytes::RegexBuilder::new(pat);
     builder.case_insensitive(flags & RURE_FLAG_CASEI > 0);
     builder.multi_line(flags & RURE_FLAG_MULTI > 0);
@@ -28,10 +25,7 @@ use regex::bytes::RegexSetBuilder;
     builder
 }
 
-fn rure_compile_set_internal(
-    pats: Vec<&str>,
-    flags: u32,
-) -> RegexSetBuilder {
+fn rure_compile_set_internal(pats: Vec<&str>, flags: u32) -> RegexSetBuilder {
     let mut builder = bytes::RegexSetBuilder::new(pats);
 
     builder.case_insensitive(flags & RURE_FLAG_CASEI > 0);
@@ -177,7 +171,7 @@ fn rure_check_rewrite_string_internal(text: &[u8], cap_num: i32) -> bool {
     if max_token > cap_num {
         return false;
     }
-    return true;
+    true
 }
 
 fn rure_rewrite_str_convert_internal(rewrite: &[u8]) -> *const c_char {
@@ -278,17 +272,17 @@ fn rure_replace_count_internal(haystack: &[u8], re: &RegexUnicode) -> size_t {
 }
 
 /**
-* 负责对字符集进行连接操作
-*
-*/
+ * 负责对字符集进行连接操作
+ *
+ */
 fn connection(str: &str, vec1: Vec<String>, vec2: Vec<char>) -> Vec<String> {
     let mut vec_tmp = Vec::new();
-    if str.len() > 0 {
+    if !str.is_empty() {
         for chars in vec2 {
             let s = format!("{}{}", str, chars);
             vec_tmp.push(s);
         }
-    } else if vec1.len() == 0 {
+    } else if vec1.is_empty() {
         for elem in vec2 {
             vec_tmp.push(elem.to_string())
         }
@@ -328,7 +322,7 @@ fn group_multiple_selection(str: &str, min_atoms_len: i32) -> Vec<String> {
             str_tmp.push(elem);
         }
     }
-    atoms_tmp.sort_by(|a, b| a.len().cmp(&b.len()));
+    atoms_tmp.sort_by_key(|a| a.len());
 
     for i in 0..atoms_tmp.len() {
         let mut j = i + 1;
@@ -344,11 +338,11 @@ fn group_multiple_selection(str: &str, min_atoms_len: i32) -> Vec<String> {
 }
 
 /**
-* 处理
-* a[a-c]a[zv]
-* [abc]
-* [a-c]+
-*/
+ * 处理
+ * a[a-c]a[zv]
+ * [abc]
+ * [a-c]+
+ */
 
 fn char_class_expansion(str: &str) -> Vec<char> {
     let mut flag_connect = 0;
@@ -398,7 +392,7 @@ fn my_compile(str: &str, min_atoms_len: i32) -> MyVec {
             let mut tmp_post_group = i;
             tmp_post_group += 1;
             if tmp_post_group >= chars.len() {
-                if vec.len() != 0 {
+                if !vec.is_empty() {
                     // 右括号为自后一个字符的情况
                     for elem in vec {
                         my_atoms.push(Atoms {
@@ -409,14 +403,14 @@ fn my_compile(str: &str, min_atoms_len: i32) -> MyVec {
                 i += 1;
                 continue;
             }
-            if chars[tmp_post_group] == '.' && vec.len() != 0 {
+            if chars[tmp_post_group] == '.' && !vec.is_empty() {
                 i += 1;
                 for elem in vec {
                     my_atoms.push(Atoms {
                         atom: CString::new(elem).unwrap().into_raw(),
                     });
                 }
-            } else if chars[tmp_post_group] == '{' && vec.len() != 0 {
+            } else if chars[tmp_post_group] == '{' && !vec.is_empty() {
                 for elem in vec {
                     my_atoms.push(Atoms {
                         atom: CString::new(elem).unwrap().into_raw(),
@@ -427,12 +421,12 @@ fn my_compile(str: &str, min_atoms_len: i32) -> MyVec {
             continue;
         }
         if chars[i] == '.' {
-            if atoms_tmp_string.len() as i32 >= min_atoms_len && vec_chars_con.len() == 0 {
+            if atoms_tmp_string.len() as i32 >= min_atoms_len && vec_chars_con.is_empty() {
                 my_atoms.push(Atoms {
                     atom: CString::new(atoms_tmp_string.clone()).unwrap().into_raw(),
                 });
             }
-            if vec_chars_con.len() > 0 && atoms_tmp_string.len() > 0 {
+            if !vec_chars_con.is_empty() && !atoms_tmp_string.is_empty() {
                 for elems in vec_chars_con.clone() {
                     my_atoms.push(Atoms {
                         atom: CString::new(format!("{}{}", elems.clone(), atoms_tmp_string))
@@ -460,18 +454,19 @@ fn my_compile(str: &str, min_atoms_len: i32) -> MyVec {
             }
             let mut plus_tmp = i;
             plus_tmp += 1;
-            if plus_tmp < chars.len() && chars[plus_tmp] == '+' {
-                if atoms_tmp_string.len() as i32 >= min_atoms_len {
-                    my_atoms.push(Atoms {
-                        atom: CString::new(atoms_tmp_string.clone()).unwrap().into_raw(),
-                    });
-                    atoms_tmp_string.clear();
-                    i += 2;
-                    continue;
-                }
+            if plus_tmp < chars.len()
+                && chars[plus_tmp] == '+'
+                && atoms_tmp_string.len() as i32 >= min_atoms_len
+            {
+                my_atoms.push(Atoms {
+                    atom: CString::new(atoms_tmp_string.clone()).unwrap().into_raw(),
+                });
+                atoms_tmp_string.clear();
+                i += 2;
+                continue;
             }
             let str_char_set = &str[start_post..plus_tmp];
-            if atoms_tmp_string.len() > 0 && vec_chars_con.len() > 0 {
+            if !atoms_tmp_string.is_empty() && !vec_chars_con.is_empty() {
                 for elem in vec_chars_con.clone() {
                     vec_chars_con.push(format!("{}{}", elem, atoms_tmp_string));
                 }
@@ -481,7 +476,7 @@ fn my_compile(str: &str, min_atoms_len: i32) -> MyVec {
             vec_chars_con = connection(atoms_tmp_string.as_str(), vec_chars_con, atoms_tmp);
             atoms_tmp_string.clear();
 
-            if i == chars.len() - 1 && vec_chars_con.len() > 0 {
+            if i == chars.len() - 1 && !vec_chars_con.is_empty() {
                 for elem in vec_chars_con.clone() {
                     if elem.len() as i32 >= min_atoms_len {
                         my_atoms.push(Atoms {

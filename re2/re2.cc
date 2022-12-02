@@ -155,10 +155,12 @@ namespace re2
     }
 
     uint32_t flags = RURE_DEFAULT_FLAGS;
-    if(options_.dot_nl()) flags = RURE_FLAG_DOTNL;
+    if (options_.dot_nl())
+      flags = RURE_FLAG_DOTNL;
     // if(options_.never_nl()) flags = RURE_DEFAULT_FLAGS;
-    if(options_.encoding() == RE2::Options::EncodingLatin1){
-      flags |= RURE_FLAG_UNICODE; 
+    if (options_.encoding() == RE2::Options::EncodingLatin1)
+    {
+      flags |= RURE_FLAG_UNICODE;
     }
 
     // for All
@@ -185,7 +187,7 @@ namespace re2
           LOG(ERROR) << "Error Compile '" << pattern.data() << "':" << msg << "'";
         }
         error_ = new std::string(msg);
-        error_code_ = ErrorInternal; // 暂时对这个错误进行赋值，如何处理错误类型？？？    
+        error_code_ = ErrorInternal; // 暂时对这个错误进行赋值，如何处理错误类型？？？
       }
       return;
     }
@@ -193,7 +195,7 @@ namespace re2
     // for Consume and FindAndConsume
     suffix_regexp_ = (re2::Regexp *)rure_new((const uint8_t *)pattern.data(), pattern.size());
     // for FullMatch
-    if(rure_str != "")
+    if (rure_str != "")
     {
       std::string FullMatch_rure_str = rure_str;
       FullMatch_rure_str.insert(0, "^(");
@@ -208,11 +210,11 @@ namespace re2
     //获取捕获组的数量, 并对num_captures_其进行赋值
     rure_captures *caps = rure_captures_new(re);
     size_t captures_len = rure_captures_len(caps) - 1;
-    if(!options_.never_capture()) 
+    if (!options_.never_capture())
     {
       num_captures_ = (int)captures_len;
     }
-    else 
+    else
     {
       num_captures_ = 0;
     }
@@ -220,7 +222,7 @@ namespace re2
     rure_captures_free(caps);
     rure_error_free(err);
     error_ = empty_string;
-    error_code_ = RE2::NoError;   
+    error_code_ = RE2::NoError;
   }
 
   RE2::~RE2()
@@ -318,7 +320,6 @@ namespace re2
     }
   }
 
-
   bool RE2::Replace(std::string *str,
                     const RE2 &re,
                     const StringPiece &rewrite)
@@ -334,7 +335,7 @@ namespace re2
     // 利用rure进行replace
     const char *rure_str = re.pattern_.c_str();
     // 对rewrite进行处理
-    const char *rure_rewrite = rure_rewrite_str_convert((const uint8_t*)rewrite.data(), rewrite.size());
+    const char *rure_rewrite = rure_rewrite_str_convert((const uint8_t *)rewrite.data(), rewrite.size());
 
     rure *re_rure = rure_compile((const uint8_t *)rure_str, strlen(rure_str), RURE_DEFAULT_FLAGS, NULL, NULL);
     const char *str_rure = rure_replace(re_rure, (const uint8_t *)str->c_str(), strlen(str->c_str()),
@@ -364,7 +365,7 @@ namespace re2
     if (count != 0)
     {
       // 对rewrite进行处理
-      const char *rure_rewrite = rure_rewrite_str_convert((const uint8_t*)rewrite.data(), rewrite.size());
+      const char *rure_rewrite = rure_rewrite_str_convert((const uint8_t *)rewrite.data(), rewrite.size());
       const char *str_rure = rure_replace_all(rure_re, (const uint8_t *)str->c_str(), strlen(str->c_str()),
                                               (const uint8_t *)rure_rewrite, strlen(rure_rewrite));
       *str = str_rure;
@@ -442,7 +443,7 @@ namespace re2
                   StringPiece *submatch,
                   int nsubmatch) const
   {
-    if(text.size() == 0 && pattern() == "")
+    if (text.size() == 0 && pattern() == "")
     {
       return true;
     }
@@ -463,9 +464,9 @@ namespace re2
       return false;
     }
     // 对null和empty进行处理
-    if(text.data() == NULL)
+    if (text.data() == NULL)
     {
-      for(int i = 0; i < nsubmatch; i++)
+      for (int i = 0; i < nsubmatch; i++)
       {
         submatch[i] = NULL;
       }
@@ -491,19 +492,21 @@ namespace re2
     // rure *re1 = (rure *)rprog_;
     rure_match match = {0};
     size_t length = strlen(haystack.c_str());
-    if(options_.never_nl())
+    if (options_.never_nl())
     {
       std::string strs = haystack + '\n';
       size_t pos = strs.find('\n');
       bool flag = false;
-      while(pos != strs.npos)
+      while (pos != strs.npos)
       {
         std::string temp = strs.substr(0, pos);
         bool matched = rure_is_match(re, (const uint8_t *)temp.c_str(), strlen(temp.c_str()), 0);
-        if(matched && !nsubmatch){
+        if (matched && !nsubmatch)
+        {
           return true;
         }
-        if(matched && nsubmatch){
+        if (matched && nsubmatch)
+        {
           haystack = temp;
           length = strlen(haystack.c_str());
           flag = true;
@@ -512,41 +515,48 @@ namespace re2
         strs = strs.substr(pos + 1, length + 1);
         pos = strs.find('\n');
       }
-      if(!flag){return false;}
+      if (!flag)
+      {
+        return false;
+      }
     }
     // bool matched = rure_find(re, (const uint8_t *)haystack, strlen(haystack), 0, &match);
     // 这里没有 if(re_anchor == ANCHOR_START)原因是因为：
     // 只有Consume()使用了ANCHOR_START，而传入Consume()的参数通常是三个或者三个以上，
     // 调用Consume()时，nsubmatch不为0，因此会去执行rure_captures_new()、rure_find_captures()、rure_captures_at()
-    if(re_anchor == UNANCHORED)
+    if (re_anchor == UNANCHORED)
     {
       // bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), length, 0, &match);
       bool matched = rure_is_match(re, (const uint8_t *)haystack.c_str(), length, 0);
-      if(!matched){
+      if (!matched)
+      {
         return false;
       }
-      else if(!nsubmatch){
+      else if (!nsubmatch)
+      {
         return true;
       }
     }
-    else if(re_anchor == ANCHOR_BOTH)
+    else if (re_anchor == ANCHOR_BOTH)
     {
 
       bool matched = rure_find(re, (const uint8_t *)haystack.c_str(), length, 0, &match);
-      if(!matched || match.start != 0 || match.end != length){
+      if (!matched || match.start != 0 || match.end != length)
+      {
         return false;
       }
-      else if(!nsubmatch){
+      else if (!nsubmatch)
+      {
         return true;
       }
     }
-    
+
     // Demo  获取捕获组内容，存储到submatch数组中
     rure_captures *caps = rure_captures_new(re);
     rure_find_captures(re, (const uint8_t *)haystack.c_str(),
                        length, 0, caps);
     // size_t captures_len = num_captures_ + 1;
-    
+
     rure_captures_at(caps, 0, &match);
     if (re_anchor == ANCHOR_START && match.start != 0)
       return false;
@@ -559,13 +569,14 @@ namespace re2
         size_t start = match.start;
         size_t end = match.end;
         size_t len = end - start;
-        if(options_.encoding() == RE2::Options::EncodingUTF8){
+        if (options_.encoding() == RE2::Options::EncodingUTF8)
+        {
           submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len));
         }
-        else{
+        else
+        {
           submatch[i] = StringPiece(text.data() + start, static_cast<size_t>(len / 2));
         }
-        
       }
       else
       {
@@ -608,17 +619,17 @@ namespace re2
       // RE has fewer capturing groups than number of Arg pointers passed in.
       return false;
     }
-    
+
     // for Consume and FindAndConsume
     rure_match match;
-    if(consumed && n == 0 &&
+    if (consumed && n == 0 &&
         rure_consume((rure *)suffix_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), &match))
     {
       *consumed = match.end;
       return true;
     }
     // for FullMatch(no captures)
-    if(re_anchor == ANCHOR_BOTH && n == 0 && options_.encoding() == RE2::Options::EncodingUTF8)
+    if (re_anchor == ANCHOR_BOTH && n == 0 && options_.encoding() == RE2::Options::EncodingUTF8)
     {
       bool matched = rure_is_match((rure *)entire_regexp_, (const uint8_t *)text.data(), (size_t)text.size(), 0);
       return matched;
@@ -700,12 +711,12 @@ namespace re2
   {
     int num_caps = NumberOfCapturingGroups();
     bool result = rure_check_rewrite_string(rewrite.data(), num_caps);
-    if(!result){
+    if (!result)
+    {
       *error = "Rewrite schema error";
       return false;
     }
-    return true; 
-
+    return true;
   }
 
   // Returns the maximum submatch needed for the rewrite to be done by Replace().
@@ -726,13 +737,15 @@ namespace re2
     size_t len = rewrite.length();
     const char *rewrites[veclen];
     size_t rewrites_lengths[veclen];
-    for(int i = 0; i < veclen; i++) {
+    for (int i = 0; i < veclen; i++)
+    {
       rewrites[i] = vec[i].data();
       rewrites_lengths[i] = vec[i].size();
     }
-    const char *result = rure_rewrite((const uint8_t *)rewrite.data(), len, (const uint8_t **)rewrites, 
-                                    rewrites_lengths, (size_t)veclen);
-    if(result != NULL) {
+    const char *result = rure_rewrite((const uint8_t *)rewrite.data(), len, (const uint8_t **)rewrites,
+                                      rewrites_lengths, (size_t)veclen);
+    if (result != NULL)
+    {
       out->assign(result);
       return true;
     }
