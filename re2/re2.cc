@@ -665,18 +665,17 @@ namespace re2
     //此处在改写的时候先不进行任何处理，直接使用之前的Match函数，完成之后在对Match进行改写
     if (!Match(text, 0, text.size(), re_anchor, vec, nvec))
     {
-
       // std::cout << "DoMatch : Match 带参 未匹配";
       delete[] heapvec;
       return false;
     }
 
-    //  为consume赋值，consume的
+    //  为consumed赋值
     if (consumed != NULL)
       *consumed = static_cast<size_t>(EndPtr(vec[0]) - BeginPtr(text));
 
     // 以上的代码已经完成了整个字符数是否和正则表达式全局匹配
-    // 结下来就是要对正表达式中存在的捕获组进行处理
+    // 接下来就是要对正表达式中存在的捕获组进行处理
 
     // 如果不需要捕获组，直接返回true
     if (n == 0 || args == NULL)
@@ -690,7 +689,6 @@ namespace re2
     for (int i = 0; i < n; i++)
     {
       const StringPiece &s = vec[i + 1];
-
       if (!args[i]->Parse(s.data(), s.size()))
       {
         // TODO: Should we indicate what the error was?
