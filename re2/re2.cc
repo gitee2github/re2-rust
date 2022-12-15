@@ -670,7 +670,7 @@ namespace re2
       return false;
     }
 
-    //  为consume赋值，consume的
+    //  为consumed赋值
     if (consumed != NULL)
       *consumed = static_cast<size_t>(EndPtr(vec[0]) - BeginPtr(text));
 
