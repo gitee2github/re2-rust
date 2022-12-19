@@ -160,7 +160,7 @@ obj/so/libre2.$(SOEXT): $(SOFILES) libre2.symbols libre2.symbols.darwin
 	ln -sf libre2.$(SOEXTVER) $@
 
 .PRECIOUS: obj/dbg/test/%
-obj/dbg/test/%: obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o
+obj/dbg/test/%: libcapi.a obj/dbg/libre2.a obj/dbg/re2/testing/%.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o
 	@mkdir -p obj/dbg/test
 	$(CXX) -o $@ obj/dbg/re2/testing/$*.o $(DTESTOFILES) obj/dbg/re2/testing/util/test.o obj/dbg/libre2.a target/release/libcapi.a $(RE2_LDFLAGS) $(LDFLAGS)
 
@@ -245,7 +245,7 @@ static-install: obj/libre2.a common-install
 	
 
 .PHONY: shared
-shared: obj/so/libre2.$(SOEXT)
+shared: libcapi.a obj/so/libre2.$(SOEXT)
 
 .PHONY: shared-install
 shared-install: obj/so/libre2.$(SOEXT) common-install
