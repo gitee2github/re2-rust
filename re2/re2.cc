@@ -252,7 +252,7 @@ namespace re2
 
     return *named_groups_;
   }
-  /*
+  
   // Returns group_names_, computing it if needed.
   const std::map<int, std::string> &RE2::CapturingGroupNames() const
   {
@@ -272,7 +272,6 @@ namespace re2
 
     return *group_names_;
   }
-  */
 
   /***** Convenience interfaces *****/
 

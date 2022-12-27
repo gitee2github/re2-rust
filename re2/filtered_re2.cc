@@ -279,4 +279,14 @@ namespace re2
     AtomsToRegexps(re2_vec_, atoms, potential_regexps, prefilter_tree_->getMinAtomLen());
   }
 
+  void FilteredRE2::RegexpsGivenStrings(const std::vector<int>& matched_atoms,
+                                      std::vector<int>* passed_regexps) 
+  {
+    // RegexpsGivenStrings为filtered_re2.h中定义的私有成员函数，re2-rust中并没有使用
+  }
+  void FilteredRE2::PrintPrefilter(int regexpid) 
+  {
+    // PrintPrefilter为filtered_re2.h中定义的私有成员函数，re2-rust中并没有使用
+  }
+
 } // namespace re2
