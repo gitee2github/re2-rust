@@ -29,7 +29,6 @@ use regex::{bytes, Regex};
 use crate::error::{Error, ErrorKind};
 use std::io;
 use std::io::Write;
-use std::process::abort;
 
 include!("lib_internal.rs");
 
@@ -125,7 +124,6 @@ extern "C" fn rure_compile_must(pattern: *const c_char) -> *const RegexBytes {
     if err.is_err() {
         let _ = writeln!(&mut io::stderr(), "{}", err);
         let _ = writeln!(&mut io::stderr(), "aborting from rure_compile_must");
-        abort()
     }
     re
 }
@@ -410,7 +408,6 @@ extern "C" fn rure_escape_must(pattern: *const c_char) -> *const c_char {
         println!("aborting from rure_escape_must");
         let _ = writeln!(&mut io::stderr(), "{}", err);
         let _ = writeln!(&mut io::stderr(), "aborting from rure_escape_must");
-        abort()
     }
     esc
 }
