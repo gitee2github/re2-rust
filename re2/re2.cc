@@ -233,14 +233,13 @@ namespace re2
       delete group_names_;
   }
 
-  // Returns named_groups_, computing it if needed.
-  const std::map<std::string, int> &RE2::NamedCapturingGroups() const
+  std::map<std::string, int> *NamedCaptures(re2::Prog *prog)
   {
     std::map<std::string, int> *temp = new std::map<std::string, int>;
     std::string str;
     char *name;
     int i = 0;
-    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog_);
+    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog);
     while (rure_iter_capture_names_next(it, &name))
     {
       str = name;
@@ -248,19 +247,16 @@ namespace re2
         temp->insert(make_pair(str, i));
       ++i;
     }
-    named_groups_ = temp;
-
-    return *named_groups_;
+    return temp;
   }
-  
-  // Returns group_names_, computing it if needed.
-  const std::map<int, std::string> &RE2::CapturingGroupNames() const
+
+  std::map<int, std::string> *CaptureNames(re2::Prog *prog)
   {
     std::map<int, std::string> *temp = new std::map<int, std::string>;
     std::string str;
     char *name;
     int i = 0;
-    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog_);
+    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog);
     while (rure_iter_capture_names_next(it, &name))
     {
       str = name;
@@ -268,7 +264,32 @@ namespace re2
         temp->insert(make_pair(i, str));
       ++i;
     }
-    group_names_ = temp;
+    return temp;
+  }
+
+  // Returns named_groups_, computing it if needed.
+  const std::map<std::string, int> &RE2::NamedCapturingGroups() const
+  {
+    std::call_once(named_groups_once_, [](const RE2* re) {
+      if (re->suffix_regexp_ != NULL)
+      {
+        re->named_groups_ = NamedCaptures(re->prog_);
+      } 
+      if (re->named_groups_ == NULL)
+        re->named_groups_ = empty_named_groups;
+      }, this);
+    return *named_groups_;
+  }
+  
+  // Returns group_names_, computing it if needed.
+  const std::map<int, std::string> &RE2::CapturingGroupNames() const
+  {
+    std::call_once(group_names_once_, [](const RE2* re) {
+      if (re->suffix_regexp_ != NULL)
+        re->group_names_ = CaptureNames(re->prog_);
+      if (re->group_names_ == NULL)
+        re->group_names_ = empty_group_names;
+    }, this);
 
     return *group_names_;
   }
