@@ -187,6 +187,7 @@ namespace re2
         error_ = new std::string(msg);
         error_code_ = ErrorInternal; // 暂时对这个错误进行赋值，如何处理错误类型？？？
       }
+      rure_error_free(err);
       return;
     }
     prog_ = (Prog *)re;
