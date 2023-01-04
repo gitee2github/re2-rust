@@ -94,30 +94,125 @@ namespace re2
     Init(pattern, options);
   }
 
-  std::string encodingLatin1ToUTF8(std::string str)
+  typedef signed int Rune; /* Code-point values in Unicode 4.0 are 21 bits wide.*/
+
+  enum
   {
-    string strOut;
-    for (std::string::iterator it = str.begin(); it != str.end(); ++it)
+    UTFmax = 4,         /* maximum bytes per rune */
+    Runesync = 0x80,    /* cannot represent part of a UTF sequence (<) */
+    Runeself = 0x80,    /* rune and UTF sequences are the same (<) */
+    Runeerror = 0xFFFD, /* decoding error in UTF */
+    Runemax = 0x10FFFF, /* maximum rune value */
+  };
+
+  enum
+  {
+    Bit1 = 7,
+    Bitx = 6,
+    Bit2 = 5,
+    Bit3 = 4,
+    Bit4 = 3,
+    Bit5 = 2,
+
+    T1 = ((1 << (Bit1 + 1)) - 1) ^ 0xFF, /* 0000 0000 */
+    Tx = ((1 << (Bitx + 1)) - 1) ^ 0xFF, /* 1000 0000 */
+    T2 = ((1 << (Bit2 + 1)) - 1) ^ 0xFF, /* 1100 0000 */
+    T3 = ((1 << (Bit3 + 1)) - 1) ^ 0xFF, /* 1110 0000 */
+    T4 = ((1 << (Bit4 + 1)) - 1) ^ 0xFF, /* 1111 0000 */
+    T5 = ((1 << (Bit5 + 1)) - 1) ^ 0xFF, /* 1111 1000 */
+
+    Rune1 = (1 << (Bit1 + 0 * Bitx)) - 1, /* 0000 0000 0111 1111 */
+    Rune2 = (1 << (Bit2 + 1 * Bitx)) - 1, /* 0000 0111 1111 1111 */
+    Rune3 = (1 << (Bit3 + 2 * Bitx)) - 1, /* 1111 1111 1111 1111 */
+    Rune4 = (1 << (Bit4 + 3 * Bitx)) - 1,
+    /* 0001 1111 1111 1111 1111 1111 */
+
+    Maskx = (1 << Bitx) - 1, /* 0011 1111 */
+    Testx = Maskx ^ 0xFF,    /* 1100 0000 */
+
+    Bad = Runeerror,
+  };
+  int runetochar(char *str, const Rune *rune)
+  {
+    /* Runes are signed, so convert to unsigned for range check. */
+    unsigned long c;
+
+    /*
+     * one character sequence
+     *	00000-0007F => 00-7F
+     */
+    c = *rune;
+    if (c <= Rune1)
     {
-      uint8_t ch = *it;
-      if (ch < 0x80)
-      {
-        strOut.push_back(ch);
-      }
-      else
-      {
-        strOut.push_back(0xc0 | ch >> 6);
-        strOut.push_back(0x80 | (ch & 0x3f));
-      }
+      str[0] = static_cast<char>(c);
+      return 1;
     }
-    return strOut;
+
+    /*
+     * two character sequence
+     *	0080-07FF => T2 Tx
+     */
+    if (c <= Rune2)
+    {
+      str[0] = T2 | static_cast<char>(c >> 1 * Bitx);
+      str[1] = Tx | (c & Maskx);
+      return 2;
+    }
+
+    /*
+     * If the Rune is out of range, convert it to the error rune.
+     * Do this test here because the error rune encodes to three bytes.
+     * Doing it earlier would duplicate work, since an out of range
+     * Rune wouldn't have fit in one or two bytes.
+     */
+    if (c > Runemax)
+      c = Runeerror;
+
+    /*
+     * three character sequence
+     *	0800-FFFF => T3 Tx Tx
+     */
+    if (c <= Rune3)
+    {
+      str[0] = T3 | static_cast<char>(c >> 2 * Bitx);
+      str[1] = Tx | ((c >> 1 * Bitx) & Maskx);
+      str[2] = Tx | (c & Maskx);
+      return 3;
+    }
+
+    /*
+     * four character sequence (21-bit value)
+     *     10000-1FFFFF => T4 Tx Tx Tx
+     */
+    str[0] = T4 | static_cast<char>(c >> 3 * Bitx);
+    str[1] = Tx | ((c >> 2 * Bitx) & Maskx);
+    str[2] = Tx | ((c >> 1 * Bitx) & Maskx);
+    str[3] = Tx | (c & Maskx);
+    return 4;
+  }
+
+  // Converts latin1 (assumed to be encoded as Latin1 bytes)
+  // into UTF8 encoding in string.
+  // Can't use EncodingUtils::EncodeLatin1AsUTF8 because it is
+  // deprecated and because it rejects code points 0x80-0x9F.
+  void ConvertLatin1ToUTF8(const StringPiece &latin1, std::string *utf)
+  {
+    char buf[UTFmax];
+
+    utf->clear();
+    for (size_t i = 0; i < latin1.size(); i++)
+    {
+      Rune r = latin1[i] & 0xFF;
+      int n = runetochar(buf, &r);
+      utf->append(buf, n);
+    }
   }
 
   void RE2::Init(const StringPiece &pattern, const Options &options)
   {
     std::string rure_str; // 正则表达式UTF-8编码形式
     static std::once_flag empty_once;
-    std::call_once(empty_once, []() { //为了解决多线程中出现的资源竞争导致的数据不一致问题
+    std::call_once(empty_once, []() { // 为了解决多线程中出现的资源竞争导致的数据不一致问题
       empty_string = new std::string;
       empty_named_groups = new std::map<std::string, int>;
       empty_group_names = new std::map<int, std::string>;
@@ -149,7 +244,7 @@ namespace re2
     }
     else
     { // Latin-1编码
-      rure_str = encodingLatin1ToUTF8(pattern.ToString());
+      ConvertLatin1ToUTF8(pattern, &rure_str);
     }
 
     uint32_t flags = RURE_DEFAULT_FLAGS;
@@ -163,7 +258,7 @@ namespace re2
 
     // for All
     rure *re = rure_compile((const uint8_t *)rure_str.c_str(), strlen(rure_str.c_str()), flags, NULL, err);
-    //如果编译失败，打印错误信息
+    // 如果编译失败，打印错误信息
     if (re == NULL)
     {
       const char *msg = rure_error_message(err);
@@ -187,6 +282,7 @@ namespace re2
         error_ = new std::string(msg);
         error_code_ = ErrorInternal; // 暂时对这个错误进行赋值，如何处理错误类型？？？
       }
+      rure_error_free(err);
       return;
     }
     prog_ = (Prog *)re;
@@ -205,7 +301,7 @@ namespace re2
       entire_regexp_ = (re2::Regexp *)re;
     }
 
-    //获取捕获组的数量, 并对num_captures_其进行赋值
+    // 获取捕获组的数量, 并对num_captures_其进行赋值
     rure_captures *caps = rure_captures_new(re);
     size_t captures_len = rure_captures_len(caps) - 1;
     if (!options_.never_capture())
@@ -233,14 +329,13 @@ namespace re2
       delete group_names_;
   }
 
-  // Returns named_groups_, computing it if needed.
-  const std::map<std::string, int> &RE2::NamedCapturingGroups() const
+  std::map<std::string, int> *NamedCaptures(re2::Prog *prog)
   {
     std::map<std::string, int> *temp = new std::map<std::string, int>;
     std::string str;
     char *name;
     int i = 0;
-    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog_);
+    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog);
     while (rure_iter_capture_names_next(it, &name))
     {
       str = name;
@@ -248,19 +343,16 @@ namespace re2
         temp->insert(make_pair(str, i));
       ++i;
     }
-    named_groups_ = temp;
-
-    return *named_groups_;
+    return temp;
   }
-  
-  // Returns group_names_, computing it if needed.
-  const std::map<int, std::string> &RE2::CapturingGroupNames() const
+
+  std::map<int, std::string> *CaptureNames(re2::Prog *prog)
   {
     std::map<int, std::string> *temp = new std::map<int, std::string>;
     std::string str;
     char *name;
     int i = 0;
-    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog_);
+    rure_iter_capture_names *it = rure_iter_capture_names_new((rure *)prog);
     while (rure_iter_capture_names_next(it, &name))
     {
       str = name;
@@ -268,7 +360,36 @@ namespace re2
         temp->insert(make_pair(i, str));
       ++i;
     }
-    group_names_ = temp;
+    return temp;
+  }
+
+  // Returns named_groups_, computing it if needed.
+  const std::map<std::string, int> &RE2::NamedCapturingGroups() const
+  {
+    std::call_once(
+        named_groups_once_, [](const RE2 *re)
+        {
+      if (re->suffix_regexp_ != NULL)
+      {
+        re->named_groups_ = NamedCaptures(re->prog_);
+      } 
+      if (re->named_groups_ == NULL)
+        re->named_groups_ = empty_named_groups; },
+        this);
+    return *named_groups_;
+  }
+
+  // Returns group_names_, computing it if needed.
+  const std::map<int, std::string> &RE2::CapturingGroupNames() const
+  {
+    std::call_once(
+        group_names_once_, [](const RE2 *re)
+        {
+      if (re->suffix_regexp_ != NULL)
+        re->group_names_ = CaptureNames(re->prog_);
+      if (re->group_names_ == NULL)
+        re->group_names_ = empty_group_names; },
+        this);
 
     return *group_names_;
   }
@@ -483,7 +604,8 @@ namespace re2
     // Latin-1编码转换
     if (options_.encoding() == RE2::Options::EncodingLatin1)
     {
-      haystack = encodingLatin1ToUTF8(text.as_string());
+      ConvertLatin1ToUTF8(text, &haystack);
+      // haystack = encodingLatin1ToUTF8(text.as_string());
     }
     rure *re = (rure *)prog_;
     // rure *re1 = (rure *)rprog_;
@@ -661,7 +783,7 @@ namespace re2
     // vec 用于存放捕获到的数据
     // nvec 表示需要捕获的数据的个数
 
-    //此处在改写的时候先不进行任何处理，直接使用之前的Match函数，完成之后在对Match进行改写
+    // 此处在改写的时候先不进行任何处理，直接使用之前的Match函数，完成之后在对Match进行改写
     if (!Match(text, 0, text.size(), re_anchor, vec, nvec))
     {
       // std::cout << "DoMatch : Match 带参 未匹配";
